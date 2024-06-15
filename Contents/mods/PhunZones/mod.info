@@ -1,0 +1,7 @@
+title=PhunZones
+name=PhunZones
+id=PhunZones
+authors=UburGeek
+description=Defines zones and behaviours in said zones
+require=PhunTools
+poster=poster.png

@@ -1,0 +1,4 @@
+version=1
+title=PhunWallet
+description=BoP Wallet and currency management
+tags=Build 41
