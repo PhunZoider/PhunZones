@@ -78,7 +78,7 @@ function PhunZonesWidget:prerender()
 
     local y = FONT_HGT_MEDIUM + 1
     -- for pips
-    if sandbox.PhunZones_Widget and cached.risk then
+    if sandbox.Widget and cached.risk then
         local colors = {
             r = 0.4,
             g = 0.4,
@@ -264,7 +264,7 @@ function PhunZonesWidget:new(x, y, width, height, player)
         g = 0,
         b = 0,
         a = 0.0
-    };    
+    };
     o.hoverBackgroundColor = {
         r = 0.0,
         g = 0.0,

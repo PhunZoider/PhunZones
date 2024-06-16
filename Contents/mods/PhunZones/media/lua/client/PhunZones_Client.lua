@@ -53,7 +53,7 @@ end)
 
 local function setup()
     Events.EveryOneMinute.Remove(setup)
-    if sandbox.PhunZones_Widget then
+    if sandbox.Widget then
         if PhunZones.settings.show_widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)
@@ -97,7 +97,7 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
         p = p or {}
         p.location = location
         playerObj:getModData().PhunZones = p
-        if sandbox.PhunZones_Widget then
+        if sandbox.Widget then
             for i = 0, getOnlinePlayers():size() - 1 do
                 local instance = PhunZonesWidget.OnOpenPanel(getOnlinePlayers():get(i))
                 if instance and instance.rebuild then
@@ -109,7 +109,7 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
 
 if PhunRunners then
     Events[PhunRunners.events.OnPhunRunnersPlayerUpdated].Add(function(playerObj)
-        if sandbox.PhunZones_Widget then
+        if sandbox.Widget then
             PhunZonesWidget.OnOpenPanel(playerObj)
         end
     end)
@@ -127,7 +127,7 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
             if location.noAnnounce then
                 return
             end
-            if sandbox.PhunZones_ShowZoneChange then
+            if sandbox.ShowZoneChange then
                 oldLocation = oldLocation or {}
                 if location.title ~= oldLocation.title or location.subtitle ~= oldLocation.subtitle then
                     PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)

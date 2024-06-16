@@ -71,7 +71,7 @@ function PhunZonesWelcome:render()
                 local s = sandbox
 
                 -- pips
-                if sandbox.PhunZones_Pips then
+                if sandbox.Pips then
                     for i = 1, self.location.difficulty do
                         self:drawRect(l, y, 20, 10, 255, self.alphaBits, 0.7, 0.7, 0.7);
                         l = l + 25
@@ -80,8 +80,7 @@ function PhunZonesWelcome:render()
                 end
 
                 -- PVP
-                if (sandbox.PhunZones_ShowPvP and location.pvp == true or location.pvp == false) and oldLocation.pvp ~=
-                    location.pvp then
+                if (sandbox.ShowPvP and location.pvp == true or location.pvp == false) then
                     local txt = getText("IGUI_PhunZones_PvPOn")
                     local color = {
                         r = 255,

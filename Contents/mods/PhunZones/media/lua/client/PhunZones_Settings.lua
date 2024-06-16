@@ -6,7 +6,7 @@ if ModOptions and ModOptions.getInstance then
     local function onModOptionsApply(optionValues)
         if optionValues.settings.options.show_widget == true then
             -- Open any closed panels
-            if sandbox.PhunZones_Widget then
+            if sandbox.Widget then
                 for i = 0, getOnlinePlayers():size() - 1 do
                     local p = getOnlinePlayers():get(i)
                     PhunZonesWidget.OnOpenPanel(p)
@@ -43,7 +43,7 @@ if ModOptions and ModOptions.getInstance then
         PhunZones.settings.show_widget = newValue
         for i = 0, getOnlinePlayers():size() - 1 do
             local p = getOnlinePlayers():get(i)
-            if newValue and sandbox.PhunZones_Widget then
+            if newValue and sandbox.Widget then
                 PhunZonesWidget.OnOpenPanel(p)
             else
                 PhunZonesWidget.OnOpenPanel(p):close()

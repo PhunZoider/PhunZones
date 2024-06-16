@@ -14,9 +14,6 @@ Sandbox_EN = {
     Sandbox_PhunZones_ShowPvP = "Show PvP",
     Sandbox_PhunZones_ShowPvP_tooltip = "Shows or hides the pvp icon and pvp zone messages",
 
-    Sandbox_PhunZones_ShowPhunRunner = "Show PhunRunners Info",
-    Sandbox_PhunZones_ShowPhunRunner_tooltip = "Shows the risk breakdown from PhunRunners mod in tooltip (required PhunRunners mod to be insalled)",
-
     Sandbox_PhunZones_OpenPhunInfoOnClick = "Open PhunInfo on click",
     Sandbox_PhunZones_OpenPhunInfoOnClick_tooltip = "Tick this to open the PhunInfo stats on click (requires PhunInfo mod to be installed)",
 
