@@ -42,7 +42,6 @@ function PhunZones:updateLocation(obj)
     local location = self:getLocation(obj:getX(), obj:getY())
     local old = nil
     local isPlayer = false
-
     if instanceof(obj, "IsoPlayer") then
         old = self.players[obj:getUsername()]
         isPlayer = true

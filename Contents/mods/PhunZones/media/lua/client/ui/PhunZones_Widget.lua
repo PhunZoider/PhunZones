@@ -115,10 +115,12 @@ end
 function PhunZonesWidget:rebuild()
 
     local player = getSpecificPlayer(self.pIndex)
-    local pData = player:getModData().PhunZones
-
-    if pData and pData.current then
-        local data = pData.current
+    local pData = PhunZones.players[player:getUsername()]
+    if not pData then
+        return
+    end
+    if pData then
+        local data = pData
         local title = data.title or ""
         local subtitle = data.subtitle or ""
         if string.len(subtitle) > 0 then
@@ -128,25 +130,25 @@ function PhunZonesWidget:rebuild()
         local difficulty = data.difficulty or 0
         local titleWidth = getTextManager():MeasureStringX(UIFont.Medium, title)
         local summary
-        if PhunRunners then
-            summary = PhunRunners:getSummary(player)
+        if PhunRunners and PhunRunners.getSummary then
+            summary = PhunRunners:getSummary(player) or {}
             self.cached = {
                 title = title,
                 pvpTexture = pvpTexture,
                 difficulty = difficulty,
                 titleWidth = titleWidth,
-                spawnSprinters = summary.spawnSprinters,
-                restless = summary.restless,
-                risk = summary.risk,
-                riskTitle = summary.title,
-                riskTitleWidth = getTextManager():MeasureStringX(UIFont.Small, summary.title),
-                riskTitleHeight = getTextManager():MeasureStringY(UIFont.Small, summary.title),
-                riskDescription = summary.description,
-                riskDescriptionWidth = getTextManager():MeasureStringX(UIFont.Small, summary.description),
-                riskDescriptionHeight = getTextManager():MeasureStringY(UIFont.Small, summary.description)
+                spawnSprinters = summary.spawnSprinters == true,
+                restless = summary.restless == true,
+                risk = summary.risk or 0,
+                riskTitle = summary.title or "",
+                riskTitleWidth = getTextManager():MeasureStringX(UIFont.Small, summary.title or ""),
+                riskTitleHeight = getTextManager():MeasureStringY(UIFont.Small, summary.title or ""),
+                riskDescription = summary.description or "",
+                riskDescriptionWidth = getTextManager():MeasureStringX(UIFont.Small, summary.description or ""),
+                riskDescriptionHeight = getTextManager():MeasureStringY(UIFont.Small, summary.description or "")
             }
-            local text = "<H1>" .. self.cached.title .. "</H1>"
-            text = text .. "<LINE> <TEXT>" .. self.cached.riskDescription
+            local text = "<H1>" .. self.cached.title
+            text = text .. "<LINE> <TEXT>" .. self.cached.riskDescription or ""
         else
             self.cached = {
                 title = title,
@@ -154,7 +156,6 @@ function PhunZonesWidget:rebuild()
                 difficulty = difficulty,
                 titleWidth = titleWidth
             }
-
         end
         return self.cached
     end

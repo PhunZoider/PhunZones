@@ -19,6 +19,7 @@ end
 local throttleCount = 0
 local pcache = {}
 local function throttleUpdatePlayer(playerObj)
+
     if throttleCount < 50 then
         throttleCount = throttleCount + 1
         return
@@ -86,6 +87,15 @@ Events.OnInitGlobalModData.Add(function()
     ModData.request(PhunZones.name)
 end)
 
+Events.OnGameStart.Add(function()
+    if sandbox.Widget then
+        for i = 1, getOnlinePlayers():size() do
+            local p = getOnlinePlayers():get(i - 1)
+            PhunZonesWidget.OnOpenPanel(p):rebuild()
+        end
+    end
+end)
+
 Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
     function(playerObj, location, old)
         if location.pvp == true and playerObj:getSafety():isEnabled() then
@@ -93,24 +103,31 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
         elseif location.pvp == false and not playerObj:getSafety():isEnabled() then
             getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
         end
-        local p = playerObj:getModData().PhunZones
-        p = p or {}
-        p.location = location
-        playerObj:getModData().PhunZones = p
+
         if sandbox.Widget then
-            for i = 0, getOnlinePlayers():size() - 1 do
-                local instance = PhunZonesWidget.OnOpenPanel(getOnlinePlayers():get(i))
-                if instance and instance.rebuild then
-                    instance:rebuild()
-                end
-            end
+            PhunZonesWidget.OnOpenPanel(playerObj):rebuild()
         end
     end)
 
 if PhunRunners then
     Events[PhunRunners.events.OnPhunRunnersPlayerUpdated].Add(function(playerObj)
         if sandbox.Widget then
-            PhunZonesWidget.OnOpenPanel(playerObj)
+            for i = 1, getOnlinePlayers():size() do
+                local p = getOnlinePlayers():get(i - 1)
+                local instance = PhunZonesWidget.OnOpenPanel(p)
+                instance:rebuild()
+            end
+        end
+    end)
+end
+
+if PhunStats then
+    Events[PhunStats.events.OnPhunStatsInied].Add(function(playerObj)
+        if sandbox.Widget then
+            for i = 1, getOnlinePlayers():size() do
+                local p = getOnlinePlayers():get(i - 1)
+                PhunZonesWidget.OnOpenPanel(p):rebuild()
+            end
         end
     end)
 end
@@ -127,7 +144,7 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
             if location.noAnnounce then
                 return
             end
-            if sandbox.ShowZoneChange then
+            if sandbox.PhunZones_ShowPvP then
                 oldLocation = oldLocation or {}
                 if location.title ~= oldLocation.title or location.subtitle ~= oldLocation.subtitle then
                     PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)

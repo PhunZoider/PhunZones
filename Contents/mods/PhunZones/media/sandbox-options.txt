@@ -1,6 +1,6 @@
 VERSION = 1,
 
-option PhunZones.Pips
+option PhunZones.PhunZones_Pips
 { 
     type = boolean,
     default = true,
@@ -8,7 +8,7 @@ option PhunZones.Pips
     translation = PhunZones_Pips 
 }
 
-option PhunZones.ShowZoneChange
+option PhunZones.PhunZones_ShowZoneChange
 { 
     type = boolean,
     default = true,
@@ -16,7 +16,7 @@ option PhunZones.ShowZoneChange
     translation = PhunZones_ShowZoneChange 
 }
 
-option PhunZones.ShowPvP
+option PhunZones.PhunZones_ShowPvP
 { 
     type = boolean,
     default = true,
@@ -24,7 +24,7 @@ option PhunZones.ShowPvP
     translation = PhunZones_ShowPvP 
 }
 
-option PhunZones.Widget
+option PhunZones.PhunZones_Widget
 { 
     type = boolean,
     default = true,

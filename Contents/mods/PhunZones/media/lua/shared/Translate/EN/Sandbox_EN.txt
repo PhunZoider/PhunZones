@@ -3,7 +3,7 @@ Sandbox_EN = {
 
 
     Sandbox_PhunZones_Widget = "Show Widget",
-    Sandbox_PhunZones_Pips_tooltip = "Displays the PhunZones widget. May require a client restart for this to take effect",
+    Sandbox_PhunZones_Widget_tooltip = "Displays the PhunZones widget. May require a client restart for this to take effect",
 
     Sandbox_PhunZones_Pips = "Show Pips",
     Sandbox_PhunZones_Pips_tooltip = "Display difficulty level with pips",
@@ -13,8 +13,5 @@ Sandbox_EN = {
 
     Sandbox_PhunZones_ShowPvP = "Show PvP",
     Sandbox_PhunZones_ShowPvP_tooltip = "Shows or hides the pvp icon and pvp zone messages",
-
-    Sandbox_PhunZones_OpenPhunInfoOnClick = "Open PhunInfo on click",
-    Sandbox_PhunZones_OpenPhunInfoOnClick_tooltip = "Tick this to open the PhunInfo stats on click (requires PhunInfo mod to be installed)",
 
 }

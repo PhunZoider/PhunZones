@@ -12,7 +12,7 @@ local FONT_HGT_LARGE = getTextManager():getFontHeight(UIFont.Large)
 local FONT_SCALE = FONT_HGT_SMALL / 14
 
 function PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)
-    if sandbox.ShowZoneChange then
+    if sandbox.PhunZones_ShowZoneChange then
         local core = getCore()
         local FONT_SCALE = getTextManager():getFontHeight(UIFont.Small) / 14
         local core = getCore()
@@ -71,7 +71,7 @@ function PhunZonesWelcome:render()
                 local s = sandbox
 
                 -- pips
-                if sandbox.Pips then
+                if sandbox.PhunZones_Pips then
                     for i = 1, self.location.difficulty do
                         self:drawRect(l, y, 20, 10, 255, self.alphaBits, 0.7, 0.7, 0.7);
                         l = l + 25
@@ -80,7 +80,7 @@ function PhunZonesWelcome:render()
                 end
 
                 -- PVP
-                if (sandbox.ShowPvP and location.pvp == true or location.pvp == false) then
+                if (sandbox.PhunZones_ShowPvP and location.pvp == true or location.pvp == false) then
                     local txt = getText("IGUI_PhunZones_PvPOn")
                     local color = {
                         r = 255,
@@ -113,6 +113,11 @@ function PhunZonesWelcome:render()
         end
     end
 
+end
+
+function PhunZonesWelcome:instantiate()
+    ISPanel.instantiate(self)
+    self.javaObject:setConsumeMouseEvents(false)
 end
 
 function PhunZonesWelcome:new(x, y, width, height, player, location, oldLocation)
