@@ -78,7 +78,7 @@ function PhunZonesWidget:prerender()
 
     local y = FONT_HGT_MEDIUM + 1
     -- for pips
-    if sandbox.Widget and cached.risk then
+    if sandbox.PhunZones_Widget and cached.risk then
         local colors = {
             r = 0.4,
             g = 0.4,

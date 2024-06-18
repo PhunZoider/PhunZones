@@ -1,4 +1,6 @@
 version=1
-title=PhunWallet
-description=BoP Wallet and currency management
+id=3270423712
+title=PhunZones
+description=Zone management for Phun servers and mods
 tags=Build 41
+visibility=public

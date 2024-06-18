@@ -54,13 +54,11 @@ end)
 
 local function setup()
     Events.EveryOneMinute.Remove(setup)
-    if sandbox.Widget then
-        if PhunZones.settings.show_widget then
-            for i = 1, getOnlinePlayers():size() do
-                local p = getOnlinePlayers():get(i - 1)
+    if sandbox.PhunZones_Widget then
+        for i = 1, getOnlinePlayers():size() do
+            local p = getOnlinePlayers():get(i - 1)
 
-                PhunZonesWidget.OnOpenPanel(p)
-            end
+            PhunZonesWidget.OnOpenPanel(p)
         end
     end
     sendClientCommand(PhunZones.name, PhunZones.commands.requestData, {})
@@ -88,7 +86,7 @@ Events.OnInitGlobalModData.Add(function()
 end)
 
 Events.OnGameStart.Add(function()
-    if sandbox.Widget then
+    if sandbox.PhunZones_Widget then
         for i = 1, getOnlinePlayers():size() do
             local p = getOnlinePlayers():get(i - 1)
             PhunZonesWidget.OnOpenPanel(p):rebuild()
@@ -104,14 +102,14 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
             getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
         end
 
-        if sandbox.Widget then
+        if sandbox.PhunZones_Widget then
             PhunZonesWidget.OnOpenPanel(playerObj):rebuild()
         end
     end)
 
 if PhunRunners then
     Events[PhunRunners.events.OnPhunRunnersPlayerUpdated].Add(function(playerObj)
-        if sandbox.Widget then
+        if sandbox.PhunZones_Widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)
                 local instance = PhunZonesWidget.OnOpenPanel(p)
@@ -123,7 +121,7 @@ end
 
 if PhunStats then
     Events[PhunStats.events.OnPhunStatsInied].Add(function(playerObj)
-        if sandbox.Widget then
+        if sandbox.PhunZones_Widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)
                 PhunZonesWidget.OnOpenPanel(p):rebuild()
