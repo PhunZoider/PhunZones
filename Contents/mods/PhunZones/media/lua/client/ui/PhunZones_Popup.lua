@@ -16,8 +16,8 @@ function PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)
         local core = getCore()
         local FONT_SCALE = getTextManager():getFontHeight(UIFont.Small) / 14
         local core = getCore()
-        local width = 600 * FONT_SCALE
-        local height = 300 * FONT_SCALE
+        local width = 1 * FONT_SCALE
+        local height = 1 * FONT_SCALE
         local x = (core:getScreenWidth() - width) / 2
         local y = (core:getScreenHeight() - height) / 2
 
