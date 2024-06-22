@@ -85,6 +85,10 @@ Events.OnInitGlobalModData.Add(function()
     ModData.request(PhunZones.name)
 end)
 
+Events.EveryTenMinutes.Add(function()
+    updatePlayers()
+end)
+
 Events.OnGameStart.Add(function()
     if sandbox.PhunZones_Widget then
         for i = 1, getOnlinePlayers():size() do

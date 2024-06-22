@@ -71,7 +71,7 @@ return {{
     difficulty = 3,
     isVanilla = true,
     title = "Louisville",
-	pvp = true,
+    pvp = true,
     bounds = {{
         x = 12400,
         y = 3904,
@@ -82,19 +82,19 @@ return {{
         y = 3904,
         x2 = 12600,
         y2 = 4351,
-        subtitle = "Quarantine Zone",
+        subtitle = "Quarantine Zone"
     }, {
         x = 12607,
         y = 4196,
         x2 = 12859,
         y2 = 4495,
-        subtitle = "Trainyard",
+        subtitle = "Trainyard"
     }, {
         x = 12548,
         y = 4355,
         x2 = 12859,
         y2 = 4495,
-        subtitle = "Trainyard",
+        subtitle = "Trainyard"
     }, {
         x = 13519,
         y = 5724,
@@ -119,7 +119,7 @@ return {{
         y = 11402,
         x2 = 7788,
         y2 = 11689,
-		subtitle = "Cabins",
+        subtitle = "Cabins"
     }}
 }, {
     key = "Rosewood",
@@ -201,6 +201,54 @@ return {{
         y = 6603,
         x2 = 10194,
         y2 = 7130
+    }}
+}, {
+    key = "Crowlake",
+    difficulty = 2,
+    title = "Crowlake",
+    mod = "Crowlake",
+    bounds = {{
+        x = 6300,
+        y = 11100,
+        x2 = 6600,
+        y2 = 11700
+    }}
+}, {
+    key = "Pineville",
+    difficulty = 2,
+    title = "Pineville",
+    mod = "pineville",
+    bounds = {{
+        x = 3900,
+        y = 9000,
+        x2 = 4200,
+        y2 = 9300
+    }, {
+        x = 3900,
+        y = 9300,
+        x2 = 4500,
+        y2 = 10200
+    }}
+}, {
+    key = "YakamaStatePark",
+    difficulty = 3,
+    title = "Yakama State Park",
+    mod = "YakamaStatePark",
+    bounds = {{
+        x = 8400,
+        y = 10500,
+        x2 = 8700,
+        y2 = 11400
+    }, {
+        x = 8700,
+        y = 11100,
+        x2 = 9000,
+        y2 = 11400
+    }, {
+        x = 9000,
+        y = 10500,
+        x2 = 9600,
+        y2 = 11400
     }}
 }, {
     key = "LCv2",
