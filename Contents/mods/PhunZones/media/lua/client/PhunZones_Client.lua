@@ -57,11 +57,12 @@ local function setup()
     if sandbox.PhunZones_Widget then
         for i = 1, getOnlinePlayers():size() do
             local p = getOnlinePlayers():get(i - 1)
-
             PhunZonesWidget.OnOpenPanel(p)
         end
     end
-    sendClientCommand(PhunZones.name, PhunZones.commands.requestData, {})
+    PhunZones:ini()
+    updatePlayers(true)
+    Events.OnPlayerUpdate.Add(throttleUpdatePlayer)
 end
 
 Events.EveryOneMinute.Add(setup)
@@ -69,20 +70,17 @@ Events.EveryOneMinute.Add(setup)
 local initialized = false
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
 
-    if tableName == PhunZones.name and type(tableData) == "table" then
-        PhunZones:ini()
-        PhunZones.bounds = tableData.bounds
-        if not initialized then
-            initialized = true
-            updatePlayers(true)
-            Events.OnPlayerUpdate.Add(throttleUpdatePlayer)
-
+    if isClient() then
+        if tableName == PhunZones.name .. "_zones" and type(tableData) == "table" then
+            PhunZones.zones = tableData
+        elseif tableName == PhunZones.name .. "_bounds" and type(tableData) == "table" then
+            PhunZones.bounds = tableData
         end
     end
 end)
 
 Events.OnInitGlobalModData.Add(function()
-    ModData.request(PhunZones.name)
+    -- ModData.request(PhunZones.name)
 end)
 
 Events.EveryTenMinutes.Add(function()

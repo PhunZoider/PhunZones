@@ -18,7 +18,7 @@ return {{
     title = "West Point",
     bounds = {{
         x = 11100,
-        y = 6300,
+        y = 6580,
         x2 = 13199,
         y2 = 7499
     }}
@@ -71,7 +71,7 @@ return {{
     difficulty = 3,
     isVanilla = true,
     title = "Louisville",
-    pvp = true,
+    pvp = false,
     bounds = {{
         x = 12400,
         y = 3904,
@@ -307,7 +307,7 @@ return {{
     }}
 }, {
     key = "Louisville",
-    difficulty = 2,
+    difficulty = 3,
     subtitle = "International Airport",
     mod = "SimonMDLVInternationalAirport",
     bounds = {{
@@ -467,8 +467,14 @@ return {{
     bounds = {{
         x = 11100,
         y = 5700,
-        x2 = 1200,
-        y2 = 5700
+        x2 = 6500,
+        y2 = 6500
+    }, {
+        x = 11100,
+        y = 6300,
+        x2 = 11400,
+        y2 = 6500,
+        subtitle = "Ship"
     }}
 }, {
     key = "military fuel depot",
@@ -1106,7 +1112,7 @@ return {{
 }, {
     key = "Louisville",
     difficulty = 2,
-    title = "Shipping Port",
+    subtitle = "Shipping Port",
     mod = "SimonMDLVHarbor",
     bounds = {{
         x = 12300,

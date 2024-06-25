@@ -7,51 +7,26 @@ local modList
 -- Adds an entry to the bounds table
 function PhunZones:add(data)
 
-    local key = data.key
-
-    if not modList then
-        modList = getActivatedMods()
-    end
-
-    local title = data.title or data.name
-    local subtitle = data.subtitle or nil
-    local isVanilla = data.isVanilla == true or nil
-    local mod = data.mod or nil
-    local pvp = data.pvp == true
-    if mod and data.isVanilla == true then
-        mod = data.mod
-    end
-
-    if not self.zones[key] then
-        self.zones[key] = {
-            key = key,
-            difficulty = data.difficulty or 1,
-            isVanilla = isVanilla,
-            noAnnounce = data.noAnnounce == true or nil,
-            title = title,
-            mod = mod,
-            subtitle = subtitle,
-            isVoid = data.isVoid == true or nil,
-            pvp = pvp
-        }
-    end
-
-    local z = self.zones[key]
-
-    for _, v in ipairs(data.bounds or {}) do
-        table.insert(self.bounds, {
+    for i = #data, 1, -1 do
+        local v = data[i]
+        local z = self.zones[v.key]
+        -- force each entry to the beggining of the table
+        -- so that subsequent entries "override" previous ones
+        local entry = {
             x = v.x,
             y = v.y,
             x2 = v.x2,
             y2 = v.y2,
-            key = key,
-            title = v.title or z.title,
+            key = z.key,
+            title = v.title or z.title or "Unknown",
             mod = v.mod or z.mod,
             subtitle = v.subtitle or z.subtitle,
             difficulty = v.difficulty or z.difficulty or 1,
             pvp = v.pvp or z.pvp,
             _key = v.x .. "_" .. v.y .. "_" .. v.x2 .. "_" .. v.y2
-        })
+        }
+        PhunTools:printTable(entry)
+        table.insert(self.bounds, entry)
     end
 
 end
@@ -60,16 +35,65 @@ end
 function PhunZones:reload()
     local data = PhunTools:loadTable("PhunZones.lua")
     if data then
+
         self.zones = {}
-        self.bounds = {}
-        for k, v in pairs(data) do
-            self:add(v)
+
+        local bounds = {}
+
+        if not modList then
+            modList = getActivatedMods()
         end
-        local bounds = self.bounds
-        ModData.add(self.name, {
-            bounds = bounds
-        })
-        ModData.transmit(self.name)
+        for _, v in ipairs(data or {}) do
+            local title = v.title or data.name
+            local subtitle = v.subtitle or nil
+            local isVanilla = v.isVanilla == true or nil
+            local mod = v.mod or nil
+            local pvp = v.pvp == true
+            if mod and v.isVanilla == true then
+                mod = v.mod
+            end
+            local key = v.key
+            local isVanilla = v.isVanilla == true or nil
+            if isVanilla or mod == nil or modList:contains(mod) then
+                if not self.zones[key] then
+                    self.zones[key] = {
+                        key = key,
+                        difficulty = v.difficulty or 1,
+                        isVanilla = isVanilla,
+                        noAnnounce = v.noAnnounce == true or nil,
+                        title = title,
+                        mod = mod,
+                        subtitle = subtitle,
+                        isVoid = v.isVoid == true or nil,
+                        pvp = pvp
+                    }
+                elseif v.title and not self.zones[key].title then
+                    self.zones[key].title = title
+                end
+                if v.bounds then
+                    for _, vv in ipairs(v.bounds) do
+                        vv.key = key
+                        vv.title = vv.title or title
+                        vv.subtitle = vv.subtitle or subtitle
+                        vv.noAnnounce = vv.noAnnounce or v.noAnnounce or nil
+                        -- vv.difficulty = vv.difficulty or data.difficulty or 1
+                        vv.isVoid = vv.isVoid or v.isVoid or nil
+                        table.insert(bounds, vv)
+                    end
+                end
+            else
+                print("Skipping " .. tostring(key) .. " because mod " .. tostring(mod) .. " is not active")
+
+            end
+
+        end
+
+        self.bounds = {}
+        self:add(bounds)
+
+        -- readd to moddata for persistence and easy client sync?
+        ModData.add(self.name .. "_zones", self.zones)
+        ModData.add(self.name .. "_bounds", self.bounds)
     end
 end
 
@@ -126,9 +150,10 @@ Commands[PhunZones.commands.reload] = function()
     PhunZones:reload()
 end
 
-Commands[PhunZones.commands.requestData] = function(playerObj)
-    sendServerCommand(playerObj, PhunZones.name, PhunZones.commands.requestData, PhunZones.bounds)
-end
+-- Commands[PhunZones.commands.requestData] = function(playerObj)
+--     ModData.transmit(playerObj, PhunZones.name .. "_zones")
+--     ModData.transmit(playerObj, PhunZones.name .. "_bounds")
+-- end
 
 Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
     if module == PhunZones.name and Commands[command] then

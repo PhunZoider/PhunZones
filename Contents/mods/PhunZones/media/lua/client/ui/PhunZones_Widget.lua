@@ -134,6 +134,7 @@ function PhunZonesWidget:rebuild()
             summary = PhunRunners:getSummary(player) or {}
             self.cached = {
                 title = title,
+                subtitle = subtitle,
                 pvpTexture = pvpTexture,
                 difficulty = difficulty,
                 titleWidth = titleWidth,
@@ -152,6 +153,7 @@ function PhunZonesWidget:rebuild()
         else
             self.cached = {
                 title = title,
+                subtitle = subtitle,
                 pvpTexture = pvpTexture,
                 difficulty = difficulty,
                 titleWidth = titleWidth
@@ -228,6 +230,13 @@ function PhunZonesWidget:onMouseMove(dx, dy)
         if self:isMouseOver() then
             self:doTooltip()
         end
+    end
+end
+
+function PhunZonesWidget:onRightMouseUp(x, y)
+    if isAdmin() then
+        local context = ISContextMenu.get(self.pIndex, getMouseX(), getMouseY());
+        context = ISInventoryPaneContextMenu.createMenu(self.pIndex, true, {}, getMouseX(), getMouseY());
     end
 end
 

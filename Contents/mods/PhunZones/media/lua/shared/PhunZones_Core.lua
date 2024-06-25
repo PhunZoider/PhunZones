@@ -114,10 +114,16 @@ end
 function PhunZones:ini()
     if not self.inied then
         self.inied = true
-        local data = ModData.getOrCreate(self.name).bounds or {}
-        self.bounds = data
+        -- load cached data
+        self.zones = ModData.getOrCreate(self.name .. "_zones")
+        self.bounds = ModData.getOrCreate(self.name .. "_bounds")
         if isServer() then
+            -- trigger redoing cached data from file
             self:reload()
+        elseif isClient() then
+            -- request new data so we have the latest
+            ModData.request(self.name .. "_zones")
+            ModData.request(self.name .. "_bounds")
         end
     end
 
