@@ -144,11 +144,11 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
             if location.noAnnounce then
                 return
             end
-            if sandbox.PhunZones_ShowPvP then
-                oldLocation = oldLocation or {}
-                if location.title ~= oldLocation.title or location.subtitle ~= oldLocation.subtitle then
-                    PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)
-                end
+            -- if sandbox.PhunZones_ShowPvP then
+            oldLocation = oldLocation or {}
+            if location.title ~= oldLocation.title or location.subtitle ~= oldLocation.subtitle then
+                PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)
             end
+            -- end
         end
     end)

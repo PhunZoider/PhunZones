@@ -122,6 +122,9 @@ function PhunZonesWidget:rebuild()
     if pData then
         local data = pData
         local title = data.title or ""
+        if data.void then
+            title = "Hiding"
+        end
         local subtitle = data.subtitle or ""
         if string.len(subtitle) > 0 then
             title = title .. " (" .. subtitle .. ")"

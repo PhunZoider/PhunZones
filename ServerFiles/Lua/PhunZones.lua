@@ -168,6 +168,12 @@ return {{
         y = 2118,
         x2 = 2723,
         y2 = 2879
+    }, {
+        x = 7707,
+        y = 4527,
+        x2 = 8262,
+        y2 = 5086,
+        subtitle = "Shipyard"
     }}
 }, {
     key = "TrimbleCountyPowerStation",
@@ -458,6 +464,24 @@ return {{
         y = 6300,
         x2 = 10799,
         y2 = 6899
+    }}
+}, {
+    key = "CorOTRroad",
+    difficulty = 2,
+    title = "BFE",
+    mod = "CorOTRroad",
+    bounds = {{
+        x = 10500,
+        y = 6000,
+        x2 = 10799,
+        y2 = 6300,
+        title = "Golden Pond" -- FIIK what to call this
+    }, {
+        x = 10800,
+        y = 6000,
+        x2 = 11099,
+        y2 = 6300,
+        title = "Hicksville" -- FIIK what to call this
     }}
 }, {
     key = "Otr",
