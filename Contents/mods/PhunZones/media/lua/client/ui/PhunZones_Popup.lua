@@ -4,6 +4,7 @@ end
 PhunZonesWelcome = ISPanel:derive("PhunZonesWelcome");
 PhunZonesWelcome.instances = {}
 local PhunZones = PhunZones
+local PhunRunners = PhunRunners
 local sandbox = SandboxVars.PhunZones
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
@@ -19,7 +20,7 @@ function PhunZonesWelcome.OnOpenPanel(playerObj, location, oldLocation)
         local width = 1 * FONT_SCALE
         local height = 1 * FONT_SCALE
         local x = (core:getScreenWidth() - width) / 2
-        local y = (core:getScreenHeight() - height) / 2
+        local y = ((core:getScreenHeight() - height) / 2) + 200
 
         local pIndex = playerObj:getPlayerNum()
         local instances = PhunZonesWelcome.instances
@@ -66,7 +67,34 @@ function PhunZonesWelcome:render()
                 y = y + FONT_HGT_MEDIUM + 5
             end
 
-            if location.difficulty > 0 then
+            if PhunRunners then
+
+                if sandbox.PhunZones_Pips then
+                    local riskData = PhunZones:getRiskInfo(self.player)
+
+                    if riskData then
+                        local colors = {
+                            r = 0.4,
+                            g = 0.4,
+                            b = 0.4,
+                            a = 1.0
+                        }
+                        if riskData.restless == false or riskData.risk == 0 then
+                            colors.g = 0.9
+                        elseif riskData.risk <= 10 then
+                            colors.g = 0.9
+                            colors.r = 0.9
+                        else
+                            colors.r = 0.9
+                        end
+                        local l = (self.width / 2) - ((riskData.pips * 7) / 2)
+                        for i = 1, riskData.pips do
+                            self:drawRect(l + ((i - 1) * 7), y, 5, 5, self.alphaBits, colors.r, colors.g, colors.b);
+                        end
+                    end
+                end
+
+            elseif location.difficulty > 0 then
                 local l = (self.width / 2) - ((location.difficulty * 25) / 2)
                 local s = sandbox
 

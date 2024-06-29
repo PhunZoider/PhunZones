@@ -27,6 +27,33 @@ for _, event in pairs(PhunZones.events) do
     end
 end
 
+local calculatePips = function(risk)
+    -- Ensure the risk is within the valid range
+    if risk < 0 then
+        risk = 0
+    end
+    if risk > 100 then
+        risk = 100
+    end
+    -- Calculate the number of pips
+    local pips = math.ceil(risk / 10)
+    return pips
+end
+
+function PhunZones:getRiskInfo(playerObj)
+
+    if playerObj and PhunRunners then
+        local riskData = PhunRunners:getPlayerData(playerObj)
+        return {
+            risk = riskData.risk or 0,
+            pips = calculatePips(riskData.risk or 0),
+            restless = riskData.restless == true,
+            spawnSprinters = riskData.spawnSprinters == true
+        }
+    end
+
+end
+
 -- iterate through all bounds and create an internal key
 function PhunZones:buildBoundKeys()
     for _, v in ipairs(self.bounds) do

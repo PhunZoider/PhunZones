@@ -3,7 +3,7 @@ if not isClient() then
 end
 PhunZonesWidget = ISPanel:derive("PhunZonesWidget");
 PhunZonesWidget.instances = {}
-
+local PhunRunners = PhunRunners
 local PhunZones = PhunZones
 local sandbox = SandboxVars.PhunZones
 
@@ -55,6 +55,21 @@ function PhunZonesWidget:close()
     PhunZonesWidget.instances[self.pIndex] = nil
 end
 
+local calculatPips = function(risk)
+    -- Ensure the risk is within the valid range
+    if risk < 0 then
+        risk = 0
+    end
+    if risk > 100 then
+        risk = 100
+    end
+
+    -- Calculate the number of pips
+    local pips = math.ceil(risk / 10)
+
+    return pips
+end
+
 function PhunZonesWidget:prerender()
     ISPanel.prerender(self);
 
@@ -67,39 +82,62 @@ function PhunZonesWidget:prerender()
         self.backgroundColor = self.normalBackgroundColor
     end
 
+    local zone = PhunZones.players[self.player:getUsername()] or {}
+
+    local title = zone.title or ""
+    if zone.void then
+        title = "Hiding"
+    end
+    local subtitle = zone.subtitle or ""
+    local pvpTexture = (zone.pvp and self.pvpOnTexture) or nil
+
     local x = 1
     local cached = self.cached or {}
-    if cached.pvpTexture then
-        self:drawTextureScaledAspect(self.cached.pvpTexture, 1, 1, 30, 30, 1);
+    if pvpTexture then
+        self:drawTextureScaledAspect(pvpTexture, 1, 1, 30, 30, 1);
         x = 32
     end
 
-    self:drawText(cached.title or "", x, 1, 0.7, 0.7, 0.7, 1.0, UIFont.Medium);
+    local width = getTextManager():MeasureStringX(UIFont.Small, title or "")
+    if width > self.width then
+        self.width = width
+    end
 
+    self:drawText(title or "", x, 1, 0.7, 0.7, 0.7, 1.0, UIFont.Medium);
     local y = FONT_HGT_MEDIUM + 1
-    -- for pips
-    if sandbox.PhunZones_Widget and cached.risk then
-        local colors = {
-            r = 0.4,
-            g = 0.4,
-            b = 0.4,
-            a = 1.0
-        }
-        if cached.restless ~= nil then
-            if not cached.restless then
-                colors.g = 0.9
-            elseif cached.risk < 20 then
-                colors.g = 0.9
-                colors.r = 0.9
-            else
-                colors.r = 0.9
-            end
+    if subtitle and string.len(subtitle) > 0 then
+        self:drawText(subtitle or "", x, y, 0.7, 0.7, 0.7, 1.0, UIFont.Small);
+        local subWidth = getTextManager():MeasureStringX(UIFont.Small, title or "")
+        if subWidth > self.width then
+            self.width = subWidth
         end
-        for i = 1, 10 do
-            if (i * 10) < cached.risk then
-                self:drawRect(x + ((i - 1) * 7), y, 5, 5, colors.a, colors.r, colors.g, colors.b);
-            else
-                break
+        y = y + FONT_HGT_SMALL + 1
+    end
+    -- for pips
+    if sandbox.PhunZones_Widget and PhunRunners then
+        local riskData = PhunZones:getRiskInfo(self.player)
+
+        if riskData then
+            local colors = {
+                r = 0.4,
+                g = 0.4,
+                b = 0.4,
+                a = 1.0
+            }
+            if riskData then
+
+                if riskData.restless == false or riskData.risk == 0 then
+                    colors.g = 0.9
+                elseif riskData.risk <= 10 then
+                    colors.g = 0.9
+                    colors.r = 0.9
+                else
+                    colors.r = 0.9
+                end
+
+                for i = 1, riskData.pips do
+                    self:drawRect(x + ((i - 1) * 7), y, 5, 5, colors.a, colors.r, colors.g, colors.b);
+                end
             end
         end
     end
@@ -167,29 +205,66 @@ function PhunZonesWidget:rebuild()
 end
 
 function PhunZonesWidget:doTooltip()
+
     local rectWidth = 10;
-    local cached = self.cached or {}
-    if cached and cached.riskTitle then
-        local titleLength = cached.riskTitleWidth;
-        local descriptionLength = cached.riskDescriptionWidth;
-        local textLength = titleLength;
-        if descriptionLength > textLength then
-            textLength = descriptionLength
-        end
 
-        local titleHeight = cached.riskTitleHeight;
-        local descriptionHeight = cached.riskDescriptionHeight;
-        local heightPadding = 2
-        local rectHeight = titleHeight + descriptionHeight + (heightPadding * 3);
+    local zone = PhunZones.players[self.player:getUsername()] or {}
+    local runners = PhunRunners:getPlayerData(self.player)
 
-        local x = self:getMouseX() + 20;
-        local y = self:getMouseY() + 20;
-
-        self:drawRect(x, y, rectWidth + textLength, rectHeight, 1.0, 0.0, 0.0, 0.0);
-        self:drawRectBorder(x, y, rectWidth + textLength, rectHeight, 0.7, 0.4, 0.4, 0.4);
-        self:drawText(self.cached.riskTitle or "???", x + 2, y + 2, 1, 1, 1, 1);
-        self:drawText(self.cached.riskDescription or "???", x + 2, y + titleHeight + (heightPadding * 2), 1, 1, 1, 0.7);
+    local title = zone.title or ""
+    if zone.void then
+        title = "Hiding"
     end
+    local subtitle = zone.subtitle or ""
+    local pvpTexture = (zone.pvp and self.pvpOnTexture) or nil
+    local difficulty = zone.difficulty or 0
+    local titleWidth = getTextManager():MeasureStringX(UIFont.Medium, title)
+    local summary = PhunRunners:getSummary(self.player) or {}
+
+    local cached = {
+        title = title,
+        subtitle = subtitle,
+        pvpTexture = pvpTexture,
+        difficulty = difficulty,
+        titleWidth = titleWidth,
+        spawnSprinters = summary.spawnSprinters == true,
+        restless = summary.restless == true,
+        risk = summary.risk or 0,
+        riskTitle = summary.title or "",
+        riskSubtitle = summary.subtitle or nil,
+        riskTitleWidth = getTextManager():MeasureStringX(UIFont.Small, summary.title or ""),
+        riskTitleHeight = getTextManager():MeasureStringY(UIFont.Small, summary.title or ""),
+        riskSubTitleHeight = getTextManager():MeasureStringY(UIFont.Small, summary.subtitle or ""),
+        riskDescription = summary.description or "",
+        riskDescriptionWidth = getTextManager():MeasureStringX(UIFont.Small, summary.description or ""),
+        riskDescriptionHeight = getTextManager():MeasureStringY(UIFont.Small, summary.description or "")
+    }
+
+    local titleLength = cached.riskTitleWidth;
+    local descriptionLength = cached.riskDescriptionWidth;
+    local textLength = titleLength;
+    if descriptionLength > textLength then
+        textLength = descriptionLength
+    end
+
+    local titleHeight = cached.riskTitleHeight;
+    local subTitleHeight = cached.riskSubTitleHeight;
+    local descriptionHeight = cached.riskDescriptionHeight;
+    local heightPadding = 2
+    local rectHeight = titleHeight + subTitleHeight + descriptionHeight + (heightPadding * 3);
+
+    local x = self:getMouseX() + 20;
+    local y = self:getMouseY() + 20;
+
+    self:drawRect(x, y, rectWidth + textLength, rectHeight, 1.0, 0.0, 0.0, 0.0);
+    self:drawRectBorder(x, y, rectWidth + textLength, rectHeight, 0.7, 0.4, 0.4, 0.4);
+    self:drawText(self.cached.riskTitle or "???", x + 2, y + 2, 1, 1, 1, 1);
+    if self.cached.riskSubtitle then
+        self:drawText(self.cached.riskSubtitle or "???", x + 2, y + titleHeight + heightPadding, 1, 1, 1, 0.7);
+    end
+    self:drawText(self.cached.riskDescription or "???", x + 2, y + titleHeight + subTitleHeight + (heightPadding * 3),
+        1, 1, 1, 0.7);
+
 end
 
 function PhunZonesWidget:onClick()
@@ -287,6 +362,7 @@ function PhunZonesWidget:new(x, y, width, height, player)
     o.cached = {}
     o.userPosition = false
     o.pIndex = player:getPlayerNum()
+    o.player = player
     o.zOffsetLargeFont = 25;
     o.zOffsetMediumFont = 20;
     o.zOffsetSmallFont = 6;
@@ -314,4 +390,3 @@ function PhunZonesWidget:SaveLayout(name, layout)
         layout.userPosition = 'false'
     end
 end
-
