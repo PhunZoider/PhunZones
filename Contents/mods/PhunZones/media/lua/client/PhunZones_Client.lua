@@ -11,7 +11,9 @@ end
 local function updatePlayers()
     for i = 0, getOnlinePlayers():size() - 1 do
         local p = getOnlinePlayers():get(i)
-        updatePlayer(p)
+        if p:isLocalPlayer() then
+            updatePlayer(p)
+        end
     end
 end
 
@@ -57,7 +59,9 @@ local function setup()
     if sandbox.PhunZones_Widget then
         for i = 1, getOnlinePlayers():size() do
             local p = getOnlinePlayers():get(i - 1)
-            PhunZonesWidget.OnOpenPanel(p)
+            if p:isLocalPlayer() then
+                PhunZonesWidget.OnOpenPanel(p)
+            end
         end
     end
     PhunZones:ini()
@@ -91,7 +95,9 @@ Events.OnGameStart.Add(function()
     if sandbox.PhunZones_Widget then
         for i = 1, getOnlinePlayers():size() do
             local p = getOnlinePlayers():get(i - 1)
-            PhunZonesWidget.OnOpenPanel(p):rebuild()
+            if p:isLocalPlayer() then
+                PhunZonesWidget.OnOpenPanel(p):rebuild()
+            end
         end
     end
 end)
@@ -114,8 +120,10 @@ if PhunRunners then
         if sandbox.PhunZones_Widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)
-                local instance = PhunZonesWidget.OnOpenPanel(p)
-                instance:rebuild()
+                if p:isLocalPlayer() then
+                    local instance = PhunZonesWidget.OnOpenPanel(p)
+                    instance:rebuild()
+                end
             end
         end
     end)
@@ -126,7 +134,9 @@ if PhunStats then
         if sandbox.PhunZones_Widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)
-                PhunZonesWidget.OnOpenPanel(p):rebuild()
+                if p:isLocalPlayer() then
+                    PhunZonesWidget.OnOpenPanel(p):rebuild()
+                end
             end
         end
     end)

@@ -85,20 +85,23 @@ function PhunZonesWidget:prerender()
     local zone = PhunZones.players[self.player:getUsername()] or {}
 
     local title = zone.title or ""
-    if zone.void then
+    if string.len(title) == 0 and zone.isVoid then
         title = "Hiding"
+    elseif string.len(title) == 0 then
+        title = "Wilderness"
     end
+
     local subtitle = zone.subtitle or ""
     local pvpTexture = (zone.pvp and self.pvpOnTexture) or nil
 
-    local x = 1
+    local x = 10
     local cached = self.cached or {}
     if pvpTexture then
         self:drawTextureScaledAspect(pvpTexture, 1, 1, 30, 30, 1);
-        x = 32
+        x = 42
     end
 
-    local width = getTextManager():MeasureStringX(UIFont.Small, title or "")
+    local width = getTextManager():MeasureStringX(UIFont.Medium, title or "") + 20
     if width > self.width then
         self.width = width
     end
@@ -107,7 +110,7 @@ function PhunZonesWidget:prerender()
     local y = FONT_HGT_MEDIUM + 1
     if subtitle and string.len(subtitle) > 0 then
         self:drawText(subtitle or "", x, y, 0.7, 0.7, 0.7, 1.0, UIFont.Small);
-        local subWidth = getTextManager():MeasureStringX(UIFont.Small, title or "")
+        local subWidth = getTextManager():MeasureStringX(UIFont.Small, title or "") + 20
         if subWidth > self.width then
             self.width = subWidth
         end
@@ -137,6 +140,12 @@ function PhunZonesWidget:prerender()
 
                 for i = 1, riskData.pips do
                     self:drawRect(x + ((i - 1) * 7), y, 5, 5, colors.a, colors.r, colors.g, colors.b);
+                end
+
+                if self:isMouseOver() then
+                    for i = riskData.pips + 1, 10 do
+                        self:drawRectBorder(x + ((i - 1) * 7), y, 5, 5, 0.7, 0.4, 0.4, 0.4);
+                    end
                 end
             end
         end
@@ -234,7 +243,8 @@ function PhunZonesWidget:doTooltip()
         riskSubtitle = summary.subtitle or nil,
         riskTitleWidth = getTextManager():MeasureStringX(UIFont.Small, summary.title or ""),
         riskTitleHeight = getTextManager():MeasureStringY(UIFont.Small, summary.title or ""),
-        riskSubTitleHeight = getTextManager():MeasureStringY(UIFont.Small, summary.subtitle or ""),
+        riskSubTitleHeight = string.len(subtitle) > 0 and
+            getTextManager():MeasureStringY(UIFont.Small, summary.subtitle or "") or 0,
         riskDescription = summary.description or "",
         riskDescriptionWidth = getTextManager():MeasureStringX(UIFont.Small, summary.description or ""),
         riskDescriptionHeight = getTextManager():MeasureStringY(UIFont.Small, summary.description or "")
@@ -258,12 +268,12 @@ function PhunZonesWidget:doTooltip()
 
     self:drawRect(x, y, rectWidth + textLength, rectHeight, 1.0, 0.0, 0.0, 0.0);
     self:drawRectBorder(x, y, rectWidth + textLength, rectHeight, 0.7, 0.4, 0.4, 0.4);
-    self:drawText(self.cached.riskTitle or "???", x + 2, y + 2, 1, 1, 1, 1);
+    self:drawText(cached.riskTitle or "???", x + 2, y + 2, 1, 1, 1, 1);
     if self.cached.riskSubtitle then
-        self:drawText(self.cached.riskSubtitle or "???", x + 2, y + titleHeight + heightPadding, 1, 1, 1, 0.7);
+        self:drawText(cached.riskSubtitle or "???", x + 2, y + titleHeight + heightPadding, 1, 1, 1, 0.7);
     end
-    self:drawText(self.cached.riskDescription or "???", x + 2, y + titleHeight + subTitleHeight + (heightPadding * 3),
-        1, 1, 1, 0.7);
+    self:drawText(cached.riskDescription or "???", x + 2, y + titleHeight + subTitleHeight + (heightPadding * 3), 1, 1,
+        1, 0.7);
 
 end
 
