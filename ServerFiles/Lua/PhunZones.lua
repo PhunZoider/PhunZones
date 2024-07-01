@@ -1023,7 +1023,7 @@ return {{
     }}
 }, {
     key = "RavenCreek",
-    difficulty = 2,
+    difficulty = 3,
     title = "Raven Creek Village",
     mod = "RavenCreek",
     bounds = {{
@@ -1061,6 +1061,19 @@ return {{
         y = 12000,
         x2 = 4339,
         y2 = 12590
+    }, {
+        x = 4193,
+        y = 11100,
+        x2 = 4400,
+        y2 = 11220,
+        subtitle = "Infection Control",
+        difficulty = 4
+    }, {
+        x = 4400,
+        y = 11100,
+        x2 = 4714,
+        y2 = 11220,
+        subtitle = "Expressway"
     }}
 }, {
     key = "NWBlockade",
