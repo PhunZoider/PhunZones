@@ -1074,6 +1074,13 @@ return {{
         x2 = 4714,
         y2 = 11220,
         subtitle = "Expressway"
+    }, {
+        x = 3100,
+        y = 12175,
+        x2 = 3553,
+        y2 = 12800,
+        difficulty = 4,
+        subtitle = "City Port"
     }}
 }, {
     key = "NWBlockade",
