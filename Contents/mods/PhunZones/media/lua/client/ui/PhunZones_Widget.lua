@@ -218,7 +218,7 @@ function PhunZonesWidget:doTooltip()
     local rectWidth = 10;
 
     local zone = PhunZones.players[self.player:getUsername()] or {}
-    local runners = PhunRunners:getPlayerData(self.player)
+    local runners = PhunRunners and PhunRunners:getPlayerData(self.player) or {}
 
     local title = zone.title or ""
     if zone.void then
@@ -228,7 +228,7 @@ function PhunZonesWidget:doTooltip()
     local pvpTexture = (zone.pvp and self.pvpOnTexture) or nil
     local difficulty = zone.difficulty or 0
     local titleWidth = getTextManager():MeasureStringX(UIFont.Medium, title)
-    local summary = PhunRunners:getSummary(self.player) or {}
+    local summary = PhunRunners and PhunRunners.getSummary and PhunRunners:getSummary(self.player) or {}
 
     local cached = {
         title = title,
