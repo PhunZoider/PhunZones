@@ -118,7 +118,7 @@ function PhunZonesWidget:prerender()
     end
     -- for pips
     if sandbox.PhunZones_Widget and PhunRunners then
-        local riskData = PhunZones:getRiskInfo(self.player)
+        local riskData = PhunZones:getRiskInfo(self.player, zone)
 
         if riskData then
             local colors = {
@@ -128,14 +128,26 @@ function PhunZonesWidget:prerender()
                 a = 1.0
             }
             if riskData then
-
-                if riskData.restless == false or riskData.risk == 0 then
-                    colors.g = 0.9
-                elseif riskData.risk <= 10 then
-                    colors.g = 0.9
-                    colors.r = 0.9
+                if riskData.modifier == nil then
+                    -- assert old version
+                    if riskData.restless == false or riskData.risk == 0 then
+                        colors.g = 0.9
+                    elseif riskData.risk <= 10 then
+                        colors.g = 0.9
+                        colors.r = 0.9
+                    else
+                        colors.r = 0.9
+                    end
                 else
-                    colors.r = 0.9
+                    -- new version which includes modifier
+                    if riskData.modifier == 0 or riskData.risk == 0 then
+                        colors.g = 0.9
+                    elseif riskData.modifier and riskData.modifier < 90 then
+                        colors.g = 0.9
+                        colors.r = 0.9
+                    else
+                        colors.r = 0.9
+                    end
                 end
 
                 for i = 1, riskData.pips do
@@ -228,7 +240,7 @@ function PhunZonesWidget:doTooltip()
     local pvpTexture = (zone.pvp and self.pvpOnTexture) or nil
     local difficulty = zone.difficulty or 0
     local titleWidth = getTextManager():MeasureStringX(UIFont.Medium, title)
-    local summary = PhunRunners and PhunRunners.getSummary and PhunRunners:getSummary(self.player) or {}
+    local summary = PhunRunners and PhunRunners.getSummary and PhunRunners:getSummary(self.player, zone) or {}
 
     local cached = {
         title = title,

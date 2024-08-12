@@ -39,7 +39,7 @@ return {{
     isVanilla = true,
     title = "Muldraugh",
     bounds = {{
-        x = 10590,
+        x = 10516,
         y = 9300,
         x2 = 11000,
         y2 = 10700
@@ -144,6 +144,209 @@ return {{
         y2 = 6597
     }}
 }, {
+    key = "TheRomero",
+    title = "The Romero",
+    difficulty = 4,
+    subtitle = "Ship of the dead",
+    mod = "TheRomero",
+    bounds = {{
+        x = 11894,
+        y = 1240,
+        x2 = 11985,
+        y2 = 1506
+    }}
+}, {
+    key = "Elliot Pond",
+    title = "Elliot Pond",
+    difficulty = 2,
+    mod = "Elliot Pond",
+    bounds = {{
+        x = 3902,
+        y = 13501,
+        x2 = 7489,
+        y2 = 15593
+    }}
+}, {
+    key = "RallyMap",
+    title = "Rally",
+    difficulty = 2,
+    mod = "RallyMap",
+    bounds = {{
+        x = 14999,
+        y = 4199,
+        x2 = 16195,
+        y2 = 5095
+    }}
+}, {
+    key = "LyzzExotics",
+    title = "Exotics Rest Area",
+    difficulty = 2,
+    mod = "LyzzExotics",
+    bounds = {{
+        x = 6900,
+        y = 11100,
+        x2 = 7197,
+        y2 = 11396
+    }}
+}, {
+    key = "NorthKillian",
+    title = "Killian County",
+    difficulty = 2,
+    mod = "NorthKillian",
+    bounds = {{
+        x = 7206,
+        y = 8702,
+        x2 = 8689,
+        y2 = 9590
+    }, {
+        x = 7209,
+        y = 9101,
+        x2 = 7599,
+        y2 = 9441,
+        difficulty = 3,
+        subtitle = "Sorian City"
+    }, {
+        x = 7811,
+        y = 8999,
+        x2 = 7974,
+        y2 = 9222,
+        difficulty = 4,
+        subtitle = "Alcatraz"
+    }, {
+        x = 8134,
+        y = 8869,
+        x2 = 8620,
+        y2 = 9293,
+        difficulty = 3,
+        subtitle = "EdeyVille"
+    }, {
+        x = 7256,
+        y = 8706,
+        x2 = 7498,
+        y2 = 8871,
+        subtitle = "Zuley Town"
+    }}
+}, {
+    key = "KillianCountryCenter",
+    title = "Killian Country",
+    difficulty = 3,
+    mod = "KillianCountryCenter",
+    bounds = {{
+        x = 7499,
+        y = 9590,
+        x2 = 8099,
+        y2 = 10198
+    }}
+}, {
+    key = "Coryerdon",
+    title = "Coryerdon",
+    difficulty = 3,
+    mod = "coryerdon",
+    bounds = {{
+        x = 7794,
+        y = 5719,
+        x2 = 9883,
+        y2 = 6220
+    }, {
+        x = 7794,
+        y = 6220,
+        x2 = 9298,
+        y2 = 6596
+    }, {
+        x = 8356,
+        y = 6596,
+        x2 = 9010,
+        y2 = 7191
+    }}
+}, {
+    key = "Jasperville",
+    title = "Jasperville",
+    difficulty = 3,
+    mod = "Jasperville",
+    bounds = {{
+        x = 4807,
+        y = 1503,
+        x2 = 6939,
+        y2 = 3288
+    }}
+}, {
+    key = "Leavenburg",
+    title = "Leavenburg",
+    difficulty = 3,
+    mod = "Leavenburg",
+    bounds = {{
+        x = 5402,
+        y = 3871,
+        x2 = 6337,
+        y2 = 4475
+    }}
+}, {
+    key = "SimonMDValuTechAmusementPark",
+    title = "Amusement Park",
+    difficulty = 3,
+    mod = "SimonMDValuTechAmusementPark",
+    bounds = {{
+        x = 13503,
+        y = 4201,
+        x2 = 13796,
+        y2 = 4794
+    }}
+}, {
+    key = "nuke17x36Dunno",
+    title = "Truckers Paradise",
+    difficulty = 3,
+    mod = "nuke17x36",
+    bounds = {{
+        x = 5226,
+        y = 11110,
+        x2 = 5369,
+        y2 = 11190
+    }}
+}, {
+    key = "nuke17x36",
+    title = "Trucker Stop",
+    difficulty = 3,
+    mod = "nuke17x36",
+    bounds = {{
+        x = 5109,
+        y = 10830,
+        x2 = 5260,
+        y2 = 11000
+    }}
+}, {
+    key = "nuke37x22",
+    title = "Railyard",
+    difficulty = 3,
+    mod = "nuke37x22",
+    bounds = {{
+        x = 11100,
+        y = 9600,
+        x2 = 11400,
+        y2 = 9900
+    }}
+}, {
+    key = "nuke22x22",
+    title = "Construction Site",
+    difficulty = 3,
+    mod = "nuke22x22",
+    bounds = {{
+        x = 6600,
+        y = 6600,
+        x2 = 6890,
+        y2 = 6890
+    }}
+}, {
+    key = "VSTOWN",
+    title = "Vally Station Town",
+    difficulty = 3,
+    mod = "VSTOWN",
+    bounds = {{
+        x = 13800,
+        y = 4800,
+        x2 = 14690,
+        y2 = 5090
+    }}
+}, {
     key = "Dirkerdam",
     difficulty = 2,
     title = "Dirkerdam",
@@ -173,6 +376,7 @@ return {{
         y = 4527,
         x2 = 8262,
         y2 = 5086,
+        difficulty = 3,
         subtitle = "Shipyard"
     }}
 }, {
@@ -185,6 +389,42 @@ return {{
         y = 3000,
         x2 = 18899,
         y2 = 4199
+    }, {
+        x = 15003,
+        y = 3902,
+        x2 = 15521,
+        y2 = 4109,
+        subtitle = "Crestwood"
+    }, {
+        x = 15631,
+        y = 3190,
+        x2 = 16207,
+        y2 = 3417,
+        subtitle = "La Grange"
+    }, {
+        x = 17126,
+        y = 3100,
+        x2 = 17361,
+        y2 = 3208,
+        subtitle = "Sulpher"
+    }, {
+        x = 18402,
+        y = 3574,
+        x2 = 18598,
+        y2 = 3856,
+        subtitle = "Campbellsburg"
+    }, {
+        x = 17983,
+        y = 3921,
+        x2 = 3921,
+        y2 = 4116,
+        subtitle = "New Castle"
+    }, {
+        x = 17272,
+        y = 3909,
+        x2 = 17490,
+        y2 = 4071,
+        subtitle = "Smithfield"
     }}
 }, {
     key = "hopewell_eng_zombies",

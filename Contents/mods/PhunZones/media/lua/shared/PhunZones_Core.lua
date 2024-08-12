@@ -47,6 +47,7 @@ function PhunZones:getRiskInfo(playerObj)
         return {
             risk = riskData.risk or 0,
             pips = calculatePips(riskData.risk or 0),
+            modifier = riskData.modifier,
             restless = riskData.restless == true,
             spawnSprinters = riskData.spawnSprinters == true
         }
