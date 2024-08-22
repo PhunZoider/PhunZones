@@ -79,14 +79,28 @@ function PhunZonesWelcome:render()
                             b = 0.4,
                             a = 1.0
                         }
-                        if riskData.restless == false or riskData.risk == 0 then
-                            colors.g = 0.9
-                        elseif riskData.risk <= 10 then
-                            colors.g = 0.9
-                            colors.r = 0.9
+                        if riskData.modifier == nil then
+                            -- assert old version
+                            if riskData.restless == false or riskData.risk == 0 then
+                                colors.g = 0.9
+                            elseif riskData.risk <= 10 then
+                                colors.g = 0.9
+                                colors.r = 0.9
+                            else
+                                colors.r = 0.9
+                            end
                         else
-                            colors.r = 0.9
+                            -- new version which includes modifier
+                            if riskData.modifier == 0 or riskData.risk == 0 then
+                                colors.g = 0.9
+                            elseif riskData.modifier and riskData.modifier < 90 then
+                                colors.g = 0.9
+                                colors.r = 0.9
+                            else
+                                colors.r = 0.9
+                            end
                         end
+
                         local l = (self.width / 2) - ((riskData.pips * 7) / 2)
                         for i = 1, riskData.pips do
                             self:drawRect(l + ((i - 1) * 7), y, 5, 5, self.alphaBits, colors.r, colors.g, colors.b);

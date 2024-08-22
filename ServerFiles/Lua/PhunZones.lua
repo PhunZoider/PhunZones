@@ -337,7 +337,7 @@ return {{
     }}
 }, {
     key = "VSTOWN",
-    title = "Vally Station Town",
+    title = "Valley Station Town",
     difficulty = 3,
     mod = "VSTOWN",
     bounds = {{

@@ -153,6 +153,16 @@ function PhunZones:ini()
             ModData.request(self.name .. "_zones")
             ModData.request(self.name .. "_bounds")
         end
+
+        -- print('- -- -- EVENTS --  - ')
+        -- local e = {}
+        -- for k, v in pairs(Events) do
+        --     table.insert(e, k)
+        -- end
+        -- table.sort(e, function(a, b)
+        --     return a < b
+        -- end)
+        -- PhunTools:printTable(e)
     end
 
 end
