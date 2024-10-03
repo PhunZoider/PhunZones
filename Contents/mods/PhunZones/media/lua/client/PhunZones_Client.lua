@@ -55,7 +55,7 @@ Events.OnServerCommand.Add(function(module, command, arguments)
 end)
 
 local function setup()
-    Events.EveryOneMinute.Remove(setup)
+    Events.OnTick.Remove(setup)
     if sandbox.PhunZones_Widget then
         for i = 1, getOnlinePlayers():size() do
             local p = getOnlinePlayers():get(i - 1)
@@ -69,18 +69,20 @@ local function setup()
     Events.OnPlayerUpdate.Add(throttleUpdatePlayer)
 end
 
-Events.EveryOneMinute.Add(setup)
+Events.OnTick.Add(setup)
 
 local initialized = false
+
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
 
-    if isClient() then
-        if tableName == PhunZones.name .. "_zones" and type(tableData) == "table" then
-            PhunZones.zones = tableData
-        elseif tableName == PhunZones.name .. "_bounds" and type(tableData) == "table" then
-            PhunZones.bounds = tableData
-        end
+    if tableName == PhunZones.name .. "_zones" and type(tableData) == "table" then
+        PhunZones.zones = tableData
+    elseif tableName == PhunZones.name .. "_bounds" and type(tableData) == "table" then
+        PhunZones.bounds = tableData
+        updatePlayers()
+        triggerEvent(PhunZones.events.OnPhunZoneReady)
     end
+
 end)
 
 Events.OnInitGlobalModData.Add(function()
@@ -116,7 +118,7 @@ Events[PhunZones.events.OnPhunZonesPlayerLocationChanged].Add(
     end)
 
 if PhunRunners then
-    Events[PhunRunners.events.OnPhunRunnersPlayerUpdated].Add(function(playerObj)
+    Events[PhunRunners.events.OnPlayerRiskUpdate].Add(function(playerObj, detail)
         if sandbox.PhunZones_Widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)

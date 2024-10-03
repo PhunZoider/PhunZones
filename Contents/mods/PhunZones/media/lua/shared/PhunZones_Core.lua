@@ -15,7 +15,8 @@ PhunZones = {
     events = {
         OnPhunZonesPlayerLocationChanged = "OnPhunZonesPlayerLocationChanged",
         OnPhunZoneWelcomeOpened = "OnPhunZoneWelcomeOpened",
-        OnPhunZoneWidgetClicked = "OnPhunZoneWidgetClicked"
+        OnPhunZoneWidgetClicked = "OnPhunZoneWidgetClicked",
+        OnPhunZoneReady = "OnPhunZoneReady"
     },
     bounds = {},
     zones = {}
