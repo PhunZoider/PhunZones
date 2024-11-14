@@ -4,7 +4,7 @@ local sandbox = SandboxVars.PhunZones
 if ModOptions and ModOptions.getInstance then
 
     local function onModOptionsApply(optionValues)
-        if optionValues.settings.options.show_widget == true then
+        if optionValues and optionValues.settings.options.show_widget == true then
             -- Open any closed panels
             if sandbox.PhunZones_Widget then
                 for i = 0, getOnlinePlayers():size() - 1 do

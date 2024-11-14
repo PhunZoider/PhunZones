@@ -1,7 +1,7 @@
-title=PhunZones
-name=PhunZones
-id=PhunZones
+title=PhunZonesS7
+name=PhunZonesS7
+id=PhunZonesS7
 authors=UburGeek
 description=Defines zones and behaviours in said zones
-require=PhunTools
+require=PhunToolsS7
 poster=poster.png

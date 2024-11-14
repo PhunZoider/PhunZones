@@ -25,7 +25,7 @@ function PhunZones:add(data)
             pvp = v.pvp or z.pvp,
             _key = v.x .. "_" .. v.y .. "_" .. v.x2 .. "_" .. v.y2
         }
-        PhunTools:printTable(entry)
+        -- PhunTools:printTable(entry)
         table.insert(self.bounds, entry)
     end
 

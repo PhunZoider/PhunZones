@@ -132,7 +132,7 @@ if PhunRunners then
 end
 
 if PhunStats then
-    Events[PhunStats.events.OnPhunStatsInied].Add(function(playerObj)
+    Events[PhunStats.events.OnPhunStatsInied or PhunStats.events.OnReady].Add(function(playerObj)
         if sandbox.PhunZones_Widget then
             for i = 1, getOnlinePlayers():size() do
                 local p = getOnlinePlayers():get(i - 1)

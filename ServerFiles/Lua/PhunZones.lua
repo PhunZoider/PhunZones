@@ -1404,4 +1404,308 @@ return {{
         x2 = 12600,
         y2 = 5000
     }}
+}, {
+    key = "Louisville",
+    difficulty = 2,
+    subtitle = "Riverboat",
+    mod = "Louisville_Riverboat",
+    bounds = {{
+        x = 12900,
+        y = 900,
+        x2 = 12930,
+        y2 = 930
+
+    }}
+
+}, {
+    key = "Purgatory",
+    title = "Purgatory",
+    difficulty = 2,
+    mod = "PurgatoryCity",
+    bounds = {{
+        x = 2700,
+        y = 8700,
+        x2 = 3900,
+        y2 = 9300
+
+    }}
+}, {
+    key = "NaturesVengeance",
+    title = "Nature's Vengeance",
+    difficulty = 2,
+    mod = "nv_township_v1",
+    bounds = {{
+        x = 6300,
+        y = 7800,
+        x2 = 6600,
+        y2 = 8100
+
+    }}
+}, {
+    key = "Millstin",
+    title = "Millstin",
+    difficulty = 2,
+    mod = "millstinwithwestpoint",
+    bounds = {{
+
+        x = 11100,
+        y = 7200,
+        x2 = 11700,
+        y2 = 8100
+    }}
+}, {
+    key = "Lighthousematrioshka",
+    difficulty = 2,
+    subtitle = "Lighthouse",
+    mod = "Lighthousematrioshka",
+    bounds = {{
+        x = 10800,
+        y = 6300,
+        x2 = 11100,
+        y2 = 6600
+
+    }}
+
+}, {
+    key = "savecity",
+    difficulty = 2,
+    title = "SaveCity",
+    mod = "savecity",
+    bounds = {{
+        x = 11700,
+        y = 7500,
+        x2 = 12000,
+        y2 = 7800
+
+    }}
+
+}, {
+    key = "SimonMDRRRR",
+    difficulty = 2,
+    title = "Rusty Rascals",
+    mod = "SimonMDRRRR",
+    bounds = {{
+        x = 14100,
+        y = 3300,
+        x2 = 14400,
+        y2 = 3600
+
+    }}
+
+}, {
+    key = "TWDterminus",
+    difficulty = 2,
+    title = "Terminus",
+    mod = "TWDterminus",
+    bounds = {{
+        x = 11400,
+        y = 10500,
+        x2 = 11700,
+        y2 = 11100
+
+    }}
+
+}, {
+    key = "TheRuinsofBracklewhyte",
+    difficulty = 2,
+    title = "Bracklewhyte",
+    mod = "TheRuinsofBracklewhyte",
+    bounds = {{
+        x = 5100,
+        y = 9000,
+        x2 = 5400,
+        y2 = 9300
+
+    }}
+}, {
+    key = "the_oasis",
+    difficulty = 2,
+    title = "Oasis",
+    mod = "the_oasis",
+    bounds = {{
+        x = 4800,
+        y = 9300,
+        x2 = 5400,
+        y2 = 9900
+
+    }}
+
+}, {
+    key = "Valley_Station_44-19",
+    difficulty = 2,
+    title = "Valley Station",
+    mod = "Valley_Station_44-19",
+    bounds = {{
+        x = 13200,
+        y = 5700,
+        x2 = 13500,
+        y2 = 6000
+
+    }}
+
+}, {
+    key = "Trapalaketown",
+    difficulty = 2,
+    title = "Trapalaketown",
+    mod = "Trapalaketown",
+    bounds = {{
+        x = 8400,
+        y = 11700,
+        x2 = 9000,
+        y2 = 12000
+
+    }}
+}, {
+    key = "The Yacht",
+    difficulty = 2,
+    title = "The Yacht",
+    mod = "The Yacht",
+    bounds = {{
+        x = 3600,
+        y = 5400,
+        x2 = 3900,
+        y2 = 5700
+
+    }}
+
+}, {
+    key = "Wellsburg",
+    difficulty = 2,
+    title = "Wellsburg Lake",
+    mod = "Wellsburg",
+    bounds = {{
+        x = 7500,
+        y = 10200,
+        x2 = 7800,
+        y2 = 10500
+
+    }}
+
+}, {
+    key = "Louisville",
+    difficulty = 3,
+    subtitle = "Custom Import Tuners",
+    mod = "WedTuners",
+    bounds = {{
+        x = 12300,
+        y = 2400,
+        x2 = 12600,
+        y2 = 2700
+
+    }}
+}, {
+    key = "Walter White House",
+    difficulty = 2,
+    title = "Walter White House",
+    mod = "Walter White House",
+    bounds = {{
+        x = 10800,
+        y = 6900,
+        x2 = 11100,
+        y2 = 7200
+
+    }}
+
+}, {
+    key = "White Forest Camp",
+    difficulty = 2,
+    title = "White Forest Camp",
+    mod = "White Forest Camp",
+    bounds = {{
+        x = 10200,
+        y = 8400,
+        x2 = 10500,
+        y2 = 8700
+
+    }}
+
+}, {
+    key = "WeyhausenByCallnmx",
+    difficulty = 2,
+    title = "Weyhausen",
+    mod = "WeyhausenByCallnmx",
+    bounds = {{
+        x = 5100,
+        y = 9300,
+        x2 = 5400,
+        y2 = 9600
+
+    }}
+}, {
+    key = "WesternScrapCarYard",
+    difficulty = 2,
+    title = "Western Scrapyard",
+    mod = "WesternScrapCarYard",
+    bounds = {{
+        x = 8700,
+        y = 9000,
+        x2 = 9000,
+        y2 = 9300
+
+    }}
+
+}, {
+    key = "MilitaryCheckpointWestPointAbisi",
+    difficulty = 3,
+    title = "Military Checkpoint",
+    mod = "MilitaryCheckpointWestPointAbisi",
+    bounds = {{
+        x = 11400,
+        y = 7500,
+        x2 = 11700,
+        y2 = 7800
+
+    }}
+
+}, {
+    key = "NovaRosewood",
+    difficulty = 2,
+    title = "Nova Rosewood",
+    mod = "NovaRosewood",
+    bounds = {{
+        x = 7500,
+        y = 10800,
+        x2 = 7800,
+        y2 = 11100
+
+    }}
+
+}, {
+    key = "Ztardew",
+    difficulty = 2,
+    title = "Ztardew Valley",
+    mod = "Ztardew",
+    bounds = {{
+        x = 12000,
+        y = 9300,
+        x2 = 12900,
+        y2 = 1020
+
+    }}
+}, {
+    key = "ZonaSegura0123",
+    difficulty = 2,
+    title = "Zona Segura",
+    mod = "ZonaSegura0123",
+    bounds = {{
+        x = 11700,
+        y = 9000,
+        x2 = 12000,
+        y2 = 9300
+
+    }}
+
+}, {
+    key = "QuarryLake_Xavior",
+    difficulty = 2,
+    title = "Quarry Lake",
+    mod = "QuarryLake_Xavior",
+    bounds = {{
+        x = 12000,
+        y = 11400,
+        x2 = 12600,
+        y2 = 12000
+
+    }}
+
 }}
