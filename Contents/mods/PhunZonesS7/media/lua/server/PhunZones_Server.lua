@@ -37,7 +37,7 @@ function PhunZones:reload()
     if data then
 
         self.zones = {}
-
+        self.chunks = {}
         local bounds = {}
 
         if not modList then
@@ -79,6 +79,22 @@ function PhunZones:reload()
                         -- vv.difficulty = vv.difficulty or data.difficulty or 1
                         vv.isVoid = vv.isVoid or v.isVoid or nil
                         table.insert(bounds, vv)
+
+                        -- how many x chunks are there?
+                        local chunksx = math.ceil((vv.x2 - vv.x) / 300)
+                        local chunksy = math.ceil((vv.y2 - vv.y) / 300)
+
+                        for i = 0, chunksx do
+                            for j = 0, chunksy do
+                                local cx = math.floor(vv.x / 300)
+                                local cy = math.floor(vv.y / 300)
+                                local key = cx .. "_" .. cy
+                                if not self.chunks[key] then
+                                    self.chunks[key] = {}
+                                end
+                                table.insert(self.chunks[key], vv)
+                            end
+                        end
                     end
                 end
             else
@@ -91,9 +107,13 @@ function PhunZones:reload()
         self.bounds = {}
         self:add(bounds)
 
+        -- print("CHUNKS")
+        -- PhunTools:printTable(self.chunks)
+
         -- readd to moddata for persistence and easy client sync?
         ModData.add(self.name .. "_zones", self.zones)
         ModData.add(self.name .. "_bounds", self.bounds)
+        -- ModData.add(self.name .. "_chunks", self.chunks)
     end
 end
 

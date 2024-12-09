@@ -19,7 +19,8 @@ PhunZones = {
         OnPhunZoneReady = "OnPhunZoneReady"
     },
     bounds = {},
-    zones = {}
+    zones = {},
+    chunks = {}
 }
 
 for _, event in pairs(PhunZones.events) do
@@ -131,6 +132,18 @@ function PhunZones:getLocation(x, y)
         noAnnounce = true,
         difficulty = 1
     }
+
+    -- local cx = math.floor(xx / 300)
+    -- local cy = math.floor(yy / 300)
+    -- local ckey = cx .. "_" .. cy
+    -- local chunks = self.chunks or {}
+    -- for _, v in ipairs(chunks[ckey] or {}) do
+    --     if xx >= v.x and xx <= v.x2 and yy >= v.y and yy <= v.y2 then
+    --         result = v
+    --         break
+    --     end
+    -- end
+
     for _, v in ipairs(self.bounds or {}) do
         if xx >= v.x and xx <= v.x2 and yy >= v.y and yy <= v.y2 then
             result = v
@@ -146,6 +159,7 @@ function PhunZones:ini()
         -- load cached data
         self.zones = ModData.getOrCreate(self.name .. "_zones")
         self.bounds = ModData.getOrCreate(self.name .. "_bounds")
+        -- self.chunks = ModData.getOrCreate(self.name .. "_chunks")
         if isServer() then
             -- trigger redoing cached data from file
             self:reload()
@@ -153,6 +167,7 @@ function PhunZones:ini()
             -- request new data so we have the latest
             ModData.request(self.name .. "_zones")
             ModData.request(self.name .. "_bounds")
+            -- ModData.request(self.name .. "_chunks")
         end
 
         -- print('- -- -- EVENTS --  - ')

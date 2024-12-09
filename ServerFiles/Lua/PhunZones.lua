@@ -1708,4 +1708,95 @@ return {{
 
     }}
 
+}, {
+    key = "EventureIsland",
+    difficulty = 2,
+    title = "Eventure Island",
+    mod = "EventureIsland",
+    bounds = {{
+        x = 1445,
+        y = 3884,
+        x2 = 2638,
+        y2 = 4992
+
+    }}
+
+}, {
+    key = "NightFallky",
+    difficulty = 2,
+    title = "NightFall",
+    mod = "NightFallky",
+    bounds = {{
+        x = 10200,
+        y = 10200,
+        x2 = 10500,
+        y2 = 10500
+
+    }}
+
+}, {
+    key = "114519",
+    difficulty = 2,
+    title = "Sunset Lake",
+    mod = "114519",
+    bounds = {{
+        x = 6600,
+        y = 11100,
+        x2 = 7200,
+        y2 = 12000
+
+    }}
+
+}, {
+    key = "Louisville",
+    difficulty = 2,
+    subtitle = "Freddy's Fazbear Pizza",
+    mod = "Frede2",
+    bounds = {{
+        x = 12900,
+        y = 3685,
+        x2 = 12941,
+        y2 = 3734
+
+    }}
+
+}, {
+    key = "traveliermotorinnmotel",
+    difficulty = 2,
+    title = "Travelier Motor Inn",
+    mod = "traveliermotorinnmotel",
+    bounds = {{
+        x = 6115,
+        y = 5794,
+        x2 = 6194,
+        y2 = 5846
+
+    }}
+
+}, {
+    key = "NewAlbany",
+    difficulty = 2,
+    title = "New Albany",
+    mod = "NewAlbany",
+    bounds = {{
+        x = 11700,
+        y = 0,
+        x2 = 15000,
+        y2 = 900
+
+    }}
+
+}, {
+    key = "constownwithRCandFR",
+    difficulty = 3,
+    title = "Constown",
+    mod = "constownwithRCandFR",
+    bounds = {{
+        x = 5100,
+        y = 10800,
+        x2 = 6300,
+        y2 = 11400
+
+    }}
+
 }}

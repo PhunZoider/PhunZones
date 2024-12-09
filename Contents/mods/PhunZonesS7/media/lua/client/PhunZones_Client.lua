@@ -81,6 +81,8 @@ Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
         PhunZones.bounds = tableData
         updatePlayers()
         triggerEvent(PhunZones.events.OnPhunZoneReady)
+        -- elseif tableName == PhunZones.name .. "_chunks" and type(tableData) == "table" then
+        --     PhunZones.chunks = tableData
     end
 
 end)
