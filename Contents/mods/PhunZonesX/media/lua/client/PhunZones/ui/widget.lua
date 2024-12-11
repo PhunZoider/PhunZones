@@ -45,7 +45,7 @@ end
 
 function UI:new(x, y, width, height, player, playerIndex)
     local o = {};
-    o = ISCollapsableWindowJoypad:new(x, y, width, height, player);
+    o = ISPanel:new(x, y, width, height, player);
     setmetatable(o, self);
     self.__index = self;
 

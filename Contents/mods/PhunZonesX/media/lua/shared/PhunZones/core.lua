@@ -40,7 +40,7 @@ function Core:ini()
             self:refreshChanges()
         elseif isClient() then
             -- ask for any exceptions
-            ModData.getOrCreate(self.name .. "_Changes")
+            ModData.request(self.name .. "_Changes")
         end
     end
 end
