@@ -53,8 +53,9 @@ function PhunZones:reload()
                 mod = v.mod
             end
             local key = v.key
+
             local isVanilla = v.isVanilla == true or nil
-            if isVanilla or mod == nil or modList:contains(mod) then
+            if isVanilla or mod == nil then -- or modList:contains(mod) then
                 if not self.zones[key] then
                     self.zones[key] = {
                         key = key,
@@ -80,28 +81,69 @@ function PhunZones:reload()
                         vv.isVoid = vv.isVoid or v.isVoid or nil
                         table.insert(bounds, vv)
 
-                        -- how many x chunks are there?
-                        local chunksx = math.ceil((vv.x2 - vv.x) / 300)
-                        local chunksy = math.ceil((vv.y2 - vv.y) / 300)
+                        -- local subtitleKey = "def"
+                        -- if vv.subtitle then
+                        --     subtitleKey = vv.subtitle
+                        -- end
 
-                        for i = 0, chunksx do
-                            for j = 0, chunksy do
-                                local cx = math.floor(vv.x / 300)
-                                local cy = math.floor(vv.y / 300)
-                                local key = cx .. "_" .. cy
-                                if not self.chunks[key] then
-                                    self.chunks[key] = {}
-                                end
-                                table.insert(self.chunks[key], vv)
-                            end
-                        end
+                        -- subtitleKey = subtitleKey:gsub(" ", "")
+
+                        -- local diff = vv.difficulty or v.difficulty or 1
+
+                        -- local groupKey = key
+                        -- groupKey = groupKey:gsub(" ", "")
+
+                        -- if not self.chunks.groups then
+                        --     self.chunks.groups = {}
+                        --     self.chunks.chunks = {}
+                        -- end
+
+                        -- if not self.chunks.groups[groupKey] then
+                        --     self.chunks.groups[groupKey] = {
+                        --         difficulty = diff,
+                        --         noAnnounce = v.noAnnounce == true or nil,
+                        --         title = title or subtitle,
+                        --         mod = mod,
+                        --         -- subtitle = subtitle,
+                        --         isVoid = v.isVoid == true or nil,
+                        --         pvp = pvp == true or nil,
+                        --         areas = {}
+                        --     }
+                        -- end
+
+                        -- if not self.chunks.groups[groupKey].areas[subtitleKey] then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey] = {
+                        --         points = {}
+                        --     }
+                        -- end
+                        -- if self.chunks.groups[groupKey].difficulty ~= diff then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey].difficulty = diff
+                        -- end
+                        -- if self.chunks.groups[groupKey].title ~= vv.subtitle then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey].title = vv.subtitle
+                        -- end
+                        -- if self.chunks.groups[groupKey].mod ~= mod then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey].mod = mod
+                        -- end
+                        -- if v.noAnnounce and self.chunks.groups[groupKey].noAnnounce ~= v.noAnnounce == true or nil then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey].noAnnounce = v.noAnnounce == true or nil
+                        -- end
+                        -- if v.isVoid == true and not self.chunks.groups[groupKey].isVoid ~= true or nil then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey].isVoid = v.isVoid == true or nil
+                        -- end
+                        -- if pvp and self.chunks.groups[groupKey].pvp ~= pvp then
+                        --     self.chunks.groups[groupKey].areas[subtitleKey].pvp = pvp
+                        -- end
+
+                        -- table.insert(self.chunks.groups[groupKey].areas[subtitleKey].points, {vv.x, vv.y, vv.x2, vv.y2})
+
                     end
                 end
             else
                 print("Skipping " .. tostring(key) .. " because mod " .. tostring(mod) .. " is not active")
 
             end
-
+            -- PhunTools:saveTable("PhunZonesChunks.lua", self.chunks)
         end
 
         self.bounds = {}

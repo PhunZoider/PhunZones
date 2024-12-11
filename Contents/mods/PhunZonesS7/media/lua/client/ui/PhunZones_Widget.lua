@@ -379,7 +379,7 @@ function PhunZonesWidget:new(x, y, width, height, player)
         r = 0.0,
         g = 0.0,
         b = 0.0,
-        a = 0.5
+        a = 0.7
     };
     o.cached = {}
     o.userPosition = false
