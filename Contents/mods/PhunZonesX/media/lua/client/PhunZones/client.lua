@@ -45,8 +45,5 @@ function PZ:updatePlayers()
 end
 
 function PZ:updatePlayer(playerObj)
-    local result = PZ:updateModData(playerObj)
-    if result then
-        playerObj:setHaloNote("Welcome to " .. result.title .. (result.subtitle and " - " .. result.subtitle or ""))
-    end
+    PZ:updateModData(playerObj)
 end

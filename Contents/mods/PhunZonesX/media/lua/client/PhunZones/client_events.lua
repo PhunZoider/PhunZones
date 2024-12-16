@@ -24,6 +24,12 @@ local PZ = PhunZones
 
 -- end
 
+Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone)
+    if not zone.noAnnounce then
+        playerObj:setHaloNote(zone.title .. (zone.subtitle and " - " .. zone.subtitle or ""))
+    end
+end)
+
 Events.EveryOneMinute.Add(function()
     PZ:updatePlayers()
 end)
