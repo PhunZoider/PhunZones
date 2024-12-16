@@ -8,6 +8,7 @@ PhunZones = {
         OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked"
     },
     ui = {},
+    data = {},
     commands = {
         playerSetup = "PhunZonesPlayerSetup"
     }

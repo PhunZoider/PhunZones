@@ -53,6 +53,13 @@ return {
                 difficulty = 2,
                 subtitle = "Kentucky State Prison",
                 mod = "rosewood_prison"
+            },
+            Mall = {
+                cells = {{25, 38}},
+                points = {{7560, 11420, 7777, 11637}},
+                difficulty = 2,
+                subtitle = "Mall",
+                mod = "Rosewood Mall"
             }
         }
     },
@@ -1292,6 +1299,7 @@ return {
         }
     },
     ZonaSegura0123 = {
+        cells = {{39, 30}},
         difficulty = 2,
         title = "Zona Segura",
         mod = "ZonaSegura0123",
@@ -1368,6 +1376,61 @@ return {
         areas = {
             def = {
                 points = {{5100, 10800, 6300, 11400}}
+            }
+        }
+    },
+    NewEllroy = {
+        cells = {{17, 33}, {17, 34}, {18, 33}, {18, 34}},
+        difficulty = 3,
+        title = "Ellroy",
+        mod = "NewEllroy",
+        areas = {
+            def = {
+                points = {{5100, 9900, 5700, 10500}}
+            }
+        }
+    },
+    ErikasFurnitureStore = {
+        cells = {{38, 27}},
+        difficulty = 3,
+        title = "Ellroy",
+        mod = "Erikas_Furniture_Store",
+        areas = {
+            def = {
+                points = {{11486, 8229, 11584, 8322}}
+            }
+        }
+    },
+    BitterrootRanch = {
+        cells = {{35, 24}, {35, 25}},
+        difficulty = 3,
+        title = "Bitterroot",
+        mod = "Bitterroot Ranch",
+        areas = {
+            def = {
+                points = {{10607, 7555, 10768, 7637}}
+            }
+        }
+    },
+    NUCExperimentalReactor = {
+        cells = {{28, 41}},
+        difficulty = 4,
+        title = "Reactor",
+        mod = "NUCExperimentalReactor",
+        areas = {
+            def = {
+                points = {{8490, 12373, 8672, 12550}}
+            }
+        }
+    },
+    DenseWoods = {
+        cells = {{48, 17}},
+        difficulty = 3,
+        title = "Woods",
+        mod = "AbandonedSurvivorBase",
+        areas = {
+            def = {
+                points = {{14400, 5100, 14700, 5400}}
             }
         }
     }
