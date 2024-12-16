@@ -46,14 +46,16 @@ function Core:ini()
     end
 end
 
-function Core:updateModData(obj)
+function Core:updateModData(obj, skipEvent)
     local existing = obj:getModData().PhunZones or {}
     local data = self:getLocation(obj:getX(), obj:getY()) or {}
     if data.zone ~= existing.zone or data.area ~= existing.area then
         obj:getModData().PhunZones = data
-        triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, data)
-        return data
+        if not skipEvent then
+            triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, data)
+        end
     end
+    return data
 end
 
 local sandbox = nil
