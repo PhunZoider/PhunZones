@@ -165,7 +165,7 @@ function UI:setData(data)
             self.data.title = data.zone.title
             self.data.titleWidth = getTextManager():MeasureStringX(UIFont.Medium, data.zone.title) + 20
             if self.data.titleWidth > self.width then
-                self.data.titleWidth.width = self.width
+                self.data.titleWidth = self.width
             end
             self.data.titleHeight = FONT_HGT_MEDIUM
         else
