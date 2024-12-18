@@ -47,6 +47,9 @@ function Core:ini()
 end
 
 function Core:updateModData(obj, skipEvent)
+    if not obj then
+        return
+    end
     local existing = obj:getModData().PhunZones or {}
     local data = self:getLocation(obj:getX(), obj:getY()) or {}
     if data.zone ~= existing.zone or data.area ~= existing.area then

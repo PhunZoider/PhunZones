@@ -10,6 +10,7 @@ return {
     },
     WestPoint = {
         difficulty = 2,
+        rads = 20,
         title = "West Point",
         areas = {
             def = {
@@ -19,6 +20,7 @@ return {
     },
     MarchRidge = {
         difficulty = 2,
+        rads = 35,
         title = "March Ridge",
         areas = {
             def = {
@@ -28,6 +30,7 @@ return {
     },
     Muldraugh = {
         difficulty = 1,
+        rads = 10,
         title = "Muldraugh",
         areas = {
             def = {
@@ -79,6 +82,7 @@ return {
     },
     Louisville = {
         difficulty = 3,
+        rads = 80,
         title = "Louisville",
         areas = {
             def = {
