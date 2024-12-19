@@ -1,6 +1,3 @@
-if not isClient() then
-    return
-end
 local PZ = PhunZones
 
 local Commands = {}

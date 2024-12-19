@@ -1,4 +1,4 @@
-if not isClient() then
+if not isClient() and isServer() then
     return
 end
 require("ISUI/Maps/ISMiniMap")
@@ -36,9 +36,6 @@ function UI.OnOpenPanel(playerObj, playerIndex)
 
     UI.instances[playerIndex]:addToUIManager();
     UI.instances[playerIndex]:setVisible(true);
-
-    UI.instances[playerIndex].minimap = getPlayerMiniMap(playerIndex)
-
     return UI.instances[playerIndex];
 
 end
@@ -167,7 +164,7 @@ function UI:setData(data)
             if self.data.titleWidth > self.width then
                 self.data.titleWidth = self.width
             end
-            self.data.titleHeight = FONT_HGT_MEDIUM
+            self.data.titleHeight = FONT_HGT_MEDIUM + 10
         else
             self.data.title = nil
             self.data.titleWidth = 0
@@ -208,10 +205,27 @@ function UI:prerender()
     if clock and clock:isDateVisible() then
         -- print("clock is visible")
     end
-    local x = 2
-    local y = 2
+    local x = 5
+    local y = 5
     local txtColor = self.normalTextColor
-    if self.coverMap then
+
+    local minimap = getPlayerMiniMap(self.playerIndex)
+
+    if not minimap then
+
+        local width = getTextManager():MeasureStringX(UIFont.small, self.data.title or "") + x
+        self.borderColor = self.hoverBorderColor
+        self.backgroundColor = self.hoverBackgroundColor
+        self:setWidth(self.data.titleWidth + 40)
+        self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
+
+        self:setX(getCore():getScreenWidth() - self.width - 2)
+        self:setY(getCore():getScreenHeight() - self.height - 30)
+        self:bringToTop()
+
+        txtColor = self.hoverTextColor
+
+    elseif self.coverMap then
         self:setX(self.minimap.x)
         self:setY(self.minimap.y)
         self:bringToTop()
@@ -225,8 +239,6 @@ function UI:prerender()
             return
         end
     else
-        x = 5
-        y = 5
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
         self:setWidth(self.minimap.width)
@@ -239,7 +251,6 @@ function UI:prerender()
         txtColor = self.hoverTextColor
 
     end
-
     if self.data.pvpTexture then
         self:drawTextureScaledAspect(self.data.pvpTexture, x, y, 30, 30, 1);
         x = x + 32 + 10
@@ -252,7 +263,6 @@ function UI:prerender()
         self:drawText(self.data.subtitle or "", x, y, txtColor.r, txtColor.g, txtColor.b, txtColor.a, UIFont.Small);
         y = y + FONT_HGT_SMALL + 1
     end
-
     -- if sandbox.PhunZones_Widget and PhunRunners then
     --     local riskData = nil -- PhunZones:getRiskInfo(self.player, zone)
 

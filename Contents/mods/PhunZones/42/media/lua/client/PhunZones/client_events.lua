@@ -1,6 +1,3 @@
-if not isClient() then
-    return
-end
 local PZ = PhunZones
 
 -- local oldISMiniMapInner_render = ISMiniMapInner.render
@@ -52,6 +49,7 @@ local function setup()
     PZ:ini()
     PZ:showWidgets()
     sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
+
 end
 
 Events.OnTick.Add(setup)

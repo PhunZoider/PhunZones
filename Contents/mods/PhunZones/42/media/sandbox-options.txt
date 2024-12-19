@@ -35,7 +35,7 @@ option PhunZones.PhunZones_Widget
 option PhunZones.DefaultNoneTitle
 { 
     type = string,
-    default = Wilderness, 
+    default = Kentucky, 
     page = PhunZones, 
     translation = PhunZonesDefaultNoneTitle
 }

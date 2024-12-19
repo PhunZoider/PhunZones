@@ -1,7 +1,6 @@
-if not isClient() then
+if not isClient() and isServer() then
     return
 end
-
 local PZ = PhunZones
 
 function PZ:updatePlayerUI(playerObj, info)
@@ -22,12 +21,11 @@ function PZ:updatePlayerUI(playerObj, info)
 end
 
 function PZ:showWidgets()
-    for i = 0, getOnlinePlayers():size() - 1 do
-        local p = getOnlinePlayers():get(i)
-        if p:isLocalPlayer() then
-            self:showWidget(p)
-            self:updatePlayerUI(p)
-        end
+    local players = self:onlinePlayers()
+    for i = 0, players:size() - 1, 1 do
+        local p = players:get(i)
+        self:showWidget(p)
+        self:updatePlayerUI(p)
     end
 end
 
@@ -36,14 +34,13 @@ function PZ:showWidget(playerObj)
 end
 
 function PZ:updatePlayers()
-    for i = 0, getOnlinePlayers():size() - 1 do
-        local p = getOnlinePlayers():get(i)
-        if p:isLocalPlayer() then
-            self:updatePlayer(p)
-        end
+    local players = self:onlinePlayers()
+    for i = 0, players:size() - 1, 1 do
+        local p = players:get(i)
+        self:updatePlayer(p)
     end
 end
 
 function PZ:updatePlayer(playerObj)
-    PZ:updateModData(playerObj)
+    self:updateModData(playerObj)
 end

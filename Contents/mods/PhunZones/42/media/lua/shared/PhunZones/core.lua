@@ -50,8 +50,22 @@ function Core:updateModData(obj, skipEvent)
     if not obj then
         return
     end
+    local moddata = obj:getModData()
     local existing = obj:getModData().PhunZones or {}
+
+    if existing.xx then
+        if math.abs(obj:getX() - existing.xx) <= 5 or math.abs(obj:getY() - existing.yy) <= 5 then
+            return
+        end
+    end
+    existing.xx = obj:getX()
+    existing.yy = obj:getY()
+
     local data = self:getLocation(obj:getX(), obj:getY()) or {}
+
+    -- if math.abs(x - x2) <= 10 or math.abs(y - y2) <= 10 then
+    -- end
+
     if data.zone ~= existing.zone or data.area ~= existing.area then
         obj:getModData().PhunZones = data
         if not skipEvent then
@@ -79,7 +93,7 @@ function Core:getLocation(x, y)
         area = "def",
         noAnnounce = true,
         difficulty = sandbox.DefaultNoneDifficulty or 2,
-        title = sandbox.DefaultNoneTitle or "Wilderness"
+        title = sandbox.DefaultNoneTitle or "Kentucky"
     }
 
     local cx = math.floor(xx / 300)
@@ -94,20 +108,53 @@ function Core:getLocation(x, y)
     return result
 end
 
+function Core:printTable(t, indent)
+    indent = indent or ""
+    for key, value in pairs(t or {}) do
+        if type(value) == "table" then
+            print(indent .. key .. ":")
+            Core:printTable(value, indent .. "  ")
+        elseif type(value) ~= "function" then
+            print(indent .. key .. ": " .. tostring(value))
+        end
+    end
+end
+
+function Core:onlinePlayers(all)
+
+    local onlinePlayers;
+
+    if not isClient() and not isServer() and not isCoopHost() then
+        onlinePlayers = ArrayList.new();
+        local p = getPlayer()
+        onlinePlayers:add(p);
+    elseif all then
+        onlinePlayers = getOnlinePlayers();
+
+    else
+        onlinePlayers = ArrayList.new();
+        for i = 0, getOnlinePlayers():size() - 1 do
+            if getOnlinePlayers:get(i):isLocalPlayer() then
+                onlinePlayers:add(getOnlinePlayers():get(i));
+            end
+        end
+    end
+
+    return onlinePlayers;
+end
+
 if isServer() then
     Events.OnServerStarted.Add(function()
         Core:ini()
     end)
-
-    print('- -- -- EVENTS --  - ')
-    local e = {}
-    for k, v in pairs(Events) do
-        table.insert(e, k)
-    end
-    table.sort(e, function(a, b)
-        return a < b
-    end)
-    PhunTools:printTable(e)
-else
-
 end
+-- print('- -- -- EVENTS! --  - ')
+-- local e = {}
+-- for k, v in pairs(Events) do
+--     table.insert(e, k)
+-- end
+-- table.sort(e, function(a, b)
+--     return a < b
+-- end)
+-- Core:printTable(e)
+
