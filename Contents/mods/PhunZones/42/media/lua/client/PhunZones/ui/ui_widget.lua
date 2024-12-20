@@ -1,4 +1,4 @@
-if not isClient() and isServer() then
+if isServer() then
     return
 end
 require("ISUI/Maps/ISMiniMap")
@@ -201,10 +201,6 @@ function UI:prerender()
 
     ISPanel.prerender(self);
 
-    local clock = UIManager.getClock()
-    if clock and clock:isDateVisible() then
-        -- print("clock is visible")
-    end
     local x = 5
     local y = 5
     local txtColor = self.normalTextColor

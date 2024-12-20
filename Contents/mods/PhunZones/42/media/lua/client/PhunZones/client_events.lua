@@ -1,25 +1,9 @@
 local PZ = PhunZones
+local Commands = require "PhunZones/client_commands"
 
--- local oldISMiniMapInner_render = ISMiniMapInner.render
-
--- -- This gets called when the mini map is open (even if the world map is open)
--- function ISMiniMapInner.render(self)
---     oldISMiniMapInner_render(self)
-
---     if PZ.ui and PZ.ui.widget then
---         for k, v in pairs(PZ.ui.widget.instances) do
---             local outer = getPlayerMiniMap(v.playerIndex)
---             v.minimapInfo = {
---                 x = self.parent.x,
---                 y = self.parent.y,
---                 w = self.parent.width,
---                 visible = (ISWorldMap_instance and ISWorldMap_instance:isVisible()),
---                 handle = outer.titleBar:isVisible()
---             }
---         end
---     end
-
--- end
+Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
+    PZ:showContext(playerObj, context, worldobjects)
+end);
 
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone)
     if not zone.noAnnounce then
@@ -29,18 +13,36 @@ Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone)
     end
 end)
 
-Events.EveryOneMinute.Add(function()
-    PZ:updatePlayers()
-end)
-
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone)
     PZ:updatePlayerUI(playerObj, zone)
 end)
 
+Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
+    local nextCheck = 0
+    local every = 1
+    local getTimestamp = getTimestamp
+    Events.OnTick.Add(function()
+        if getTimestamp() >= nextCheck then
+            nextCheck = getTimestamp() + every
+            -- PZ:updatePlayers()
+        end
+
+    end)
+end)
+
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
-    if tableName == PZ.name .. "_Changes" then
-        ModData.add(PZ.name .. "_Changes", tableData)
-        PZ:processDataSet(PZ.data)
+    if tableName == PZ.const.modifiedModData then
+        print("================")
+        print("OnReceiveGlobalModData")
+        print("================")
+        ModData.add(PZ.const.modifiedModData, tableData)
+        PZ:getZones(true, tableData)
+    end
+end)
+
+Events.OnServerCommand.Add(function(module, command, arguments)
+    if module == PZ.name and Commands[command] then
+        Commands[command](arguments)
     end
 end)
 
@@ -49,7 +51,7 @@ local function setup()
     PZ:ini()
     PZ:showWidgets()
     sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
-
 end
 
 Events.OnTick.Add(setup)
+

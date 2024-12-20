@@ -42,5 +42,9 @@ function PZ:updatePlayers()
 end
 
 function PZ:updatePlayer(playerObj)
-    self:updateModData(playerObj)
+    if not (UIManager.getSpeedControls() and UIManager.getSpeedControls():getCurrentGameSpeed() == 0) then
+        self:updateModData(playerObj)
+    else
+        print("is paused")
+    end
 end

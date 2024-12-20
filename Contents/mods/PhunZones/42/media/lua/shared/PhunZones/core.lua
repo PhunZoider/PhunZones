@@ -7,10 +7,15 @@ PhunZones = {
         OnPhunZonesObjectLocationChanged = "PhunZonesOnPhunZonesObjectLocationChanged",
         OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked"
     },
+    const = {
+        modifiedLuaFile = "PhunZone_Changes.lua",
+        modifiedModData = "PhunZone_Changes"
+    },
     ui = {},
     data = {},
     commands = {
-        playerSetup = "PhunZonesPlayerSetup"
+        playerSetup = "PhunZonesPlayerSetup",
+        transmitChanges = "PhunZonesTransmitChanges"
     }
 }
 
@@ -32,41 +37,41 @@ end
 function Core:ini()
     if not self.inied then
         self.inied = true
-        -- load existing data
-        self.data = ModData.getOrCreate(self.name)
-        ModData.getOrCreate(self.name .. "_Changes")
-        -- process anything from the data file
-        self.data = self:processDataSet(allLocations)
-        if isServer() then
-            self:refreshChanges()
-        elseif isClient() then
-            -- ask for any exceptions
-            ModData.request(self.name .. "_Changes")
+
+        if (not isClient() and not isServer() and not isCoopHost()) or isServer() then
+            -- single player or a server so load changes from file
+            print("PhunZones: Loading changes as server")
+            self:getZones(true)
+        else
+            print("PhunZones: Loading changes as client")
+            -- client so use cached version and then ask server for its changes
+            self:getZones(true, ModData.getOrCreate(self.const.modifiedModData))
         end
+        triggerEvent(self.events.OnPhunZoneReady)
     end
 end
 
 function Core:updateModData(obj, skipEvent)
-    if not obj then
+    if not obj or not obj.getModData then
         return
     end
-    local moddata = obj:getModData()
+
     local existing = obj:getModData().PhunZones or {}
 
-    if existing.xx then
-        if math.abs(obj:getX() - existing.xx) <= 5 or math.abs(obj:getY() - existing.yy) <= 5 then
-            return
-        end
-    end
-    existing.xx = obj:getX()
-    existing.yy = obj:getY()
+    -- commenting for now as its probably as expensive to do this as it is to just do the lookup
 
-    local data = self:getLocation(obj:getX(), obj:getY()) or {}
-
-    -- if math.abs(x - x2) <= 10 or math.abs(y - y2) <= 10 then
+    -- if existing.xx then
+    --     -- object hasn't moved more than 5 units so don't bother calculating
+    --     if math.abs(obj:getX() - existing.xx) <= 5 or math.abs(obj:getY() - existing.yy) <= 5 then
+    --         return
+    --     end
     -- end
+    -- existing.xx = obj:getX()
+    -- existing.yy = obj:getY()
 
-    if data.zone ~= existing.zone or data.area ~= existing.area then
+    local data = self:getLocation(obj) or {}
+
+    if data.region ~= existing.region or data.zone ~= existing.zone then
         obj:getModData().PhunZones = data
         if not skipEvent then
             triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, data)
@@ -79,33 +84,33 @@ local sandbox = nil
 
 function Core:getLocation(x, y)
 
-    if sandbox == nil then
-        sandbox = SandboxVars.PhunZones
-    end
-
     local xx, yy = x, y
     if not y and x.getX then
         -- passed an object
         xx, yy = x:getX(), x:getY()
     end
-    local result = {
-        zone = "none",
-        area = "def",
-        noAnnounce = true,
-        difficulty = sandbox.DefaultNoneDifficulty or 2,
-        title = sandbox.DefaultNoneTitle or "Kentucky"
-    }
 
-    local cx = math.floor(xx / 300)
-    local cy = math.floor(yy / 300)
-    local ckey = cx .. "_" .. cy
-    local chunks = self.data.chunks or {}
-    for _, v in ipairs(chunks[ckey] or {}) do
-        if xx >= v.x and xx <= v.x2 and yy >= v.y and yy <= v.y2 then
-            return self.data.zones[v.zone].areas[v.area]
+    local ckey = math.floor(xx / 300) .. "_" .. math.floor(yy / 300)
+
+    for _, v in ipairs(self.data.cells[ckey] or {}) do
+        -- 1 = region key
+        -- 2 = zone key
+        -- 3 = x1
+        -- 4 = y1
+        -- 5 = x2
+        -- 6 = y2
+        if xx >= v[3] and xx <= v[5] and yy >= v[4] and yy <= v[6] then
+            return self.data.lookup[v[1]][v[2]]
         end
     end
-    return result
+
+    return {
+        region = "none",
+        zone = "main",
+        noAnnounce = true,
+        difficulty = SandboxVars.PhunZones.DefaultNoneDifficulty or 2,
+        title = SandboxVars.PhunZones.DefaultNoneTitle or "Kentucky"
+    }
 end
 
 function Core:printTable(t, indent)

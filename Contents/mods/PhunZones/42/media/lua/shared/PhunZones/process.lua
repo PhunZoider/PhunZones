@@ -1,129 +1,138 @@
-require "PhunZones/core"
 local PZ = PhunZones
+require "PhunZones/core"
+local tableTools = require("PhunZones/table")
+local fileTools = require("PhunZones/files")
 
-function PZ:processDataSet(data, doAll)
-    local regions = {}
-    local chunks = {}
-    local mods = getActivatedMods()
-    local warnings = {}
+local allLocations = require("PhunZones/data")
 
-    local changes = ModData.getOrCreate(PZ.name .. "_Changes") or {}
+local excludedKeys = ArrayList:new();
+local getActivatedMods = getActivatedMods
+excludedKeys:add("children")
+excludedKeys:add("zones")
 
-    for k, v in pairs(changes) do
+local function getEntry(entry, omitMods)
 
-        if not regions[k] then
-            regions[k] = v
-        else
+    local row = nil
 
-            for prop, propVal in pairs(v) do
-                if prop ~= "areas" then
-                    regions[k][prop] = propVal
-                end
-            end
-
-            for ak, av in pairs(v.areas or {}) do
-                if not regions[k].areas then
-                    regions[k].areas = {}
-                end
-                if not regions[k].areas[ak] then
-                    regions[k].areas[ak] = av
-                else
-                    for k, v in pairs(av) do
-                        regions[k].areas[ak][k] = v
-                    end
-                end
-
-            end
-        end
-    end
-
-    for regionKey, regionValue in pairs(data or {}) do
-
-        local skipRegion = false
-        local changeRegion = changes[regionKey] or {}
-
-        if doAll ~= true then
-            local mod = changeRegion.mod or regionValue.mod
-            if changeRegion.disabled == true or regionValue.disabled == true then
-                skipRegion = true
-            elseif (mod and not mods:contains(mod)) then
-                skipRegion = true
-            end
-        end
-
-        if not skipRegion then
-
-            regions[regionKey] = {
-                areas = {}
-            }
-            for k, v in pairs(regionValue or {}) do
-                if k ~= "areas" then
-                    regions[regionKey][k] = v
-                end
-            end
-
-            for areaKey, areaValue in pairs(regionValue.areas or {}) do
-
-                local skipArea = false
-
-                if doAll ~= true then
-                    if areaValue.disabled == true then
-                        skipArea = true
-                    elseif areaValue.mod and not mods:contains(areaValue.mod) then
-                        skipArea = true
-                    end
-                end
-
-                if not skipArea then
-                    regions[regionKey].areas[areaKey] = {}
-                    -- copy params from parent region
-                    for k, v in pairs(regions[regionKey]) do
-                        if k ~= "areas" then
-                            regions[regionKey].areas[areaKey][k] = v
-                        end
-                    end
-
-                    for k, v in pairs(areaValue or {}) do
-                        if k ~= "points" then
-                            regions[regionKey].areas[areaKey][k] = v
-                        end
-                    end
-
-                    regions[regionKey].areas[areaKey].zone = regionKey
-                    regions[regionKey].areas[areaKey].area = areaKey
-
-                    for _, v in ipairs(areaValue.points or {}) do
-                        local xIterations = math.floor((v[3] - v[1]) / 300)
-                        local yIterations = math.floor((v[4] - v[2]) / 300)
-
-                        for x = 0, xIterations do
-                            for y = 0, yIterations do
-                                local cx = math.floor(v[1] / 300) + x
-                                local cy = math.floor(v[2] / 300) + y
-                                local ckey = cx .. "_" .. cy
-                                if not chunks[ckey] then
-                                    chunks[ckey] = {}
-                                end
-                                table.insert(chunks[ckey], {
-                                    zone = regionKey,
-                                    area = areaKey,
-                                    x = v[1],
-                                    y = v[2],
-                                    x2 = v[3],
-                                    y2 = v[4]
-
-                                })
-                            end
-                        end
-                    end
+    local process = true
+    if omitMods then
+        if entry.mods then
+            local mods = luautils.split(entry.mods .. ";", ";")
+            for _, m in ipairs(mods) do
+                if m and getActivatedMods():contains(m) then
+                    process = false
                 end
             end
         end
     end
+    if process then
+        row = tableTools:shallowCopyTable(entry, excludedKeys)
+    end
 
-    return {
-        zones = regions,
-        chunks = chunks
+    local mainzones = tableTools:shallowCopyTable(entry.zones)
+    row.zones = {
+        main = {
+            zones = mainzones
+        }
     }
 
+    if entry.children then
+        for k, v in pairs(entry.children) do
+            local process = true
+            if omitMods then
+                if v.mods then
+                    local mods = luautils.split(v.mods .. ";", ";")
+                    for _, m in ipairs(mods) do
+                        if m and getActivatedMods():contains(m) then
+                            process = false
+                        end
+                    end
+                end
+            end
+            if process then
+                row.zones[k] = tableTools:shallowCopyTable(v)
+            end
+        end
+    end
+    return row
 end
+
+local function getCellsFromZone(zone)
+
+end
+
+function PZ:getCoreZones(omitMods)
+
+    local results = {}
+    for key, entry in pairs(allLocations) do
+        results[key] = getEntry(entry, omitMods)
+    end
+    return results
+end
+
+function PZ:getModifiedZones(omitMods)
+    local data = require("")
+    local data = fileTools:loadTable(self.const.modifiedLuaFile) or {}
+    ModData.add(self.const.modifiedModData, data)
+    local results = {}
+    for key, entry in pairs(data) do
+        results[key] = getEntry(entry, omitMods)
+    end
+    return results
+end
+
+function PZ:getZones(omitMods, modifiedDataSet)
+
+    local core = self:getCoreZones(omitMods)
+
+    local modified = modifiedDataSet or self:getModifiedZones(omitMods)
+
+    -- local results = tableTools:mergeTables(core or {}, modified or {})
+    local results = tableTools:mergeTables(modified or {}, core or {})
+
+    local lookup = {}
+
+    -- set chunks
+    local cells = {}
+    for regionKey, regionData in pairs(results or {}) do
+
+        for zoneKey, zoneData in pairs(regionData.zones or {}) do
+            for _, v in ipairs(zoneData.zones) do
+                local xIterations = math.floor((v[3] - v[1]) / 300)
+                local yIterations = math.floor((v[4] - v[2]) / 300)
+                for x = 0, xIterations do
+                    for y = 0, yIterations do
+                        local cx = math.floor(v[1] / 300) + x
+                        local cy = math.floor(v[2] / 300) + y
+                        local ckey = cx .. "_" .. cy
+                        if not cells[ckey] then
+                            cells[ckey] = {}
+                        end
+                        table.insert(cells[ckey], {regionKey, zoneKey, v[1], v[2], v[3], v[4]})
+                    end
+                end
+            end
+            local z = tableTools:shallowCopyTable(zoneData, excludedKeys) or {}
+            z.region = regionKey
+            z.zone = zoneKey
+            local merged = tableTools:mergeTables(regionData, z, excludedKeys)
+            if not lookup[regionKey] then
+                lookup[regionKey] = {}
+            end
+            lookup[regionKey][zoneKey] = merged
+        end
+    end
+
+    self.data = {
+        cells = cells,
+        zones = results,
+        lookup = lookup
+    }
+
+    print("Zones: " .. getTimestamp())
+    self:printTable(self.data.lookup)
+    print(" ------ ")
+
+    return self.data
+end
+
