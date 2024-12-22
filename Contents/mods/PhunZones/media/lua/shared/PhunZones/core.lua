@@ -44,11 +44,12 @@ function Core:ini()
             -- single player or a server so load changes from file
             print("PhunZones: Loading changes as server")
             self:getZones(true)
-        else
+        elseif not isServer() then
             print("PhunZones: Loading changes as client")
             -- client so use cached version and then ask server for its changes
             self:getZones(true, ModData.getOrCreate(self.const.modifiedModData))
         end
+        print("PhunZones: Triggering OnPhunZoneReady")
         triggerEvent(self.events.OnPhunZoneReady)
     end
 end
@@ -141,8 +142,9 @@ function Core:onlinePlayers(all)
     else
         onlinePlayers = ArrayList.new();
         for i = 0, getOnlinePlayers():size() - 1 do
-            if getOnlinePlayers:get(i):isLocalPlayer() then
-                onlinePlayers:add(getOnlinePlayers():get(i));
+            local player = getOnlinePlayers():get(i);
+            if player:isLocalPlayer() then
+                onlinePlayers:add(player);
             end
         end
     end
