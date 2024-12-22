@@ -1,3 +1,6 @@
+if isServer() then
+    return
+end
 local PZ = PhunZones
 
 local Commands = {}

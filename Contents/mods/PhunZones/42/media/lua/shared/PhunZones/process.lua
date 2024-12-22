@@ -19,14 +19,16 @@ local function getEntry(entry, omitMods)
         if entry.mods then
             local mods = luautils.split(entry.mods .. ";", ";")
             for _, m in ipairs(mods) do
-                if m and getActivatedMods():contains(m) then
+                if m and not getActivatedMods():contains(m) then
                     process = false
                 end
             end
         end
     end
-    if process then
+    if process == true then
         row = tableTools:shallowCopyTable(entry, excludedKeys)
+    else
+        return nil
     end
 
     local mainzones = tableTools:shallowCopyTable(entry.zones)
@@ -43,7 +45,7 @@ local function getEntry(entry, omitMods)
                 if v.mods then
                     local mods = luautils.split(v.mods .. ";", ";")
                     for _, m in ipairs(mods) do
-                        if m and getActivatedMods():contains(m) then
+                        if m and not getActivatedMods():contains(m) then
                             process = false
                         end
                     end
@@ -57,15 +59,14 @@ local function getEntry(entry, omitMods)
     return row
 end
 
-local function getCellsFromZone(zone)
-
-end
-
 function PZ:getCoreZones(omitMods)
 
     local results = {}
     for key, entry in pairs(allLocations) do
-        results[key] = getEntry(entry, omitMods)
+        local e = getEntry(entry, omitMods)
+        if e then
+            results[key] = e
+        end
     end
     return results
 end
@@ -76,7 +77,10 @@ function PZ:getModifiedZones(omitMods)
     ModData.add(self.const.modifiedModData, data)
     local results = {}
     for key, entry in pairs(data) do
-        results[key] = getEntry(entry, omitMods)
+        local e = getEntry(entry, omitMods)
+        if e then
+            results[key] = e
+        end
     end
     return results
 end
@@ -84,6 +88,10 @@ end
 function PZ:getZones(omitMods, modifiedDataSet)
 
     local core = self:getCoreZones(omitMods)
+
+    -- print("\n==============\nCORE: " .. tostring(omitMods))
+
+    -- self:printTable(core)
 
     local modified = modifiedDataSet or self:getModifiedZones(omitMods)
 
@@ -123,19 +131,21 @@ function PZ:getZones(omitMods, modifiedDataSet)
         end
     end
 
-    self.data = {
-        cells = cells,
-        zones = results,
-        lookup = lookup
-    }
+    if omitMods then
+        self.data = {
+            cells = cells,
+            zones = results,
+            lookup = lookup
+        }
+    end
 
-    print("ZONES: ")
-    self:printTable(self.data.zones)
-    print(" /ZONES ")
+    -- print("ZONES: ")
+    -- self:printTable(self.data.zones)
+    -- print(" /ZONES ")
 
-    print("LOOKUP: ")
-    self:printTable(self.data.lookup)
-    print(" /LOOKUP ")
+    -- print("LOOKUP: ")
+    -- self:printTable(self.data.lookup)
+    -- print(" /LOOKUP ")
 
     return self.data
 end

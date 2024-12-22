@@ -1,3 +1,6 @@
+if isServer() then
+    return
+end
 local PZ = PhunZones
 local Commands = require "PhunZones/client_commands"
 
@@ -24,17 +27,13 @@ Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
     Events.OnTick.Add(function()
         if getTimestamp() >= nextCheck then
             nextCheck = getTimestamp() + every
-            -- PZ:updatePlayers()
+            PZ:updatePlayers()
         end
-
     end)
 end)
 
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == PZ.const.modifiedModData then
-        print("================")
-        print("OnReceiveGlobalModData")
-        print("================")
         ModData.add(PZ.const.modifiedModData, tableData)
         PZ:getZones(true, tableData)
     end

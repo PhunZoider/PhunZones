@@ -13,9 +13,9 @@ Commands[PZ.commands.playerSetup] = function(player)
     print("playerSetup in server")
     print("================")
     if isServer() then
-        sendServerCommand(player, PZ.commands.playerSetup, {})
+        sendServerCommand(player, PZ.name, PZ.commands.playerSetup, {})
     else
-        PZ:getZones()
+        PZ:getZones(true)
     end
 
 end

@@ -24,9 +24,8 @@ function UI.OnOpenPanel(playerObj, data, cb)
 
     if not UI.instances[playerIndex] then
         local core = getCore()
-        local FONT_SCALE = getTextManager():getFontHeight(UIFont.Small) / 14
-        local width = 220 * FONT_SCALE
-        local height = 300 * FONT_SCALE
+        local width = 300 * FONT_SCALE
+        local height = 350 * FONT_SCALE
 
         local x = (core:getScreenWidth() - width) / 2
         local y = (core:getScreenHeight() - height) / 2
@@ -52,7 +51,8 @@ function UI.OnOpenPanel(playerObj, data, cb)
         title = data.title,
         subtitle = data.subtitle,
         difficulty = data.difficulty,
-        mods = data.mods
+        mods = data.mods,
+        rads = data.rads
     }
     instance.cb = cb
 
@@ -84,6 +84,7 @@ function UI.OnOpenPanel(playerObj, data, cb)
     instance.txtDifficulty:setText(tostring(instance.data.difficulty or 2))
     instance.txtSubtitle:setText(tostring(instance.data.subtitle or ""))
     instance.txtTitle:setText(tostring(instance.data.title or ""))
+    instance.txtRads:setText(tostring(instance.data.rads or ""))
     return instance;
 
 end
@@ -277,6 +278,17 @@ function UI:createChildren()
     self.txtDifficulty = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtDifficulty:initialise();
     self:addChild(self.txtDifficulty);
+
+    y = y + h + 10
+
+    self.lblRads = ISLabel:new(x, y, h, "Rads", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblRads:initialise();
+    self.lblRads:instantiate();
+    self:addChild(self.lblRads);
+
+    self.txtRads = ISTextEntryBox:new("", x + 75, y, 200, h);
+    self.txtRads:initialise();
+    self:addChild(self.txtRads);
 
     y = y + h + 10
 

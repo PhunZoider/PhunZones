@@ -11,5 +11,5 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
 end)
 
 Events.OnServerStarted.Add(function()
-    PZ:getZones()
+    PZ:getZones(true)
 end)

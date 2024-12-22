@@ -237,11 +237,11 @@ function UI:prerender()
     else
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
-        self:setWidth(self.minimap.width)
+        self:setWidth(minimap.width)
         self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
 
-        self:setX(self.minimap.x)
-        self:setY(self.minimap.y - self.height - 2)
+        self:setX(minimap.x)
+        self:setY(minimap.y - self.height - 2)
         self:bringToTop()
 
         txtColor = self.hoverTextColor

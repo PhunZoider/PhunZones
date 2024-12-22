@@ -34,9 +34,6 @@ end)
 
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == PZ.const.modifiedModData then
-        print("================")
-        print("OnReceiveGlobalModData")
-        print("================")
         ModData.add(PZ.const.modifiedModData, tableData)
         PZ:getZones(true, tableData)
     end
@@ -49,7 +46,6 @@ Events.OnServerCommand.Add(function(module, command, arguments)
 end)
 
 local function setup()
-    print("PhunZones: client Setup")
     Events.OnTick.Remove(setup)
     PZ:ini()
     PZ:showWidgets()
