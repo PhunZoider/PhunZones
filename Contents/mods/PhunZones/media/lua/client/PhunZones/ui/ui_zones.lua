@@ -119,11 +119,24 @@ function UI:saveData(data)
         md[data.region].zones[data.zone].zones = {}
     end
 
-    for k, v in pairs(data) do
-        if k ~= "region" and k ~= "zone" then
-            md[data.region].zones[data.zone][k] = v
-        end
+    local fields = {"enabled", "pvp", "title", "subtitle", "difficulty", "mods", "rads", "zeds", "bandits"}
+
+    for _, v in ipairs(fields) do
+        md[data.region].zones[data.zone][v] = data[v]
     end
+    -- -- reset any existing keys
+    -- for k, v in pairs(md[data.region].zones[data.zone]) do
+    --     if k ~= "region" and k ~= "zone" and k ~= "zones" then
+    --         md[data.region].zones[data.zone][k] = nil
+    --     end
+    -- end
+
+    -- -- copy over passed keys
+    -- for k, v in pairs(data) do
+    --     if k ~= "region" and k ~= "zone" and k ~= "zones" then
+    --         md[data.region].zones[data.zone][k] = v
+    --     end
+    -- end
 
     PZ:saveChanges(md)
     self:refreshData()

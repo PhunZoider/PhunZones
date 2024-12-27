@@ -160,7 +160,7 @@ function Core:saveChanges(data)
         fileTools:saveTable(self.const.modifiedLuaFile, data)
     end
 
-    self:getZones(true)
+    self:getZones(true, data)
 end
 
 if isServer() then

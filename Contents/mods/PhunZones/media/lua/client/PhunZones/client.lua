@@ -48,3 +48,21 @@ function PZ:updatePlayer(playerObj)
         print("is paused")
     end
 end
+
+-- Prevent bandits mod from spawning bandits in this zone
+local BanditScheduler = BanditScheduler
+if BanditScheduler then
+    local oldfn = BanditScheduler.GenerateSpawnPoint
+
+    function BanditScheduler.GenerateSpawnPoint(player, d)
+
+        local zone = PZ:getLocation(player:getX(), player:getY())
+
+        if zone and zone.bandits == false then
+            return false
+        end
+
+        return oldfn(player, d)
+
+    end
+end

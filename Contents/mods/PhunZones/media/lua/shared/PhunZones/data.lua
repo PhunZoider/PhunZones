@@ -2,7 +2,9 @@ return {
     void = {
         difficulty = 0,
         isVoid = true,
-        children = {
+        zeds = false,
+        bandits = false,
+        zones = {
             main = {
                 zones = {{21000, 6000, 24899, 13499}}
             }
@@ -11,7 +13,7 @@ return {
     WestPoint = {
         difficulty = 2,
         title = "West Point",
-        children = {
+        zones = {
             main = {
                 zones = {{11100, 6580, 13199, 7499}}
             }
@@ -21,7 +23,7 @@ return {
         difficulty = 2,
         rads = 10,
         title = "March Ridge",
-        children = {
+        zones = {
             main = {
                 zones = {{9600, 12600, 10499, 13199}}
             }
@@ -31,7 +33,7 @@ return {
         difficulty = 1,
         rads = 10,
         title = "Muldraugh",
-        children = {
+        zones = {
             main = {
                 zones = {{10490, 9160, 11000, 10700}}
             }
@@ -40,7 +42,7 @@ return {
     Rosewood = {
         difficulty = 0,
         title = "Rosewood",
-        children = {
+        zones = {
             main = {
                 zones = {{7800, 10800, 8699, 12299}}
             },
@@ -68,7 +70,7 @@ return {
     Riverside = {
         difficulty = 2,
         title = "Riverside",
-        children = {
+        zones = {
             main = {
                 zones = {{5400, 5100, 6899, 5699}}
             },
@@ -83,7 +85,7 @@ return {
         difficulty = 3,
         rads = 60,
         title = "Louisville",
-        children = {
+        zones = {
             main = {
                 zones = {{12400, 3904, 12545, 4483}, {11700, 300, 14699, 3899}}
             },
@@ -137,7 +139,7 @@ return {
         difficulty = 2,
         title = "Bridge",
         mods = "Taylorsville_bridge_to_Dirkerdam",
-        children = {
+        zones = {
             Bridge = {
                 zones = {{9601, 5703, 9900, 6597}}
             },
@@ -152,7 +154,7 @@ return {
         difficulty = 4,
         title = "The Romero",
         mods = "TheRomero",
-        children = {
+        zones = {
             main = {
                 zones = {{11894, 1240, 11985, 1506}},
                 subtitle = "Ship of the dead"
@@ -163,7 +165,7 @@ return {
         difficulty = 2,
         title = "Elliot Pond",
         mods = "Elliot Pond",
-        children = {
+        zones = {
             main = {
                 zones = {{3902, 13501, 7489, 15593}}
             }
@@ -173,7 +175,7 @@ return {
         difficulty = 2,
         title = "Rally",
         mods = "RallyMap",
-        children = {
+        zones = {
             main = {
                 zones = {{14999, 4199, 16195, 5095}}
             }
@@ -183,7 +185,7 @@ return {
         difficulty = 2,
         title = "Exotics Rest Area",
         mods = "LyzzExotics",
-        children = {
+        zones = {
             main = {
                 zones = {{6900, 11100, 7197, 11396}}
             }
@@ -193,7 +195,7 @@ return {
         difficulty = 2,
         title = "Killian County",
         mods = "NorthKillian",
-        children = {
+        zones = {
             main = {
                 zones = {{7206, 8702, 8689, 9590}}
             },
@@ -222,7 +224,7 @@ return {
         difficulty = 3,
         title = "Killian Country",
         mods = "KillianCountryCenter",
-        children = {
+        zones = {
             main = {
                 zones = {{7499, 9590, 8099, 10198}}
             }
@@ -233,7 +235,7 @@ return {
         difficulty = 3,
         title = "Coryerdon",
         mods = "coryerdon",
-        children = {
+        zones = {
             main = {
                 zones = {{7794, 5719, 9883, 6220}, {7794, 6220, 9298, 6596}, {8356, 6596, 9010, 7191}}
             }
@@ -243,7 +245,7 @@ return {
         difficulty = 3,
         title = "Jasperville",
         mods = "Jasperville",
-        children = {
+        zones = {
             main = {
                 zones = {{4807, 1503, 6939, 3288}}
             }
@@ -253,7 +255,7 @@ return {
         difficulty = 3,
         title = "Leavenburg",
         mods = "Leavenburg",
-        children = {
+        zones = {
             main = {
                 zones = {{5402, 3871, 6337, 4475}}
             }
@@ -263,7 +265,7 @@ return {
         difficulty = 3,
         title = "Amusement Park",
         mods = "SimonMDValuTechAmusementPark",
-        children = {
+        zones = {
             main = {
                 zones = {{13503, 4201, 13796, 4794}}
             }
@@ -273,7 +275,7 @@ return {
         difficulty = 3,
         title = "Trucker Stop",
         mods = "nuke17x36",
-        children = {
+        zones = {
             main = {
                 zones = {{5109, 10830, 5260, 11000}}
             }
@@ -283,7 +285,7 @@ return {
         difficulty = 3,
         title = "Railyard",
         mods = "nuke37x22",
-        children = {
+        zones = {
             main = {
                 zones = {{11100, 9600, 11400, 9900}}
             }
@@ -293,7 +295,7 @@ return {
         difficulty = 3,
         title = "Construction Site",
         mods = "nuke22x22",
-        children = {
+        zones = {
             main = {
                 zones = {{6600, 6600, 6890, 6890}}
             }
@@ -304,7 +306,7 @@ return {
         difficulty = 3,
         title = "Valley Station Town",
         mods = "VSTOWN",
-        children = {
+        zones = {
             main = {
                 zones = {{13800, 4800, 14690, 5090}}
             }
@@ -314,7 +316,7 @@ return {
         difficulty = 2,
         title = "Dirkerdam",
         mods = "Dirkerdam",
-        children = {
+        zones = {
             main = {
                 zones = {{6271, 2068, 8770, 4504}, {8829, 5606, 9067, 5978}, {8782, 4517, 9579, 4915},
                          {1899, 2118, 2723, 2879}}
@@ -330,7 +332,7 @@ return {
         difficulty = 2,
         title = "Trimble County Power Station",
         mods = "TrimbleCountyPowerStation",
-        children = {
+        zones = {
             main = {
                 zones = {{15000, 3000, 18899, 4199}}
             },
@@ -364,7 +366,7 @@ return {
         difficulty = 2,
         title = "Hopewell",
         mods = "hopewell_eng_zombies",
-        children = {
+        zones = {
             main = {
                 zones = {{14700, 2700, 15599, 3599}}
             }
@@ -374,7 +376,7 @@ return {
         difficulty = 2,
         title = "Crowlake",
         mods = "Crowlake",
-        children = {
+        zones = {
             main = {
                 zones = {{6300, 11100, 6600, 11700}}
             }
@@ -384,7 +386,7 @@ return {
         difficulty = 2,
         title = "Pineville",
         mods = "pineville",
-        children = {
+        zones = {
             main = {
                 zones = {{3900, 9000, 4200, 9300}, {3900, 9300, 4500, 10200}}
             }
@@ -394,7 +396,7 @@ return {
         difficulty = 3,
         title = "Yakama State Park",
         mods = "YakamaStatePark",
-        children = {
+        zones = {
             main = {
                 zones = {{8400, 10500, 8700, 11400}, {8700, 11100, 9000, 11400}, {9000, 10500, 9600, 11400}}
             }
@@ -405,7 +407,7 @@ return {
         difficulty = 2,
         title = "Lake Cumberland",
         mods = "LCv2",
-        children = {
+        zones = {
             main = {
                 zones = {{13200, 6300, 17999, 8099}}
             }
@@ -415,7 +417,7 @@ return {
         difficulty = 2,
         title = "Last Minute Prepper",
         mods = "LastMinutePrepperReloaded",
-        children = {
+        zones = {
             main = {
                 zones = {{13200, 3600, 13499, 3899}}
             }
@@ -425,7 +427,7 @@ return {
         difficulty = 2,
         title = "Monmouth County to Bedford Falls",
         mods = "RfMCtBF_addon",
-        children = {
+        zones = {
             main = {
                 zones = {{12900, 8100, 13499, 8399}}
             }
@@ -435,7 +437,7 @@ return {
         difficulty = 2,
         title = "Bedford Falls",
         mods = "BedfordFalls",
-        children = {
+        zones = {
             main = {
                 zones = {{12600, 7500, 14399, 13199}}
             }
@@ -445,7 +447,7 @@ return {
         difficulty = 2,
         title = "Breakpoint",
         mods = "Breakpoint",
-        children = {
+        zones = {
             main = {
                 zones = {{12600, 4800, 12899, 5099}}
             }
@@ -455,7 +457,7 @@ return {
         difficulty = 2,
         title = "Fort Knox",
         mods = "FortKnoxLinked",
-        children = {
+        zones = {
             main = {
                 zones = {{12300, 13200, 15899, 17999}}
             }
@@ -465,7 +467,7 @@ return {
         difficulty = 2,
         title = "Seaside",
         mods = "Seaside",
-        children = {
+        zones = {
             main = {
                 zones = {{12300, 900, 12599, 1199}}
             }
@@ -475,7 +477,7 @@ return {
         difficulty = 2,
         title = "Redstone Raceway",
         mods = "RedRacer",
-        children = {
+        zones = {
             main = {
                 zones = {{12000, 10800, 12299, 11399}}
             }
@@ -485,7 +487,7 @@ return {
         difficulty = 2,
         title = "Monmouth County",
         mods = "MonmouthCounty_new",
-        children = {
+        zones = {
             main = {
                 zones = {{11700, 7800, 12899, 8999}}
             }
@@ -495,7 +497,7 @@ return {
         difficulty = 2,
         title = "Ashenwood",
         mods = "Ashenwood",
-        children = {
+        zones = {
             main = {
                 zones = {{11400, 11100, 11699, 11699}}
             }
@@ -505,7 +507,7 @@ return {
         difficulty = 2,
         title = "Linden",
         mods = "Linden",
-        children = {
+        zones = {
             main = {
                 zones = {{11400, 8400, 11699, 8699}}
             }
@@ -515,7 +517,7 @@ return {
         difficulty = 2,
         title = "Addams Mansion",
         mods = "AddamsMansion",
-        children = {
+        zones = {
             main = {
                 zones = {{11100, 9300, 11399, 9599}}
             }
@@ -526,7 +528,7 @@ return {
         difficulty = 2,
         title = "TeraMart East",
         mods = "TeraMart - East Side",
-        children = {
+        zones = {
             main = {
                 zones = {{10800, 11100, 11099, 11399}}
             }
@@ -537,7 +539,7 @@ return {
         difficulty = 2,
         title = "Uncle Red's Bunker",
         mods = "UncleRedsBunkerRedux",
-        children = {
+        zones = {
             main = {
                 zones = {{10800, 10800, 11099, 11099}}
             }
@@ -547,7 +549,7 @@ return {
         difficulty = 2,
         title = "Papaville",
         mods = "Papaville",
-        children = {
+        zones = {
             main = {
                 zones = {{10800, 8100, 11099, 8399}}
             }
@@ -557,7 +559,7 @@ return {
         difficulty = 2,
         title = "Petroville",
         mods = "Petroville",
-        children = {
+        zones = {
             main = {
                 zones = {{10500, 11700, 11399, 12599}}
             }
@@ -567,7 +569,7 @@ return {
         difficulty = 2,
         title = "The Museum",
         mods = "TheMuseumID",
-        children = {
+        zones = {
             main = {
                 zones = {{10500, 8100, 10799, 8399}}
             }
@@ -577,7 +579,7 @@ return {
         difficulty = 2,
         title = "Elysium Island",
         mods = "Elysium_Island",
-        children = {
+        zones = {
             main = {
                 zones = {{10500, 6300, 10799, 6899}}
             }
@@ -587,7 +589,7 @@ return {
         difficulty = 2,
         title = "BFE",
         mods = "CorOTRroad",
-        children = {
+        zones = {
             main = {
                 zones = {{10500, 6000, 10799, 6300}, {10800, 6000, 11099, 6300}}
             }
@@ -597,7 +599,7 @@ return {
         difficulty = 2,
         title = "Over the River",
         mods = "Otr",
-        children = {
+        zones = {
             main = {
                 zones = {{11100, 5700, 6500, 6500}}
             },
@@ -612,7 +614,7 @@ return {
         difficulty = 2,
         title = "Military Fuel Depot",
         mods = "military fuel depot",
-        children = {
+        zones = {
             main = {
                 zones = {{10200, 12900, 10799, 13499}}
             }
@@ -622,7 +624,7 @@ return {
         difficulty = 2,
         title = "Lande Desolate Camping",
         mods = "Lande Desolate Camping",
-        children = {
+        zones = {
             main = {
                 zones = {{10200, 10500, 10499, 10799}}
             }
@@ -632,7 +634,7 @@ return {
         difficulty = 2,
         title = "Springwood",
         mods = "Springwood1",
-        children = {
+        zones = {
             main = {
                 zones = {{10200, 7800, 10499, 8399}}
             }
@@ -642,7 +644,7 @@ return {
         difficulty = 2,
         title = "Lalafell's Heart Lake Town",
         mods = "Lalafell's Heart Lake Town",
-        children = {
+        zones = {
             main = {
                 zones = {{9900, 10500, 10199, 10799}}
             }
@@ -652,7 +654,7 @@ return {
         difficulty = 2,
         title = "Chernaville",
         mods = "Chernaville",
-        children = {
+        zones = {
             main = {
                 zones = {{9600, 10200, 9899, 10799}}
             }
@@ -662,7 +664,7 @@ return {
         difficulty = 2,
         title = "Prison",
         mods = "TWDprison",
-        children = {
+        zones = {
             main = {
                 zones = {{9600, 9300, 9899, 9599}}
             }
@@ -673,7 +675,7 @@ return {
         difficulty = 2,
         title = "Military Airport",
         mods = "Militaryairport",
-        children = {
+        zones = {
             main = {
                 zones = {{9600, 7800, 10199, 8699}}
             }
@@ -683,7 +685,7 @@ return {
         difficulty = 2,
         title = "Hopefalls",
         mods = "Hopefalls",
-        children = {
+        zones = {
             main = {
                 zones = {{9600, 6600, 9899, 6899}}
             }
@@ -693,7 +695,7 @@ return {
         difficulty = 2,
         title = "C.O.N. Research & Testing Facility",
         mods = "CONRTF",
-        children = {
+        zones = {
             main = {
                 zones = {{9300, 12600, 9599, 12899}}
             }
@@ -703,7 +705,7 @@ return {
         difficulty = 2,
         title = "Speck",
         mods = "Speck_Map",
-        children = {
+        zones = {
             main = {
                 zones = {{9000, 12300, 9299, 12599}}
             }
@@ -713,7 +715,7 @@ return {
         difficulty = 2,
         title = "Pitstop",
         mods = "Pitstop",
-        children = {
+        zones = {
             main = {
                 zones = {{9000, 10500, 10700, 11699}}
             }
@@ -723,7 +725,7 @@ return {
         difficulty = 2,
         title = "Betsy's Farm",
         mods = "DJBetsysFarm",
-        children = {
+        zones = {
             main = {
                 zones = {{9000, 9300, 9299, 9599}}
             }
@@ -733,7 +735,7 @@ return {
         difficulty = 2,
         title = "Rabbit Hash",
         mods = "RabbitHashKY",
-        children = {
+        zones = {
             main = {
                 zones = {{9000, 7200, 9599, 7499}}
             }
@@ -743,7 +745,7 @@ return {
         difficulty = 2,
         title = "Lake Ivy",
         mods = "lakeivytownship",
-        children = {
+        zones = {
             main = {
                 zones = {{8700, 9600, 9599, 10499}}
             }
@@ -753,7 +755,7 @@ return {
         difficulty = 2,
         title = "Parking Lot",
         mods = "ParkingLot",
-        children = {
+        zones = {
             main = {
                 zones = {{8700, 8700, 9299, 8999}}
             }
@@ -763,7 +765,7 @@ return {
         difficulty = 2,
         title = "Ed's Auto Salvage",
         mods = "EdsAutoSalvage",
-        children = {
+        zones = {
             main = {
                 zones = {{8700, 8400, 8999, 8699}}
             }
@@ -773,7 +775,7 @@ return {
         difficulty = 2,
         title = "Homepie",
         mods = "Myhometown",
-        children = {
+        zones = {
             main = {
                 zones = {{8700, 7800, 9299, 8399}}
             }
@@ -783,7 +785,7 @@ return {
         difficulty = 2,
         title = "Firecamp",
         mods = "firecamp",
-        children = {
+        zones = {
             main = {
                 zones = {{8700, 7500, 8999, 7799}}
             }
@@ -793,7 +795,7 @@ return {
         difficulty = 2,
         title = "Orchid",
         mods = "Orchidwood(official version)",
-        children = {
+        zones = {
             main = {
                 zones = {{8100, 9600, 8699, 10199}}
             }
@@ -803,7 +805,7 @@ return {
         difficulty = 2,
         title = "Little Township",
         mods = "LittleTownship",
-        children = {
+        zones = {
             main = {
                 zones = {{8100, 8400, 8399, 8699}}
             }
@@ -813,7 +815,7 @@ return {
         difficulty = 2,
         title = "Greenport",
         mods = "Greenport",
-        children = {
+        zones = {
             main = {
                 zones = {{8100, 7400, 8699, 7799}}
             }
@@ -823,7 +825,7 @@ return {
         difficulty = 2,
         title = "Blackwood",
         mods = "Blackwood",
-        children = {
+        zones = {
             main = {
                 zones = {{7800, 10500, 8099, 10799}}
             }
@@ -833,7 +835,7 @@ return {
         difficulty = 2,
         title = "Irvington",
         mods = "EerieCountry",
-        children = {
+        zones = {
             main = {
                 zones = {{11363, 17839, 11679, 18174}, {11998, 17136, 12245, 17390}, {11104, 15911, 11396, 16194},
                          {11442, 13807, 11930, 14335}, {11487, 14879, 11912, 15257}, {10266, 14733, 10590, 14972},
@@ -846,7 +848,7 @@ return {
         difficulty = 2,
         title = "Heavens Hill",
         mods = "Heavens Hill",
-        children = {
+        zones = {
             main = {
                 zones = {{7500, 7800, 7799, 8099}}
             }
@@ -856,7 +858,7 @@ return {
         difficulty = 2,
         title = "Grapeseed",
         mods = "Grapeseed",
-        children = {
+        zones = {
             main = {
                 zones = {{7200, 11100, 7499, 11399}}
             }
@@ -866,7 +868,7 @@ return {
         difficulty = 2,
         title = "Utopia",
         mods = "Utopia",
-        children = {
+        zones = {
             main = {
                 zones = {{7200, 9600, 7499, 9899}}
             }
@@ -877,7 +879,7 @@ return {
         difficulty = 2,
         title = "New Ekron",
         mods = "NewEkron",
-        children = {
+        zones = {
             main = {
                 zones = {{6900, 8100, 7499, 8699}}
             }
@@ -887,7 +889,7 @@ return {
         difficulty = 2,
         title = "Nettle Township",
         mods = "Nettle Township",
-        children = {
+        zones = {
             main = {
                 zones = {{6600, 9000, 7199, 9599}}
             }
@@ -897,7 +899,7 @@ return {
         difficulty = 2,
         title = "Fort Rock Ridge",
         mods = "Fort Rock Ridge",
-        children = {
+        zones = {
             main = {
                 zones = {{6600, 6000, 7199, 6599}}
             }
@@ -907,7 +909,7 @@ return {
         difficulty = 2,
         title = "Greenleaf",
         mods = "Greenleaf",
-        children = {
+        zones = {
             main = {
                 zones = {{6300, 10200, 6899, 10799}}
             }
@@ -917,7 +919,7 @@ return {
         difficulty = 2,
         title = "Spencer Mansion",
         mods = "SimonMDSpencerMansionLootable",
-        children = {
+        zones = {
             main = {
                 zones = {{6300, 5700, 6599, 5999}}
             }
@@ -927,7 +929,7 @@ return {
         difficulty = 2,
         title = "Research Base",
         mods = "rbr",
-        children = {
+        zones = {
             main = {
                 zones = {{5400, 12300, 5999, 12899}, {6000, 12300, 7499, 12599}},
                 mods = "rbrA2"
@@ -938,7 +940,7 @@ return {
         difficulty = 2,
         title = "Research Base",
         mods = "rbrA",
-        children = {
+        zones = {
             main = {
                 zones = {{6300, 10200, 6899, 10799}}
             }
@@ -948,7 +950,7 @@ return {
         difficulty = 2,
         title = "Fort Redstone",
         mods = "FORTREDSTONE",
-        children = {
+        zones = {
             main = {
                 zones = {{5400, 11100, 5999, 12299}}
             }
@@ -959,7 +961,7 @@ return {
         difficulty = 2,
         title = "Big Bear Lake",
         mods = "BBL",
-        children = {
+        zones = {
             main = {
                 zones = {{4800, 6900, 6899, 8099}}
             }
@@ -969,7 +971,7 @@ return {
         difficulty = 2,
         title = "Cedar Hill",
         mods = "CedarHill",
-        children = {
+        zones = {
             main = {
                 zones = {{4800, 5700, 5099, 5999}}
             }
@@ -980,7 +982,7 @@ return {
         difficulty = 2,
         title = "Chinatown",
         mods = "Chinatown",
-        children = {
+        zones = {
             main = {
                 zones = {{11100, 8700, 11399, 9299}}
             }
@@ -990,7 +992,7 @@ return {
         difficulty = 2,
         title = "Wilbore",
         mods = "wilboreky",
-        children = {
+        zones = {
             main = {
                 zones = {{4500, 9900, 5099, 10799}}
             }
@@ -1000,7 +1002,7 @@ return {
         difficulty = 2,
         title = "Chestown",
         mods = "Chestown",
-        children = {
+        zones = {
             main = {
                 zones = {{4500, 6600, 4799, 6899}}
             }
@@ -1010,7 +1012,7 @@ return {
         difficulty = 2,
         title = "The Overlook",
         mods = "OverlookHotel",
-        children = {
+        zones = {
             main = {
                 zones = {{4500, 6300, 4799, 6599}}
             }
@@ -1020,7 +1022,7 @@ return {
         difficulty = 4,
         title = "Finnegan Research Center",
         mods = "FinneganMentalAsylum",
-        children = {
+        zones = {
             main = {
                 zones = {{3902, 9578, 3987, 9678}, {3900, 9300, 4499, 9899}},
                 difficulty = 2
@@ -1031,7 +1033,7 @@ return {
         difficulty = 2,
         title = "Super Giga Mart",
         mods = "SuperGigaMart",
-        children = {
+        zones = {
             main = {
                 zones = {{3600, 6300, 3899, 6599}}
             }
@@ -1042,7 +1044,7 @@ return {
         difficulty = 3,
         title = "Raven Creek Village",
         mods = "RavenCreek",
-        children = {
+        zones = {
             main = {
                 zones = {{3909, 13036, 4492, 13496}, {3988, 13036, 4097, 12856}, {3046, 12157, 3544, 12809},
                          {4499, 11400, 4709, 11980}, {3000, 11100, 4194, 11400}, {3300, 11400, 4500, 12000},
@@ -1068,7 +1070,7 @@ return {
         difficulty = 2,
         title = "Northwest Blockade",
         mods = "NWBlockade",
-        children = {
+        zones = {
             main = {
                 zones = {{3000, 6000, 3299, 6299}}
             }
@@ -1078,7 +1080,7 @@ return {
         difficulty = 2,
         title = "Hilltop",
         mods = "Hilltop",
-        children = {
+        zones = {
             main = {
                 zones = {{3000, 5700, 3299, 5999}}
             }
@@ -1088,7 +1090,7 @@ return {
         difficulty = 2,
         title = "Winchester",
         mods = "Winchester",
-        children = {
+        zones = {
             main = {
                 zones = {{2100, 6600, 4199, 8699}}
             }
@@ -1098,7 +1100,7 @@ return {
         difficulty = 2,
         title = "Tikitown",
         mods = "tikitown",
-        children = {
+        zones = {
             main = {
                 zones = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7469}}
             }
@@ -1108,7 +1110,7 @@ return {
         difficulty = 2,
         title = "Canvasback Studios",
         mods = "Canvasback Studios",
-        children = {
+        zones = {
             main = {
                 zones = {{9910, 10200, 10170, 10440}}
             }
@@ -1118,7 +1120,7 @@ return {
         difficulty = 2,
         title = "Purgatory",
         mods = "PurgatoryCity",
-        children = {
+        zones = {
             main = {
                 zones = {{2700, 8700, 3900, 9300}}
             }
@@ -1128,7 +1130,7 @@ return {
         difficulty = 2,
         title = "Nature's Vengeance",
         mods = "nv_township_v1",
-        children = {
+        zones = {
             main = {
                 zones = {{6300, 7800, 6600, 8100}}
             }
@@ -1138,7 +1140,7 @@ return {
         difficulty = 2,
         title = "Millstin",
         mods = "millstinwithwestpoint",
-        children = {
+        zones = {
             main = {
                 zones = {{11100, 7200, 11700, 8100}}
             }
@@ -1148,7 +1150,7 @@ return {
         difficulty = 2,
         title = "Lighthouse",
         mods = "Lighthousematrioshka",
-        children = {
+        zones = {
             Lighthouse = {
                 zones = {{10800, 6300, 11100, 6600}}
             }
@@ -1158,7 +1160,7 @@ return {
         difficulty = 2,
         title = "SaveCity",
         mods = "savecity",
-        children = {
+        zones = {
             main = {
                 zones = {{11700, 7500, 12000, 7800}}
             }
@@ -1168,7 +1170,7 @@ return {
         difficulty = 2,
         title = "Rusty Rascals",
         mods = "SimonMDRRRR",
-        children = {
+        zones = {
             main = {
                 zones = {{14100, 3300, 14400, 3600}}
             }
@@ -1178,7 +1180,7 @@ return {
         difficulty = 2,
         title = "Terminus",
         mods = "TWDterminus",
-        children = {
+        zones = {
             main = {
                 zones = {{11400, 10500, 11700, 11100}}
             }
@@ -1188,7 +1190,7 @@ return {
         difficulty = 2,
         title = "Bracklewhyte",
         mods = "TheRuinsofBracklewhyte",
-        children = {
+        zones = {
             main = {
                 zones = {{5100, 9000, 5400, 9300}}
             }
@@ -1198,7 +1200,7 @@ return {
         difficulty = 2,
         title = "Oasis",
         mods = "the_oasis",
-        children = {
+        zones = {
             main = {
                 zones = {{4800, 9300, 5400, 9900}}
             }
@@ -1208,7 +1210,7 @@ return {
         difficulty = 2,
         title = "Valley Station",
         mods = "Valley_Station_44-19",
-        children = {
+        zones = {
             main = {
                 zones = {{13200, 5700, 13500, 6000}}
             }
@@ -1218,7 +1220,7 @@ return {
         difficulty = 2,
         title = "Trapalaketown",
         mods = "Trapalaketown",
-        children = {
+        zones = {
             main = {
                 zones = {{8400, 11700, 9000, 12000}}
             }
@@ -1228,7 +1230,7 @@ return {
         difficulty = 2,
         title = "The Yacht",
         mods = "The Yacht",
-        children = {
+        zones = {
             main = {
                 zones = {{3600, 5400, 3900, 5700}}
             }
@@ -1238,7 +1240,7 @@ return {
         difficulty = 2,
         title = "Wellsburg Lake",
         mods = "Wellsburg",
-        children = {
+        zones = {
             main = {
                 zones = {{7500, 10200, 7800, 10500}}
             }
@@ -1248,7 +1250,7 @@ return {
         difficulty = 2,
         title = "Walter White House",
         mods = "Walter White House",
-        children = {
+        zones = {
             main = {
                 zones = {{10800, 6900, 11100, 7200}}
             }
@@ -1258,7 +1260,7 @@ return {
         difficulty = 2,
         title = "White Forest Camp",
         mods = "White Forest Camp",
-        children = {
+        zones = {
             main = {
                 zones = {{10200, 8400, 10500, 8700}}
             }
@@ -1268,7 +1270,7 @@ return {
         difficulty = 2,
         title = "Weyhausen",
         mods = "WeyhausenByCallnmx",
-        children = {
+        zones = {
             main = {
                 zones = {{5100, 9300, 5400, 9600}}
             }
@@ -1278,7 +1280,7 @@ return {
         difficulty = 2,
         title = "Western Scrapyard",
         mods = "WesternScrapCarYard",
-        children = {
+        zones = {
             main = {
                 zones = {{8700, 9000, 9000, 9300}}
             }
@@ -1288,7 +1290,7 @@ return {
         difficulty = 3,
         title = "Military Checkpoint",
         mods = "MilitaryCheckpointWestPointAbisi",
-        children = {
+        zones = {
             main = {
                 zones = {{11400, 7500, 11700, 7800}}
             }
@@ -1298,7 +1300,7 @@ return {
         difficulty = 2,
         title = "Nova Rosewood",
         mods = "NovaRosewood",
-        children = {
+        zones = {
             main = {
                 zones = {{7500, 10800, 7800, 11100}}
             }
@@ -1308,7 +1310,7 @@ return {
         difficulty = 2,
         title = "Ztardew Valley",
         mods = "Ztardew",
-        children = {
+        zones = {
             main = {
                 zones = {{12000, 9300, 12900, 1020}}
             }
@@ -1319,7 +1321,7 @@ return {
         difficulty = 2,
         title = "Zona Segura",
         mods = "ZonaSegura0123",
-        children = {
+        zones = {
             main = {
                 zones = {{11700, 9000, 12000, 9300}}
             }
@@ -1329,7 +1331,7 @@ return {
         difficulty = 2,
         title = "Quarry Lake",
         mods = "QuarryLake_Xavior",
-        children = {
+        zones = {
             main = {
                 zones = {{12000, 11400, 12600, 12000}}
             }
@@ -1339,7 +1341,7 @@ return {
         difficulty = 2,
         title = "Eventure Island",
         mods = "EventureIsland",
-        children = {
+        zones = {
             main = {
                 zones = {{1445, 3884, 2638, 4992}}
             }
@@ -1349,7 +1351,7 @@ return {
         difficulty = 2,
         title = "NightFall",
         mods = "NightFallky",
-        children = {
+        zones = {
             main = {
                 zones = {{10200, 10200, 10500, 10500}}
             }
@@ -1359,7 +1361,7 @@ return {
         difficulty = 2,
         title = "Sunset Lake",
         mods = "114519",
-        children = {
+        zones = {
             main = {
                 zones = {{6600, 11100, 7200, 12000}}
             }
@@ -1369,7 +1371,7 @@ return {
         difficulty = 2,
         title = "Travelier Motor Inn",
         mods = "traveliermotorinnmotel",
-        children = {
+        zones = {
             main = {
                 zones = {{6115, 5794, 6194, 5846}}
             }
@@ -1379,7 +1381,7 @@ return {
         difficulty = 2,
         title = "New Albany",
         mods = "NewAlbany",
-        children = {
+        zones = {
             main = {
                 zones = {{11700, 0, 15000, 900}}
             }
@@ -1389,7 +1391,7 @@ return {
         difficulty = 3,
         title = "Constown",
         mods = "constownwithRCandFR",
-        children = {
+        zones = {
             main = {
                 zones = {{5100, 10800, 6300, 11400}}
             }
@@ -1400,7 +1402,7 @@ return {
         difficulty = 3,
         title = "Ellroy",
         mods = "NewEllroy",
-        children = {
+        zones = {
             main = {
                 zones = {{5100, 9900, 5700, 10500}}
             }
@@ -1411,7 +1413,7 @@ return {
         difficulty = 3,
         title = "Ellroy",
         mods = "Erikas_Furniture_Store",
-        children = {
+        zones = {
             main = {
                 zones = {{11486, 8229, 11584, 8322}}
             }
@@ -1422,7 +1424,7 @@ return {
         difficulty = 3,
         title = "Bitterroot",
         mods = "Bitterroot Ranch",
-        children = {
+        zones = {
             main = {
                 zones = {{10607, 7555, 10768, 7637}}
             }
@@ -1433,20 +1435,31 @@ return {
         difficulty = 4,
         title = "Reactor",
         mods = "NUCExperimentalReactor",
-        children = {
+        zones = {
             main = {
                 zones = {{8490, 12373, 8672, 12550}}
             }
         }
     },
     DenseWoods = {
-        cells = {{48, 17}},
         difficulty = 3,
         title = "Woods",
         mods = "AbandonedSurvivorBase",
-        children = {
+        zones = {
             main = {
                 zones = {{14400, 5100, 14700, 5400}}
+            }
+        }
+    },
+    hospital = {
+        difficulty = 0,
+        zeds = false,
+        bandits = false,
+        title = "Unknown",
+        mods = "respawn-hospital-rooms2",
+        zones = {
+            main = {
+                zones = {{30000, 30000, 30300, 32300}}
             }
         }
     }

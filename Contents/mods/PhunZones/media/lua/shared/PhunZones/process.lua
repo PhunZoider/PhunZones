@@ -38,8 +38,8 @@ local function getEntry(entry, omitMods)
         }
     }
 
-    if entry.children then
-        for k, v in pairs(entry.children) do
+    if entry.zones then
+        for k, v in pairs(entry.zones) do
             local process = true
             if omitMods then
                 if v.mods then
@@ -102,6 +102,10 @@ function PZ:getZones(omitMods, modifiedDataSet)
 
     -- set chunks
     local cells = {}
+
+    -- coordinates where zeds aren't allows
+    self.zedless = {}
+
     for regionKey, regionData in pairs(results or {}) do
 
         for zoneKey, zoneData in pairs(regionData.zones or {}) do
@@ -119,8 +123,12 @@ function PZ:getZones(omitMods, modifiedDataSet)
                         table.insert(cells[ckey], {regionKey, zoneKey, v[1], v[2], v[3], v[4]})
                     end
                 end
+                if zoneData.zeds == false then
+                    table.insert(self.zedless, v)
+                end
             end
             local z = tableTools:shallowCopyTable(zoneData, excludedKeys) or {}
+
             z.region = regionKey
             z.zone = zoneKey
             local merged = tableTools:mergeTables(regionData, z, excludedKeys)

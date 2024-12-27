@@ -110,6 +110,22 @@ function UI:new(x, y, width, height, player, playerIndex)
     return o;
 end
 
+function UI:onClick()
+    triggerEvent(PZ.events.OnPhunZoneWidgetClicked, self.player)
+end
+
+function UI:onMouseUp(x, y)
+    self.downY = nil
+    self.downX = nil
+    if not self.dragging then
+        self:onClick()
+    else
+        self.dragging = false
+        self:setCapture(false)
+    end
+    return true
+end
+
 -- function UI:RestoreLayout(name, layout)
 
 --     ISLayoutManager.DefaultRestoreWindow(self, layout)

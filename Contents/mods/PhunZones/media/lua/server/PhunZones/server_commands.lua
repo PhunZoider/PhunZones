@@ -13,6 +13,7 @@ Commands[PZ.commands.playerSetup] = function(player)
     print("playerSetup in server")
     print("================")
     if isServer() then
+        PZ:updateModData(p)
         sendServerCommand(player, PZ.name, PZ.commands.playerSetup, {})
     else
         PZ:getZones(true)
@@ -30,10 +31,36 @@ end
 
 Commands[PZ.commands.modifyZone] = function(player, data)
     print("================")
-    print("modifyZone in server")
+    print("modifyZoner in server")
     print("================")
     -- send any exemption/changes to the client
+    PZ:printTable(data)
+    print("================")
     PZ:saveChanges(data)
+    print("================")
+    print("modifyZonexxx in server")
+    print("================")
+end
+
+Commands[PZ.commands.killZombie] = function(player, args)
+
+    local ids = {}
+    local passed = type(args.id) == "table" and args.id or {args.id}
+
+    for _, id in ipairs(passed) do
+        ids[id] = true
+    end
+
+    local zombies = player:getCell():getZombieList()
+
+    for i = 0, zombies:size() - 1 do
+        local zombie = zombies:get(i)
+        if instanceof(zombie, "IsoZombie") and ids[zombie:getOnlineID()] then
+            zombie:removeFromWorld()
+            zombie:removeFromSquare()
+            return
+        end
+    end
 
 end
 

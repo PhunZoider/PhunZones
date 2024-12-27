@@ -17,12 +17,14 @@ PhunZones = {
     commands = {
         playerSetup = "PhunZonesPlayerSetup",
         transmitChanges = "PhunZonesTransmitChanges",
-        modifyZone = "PhunZonesModifyZone"
+        modifyZone = "PhunZonesModifyZone",
+        killZombie = "PhunZonesKillZombie",
+        cleanPlayersZeds = "PhunZonescleanPlayersZeds"
     }
 }
 
 local Core = PhunZones
-
+Core.settings = SandboxVars[Core.name] or {}
 for _, event in pairs(Core.events or {}) do
     if not Events[event] then
         LuaEventManager.AddEvent(event)
@@ -30,9 +32,27 @@ for _, event in pairs(Core.events or {}) do
 end
 
 function Core:debug(...)
-    if self.settings.debug then
-        local args = {...}
-        PhunTools:debug(args)
+
+    local args = {...}
+    for i, v in ipairs(args) do
+        if type(v) == "table" then
+            self:printTable(v)
+        else
+            print(tostring(v))
+        end
+    end
+
+end
+
+function Core:printTable(t, indent)
+    indent = indent or ""
+    for key, value in pairs(t or {}) do
+        if type(value) == "table" then
+            print(indent .. key .. ":")
+            Core:printTable(value, indent .. "  ")
+        elseif type(value) ~= "function" then
+            print(indent .. key .. ": " .. tostring(value))
+        end
     end
 end
 
@@ -76,6 +96,17 @@ function Core:updateModData(obj, skipEvent)
 
     if data.region ~= existing.region or data.zone ~= existing.zone then
         obj:getModData().PhunZones = data
+        if instanceof(obj, "IsoPlayer") then
+            if data.pvp then
+                if obj:getSafety():isEnabled() then
+                    getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
+                end
+            else
+                if not obj:getSafety():isEnabled() then
+                    getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
+                end
+            end
+        end
         if not skipEvent then
             triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, data)
         end
@@ -111,8 +142,8 @@ function Core:getLocation(x, y)
         region = "none",
         zone = "main",
         noAnnounce = true,
-        difficulty = SandboxVars.PhunZones.DefaultNoneDifficulty or 2,
-        title = SandboxVars.PhunZones.DefaultNoneTitle or "Kentucky"
+        difficulty = self.settings.DefaultNoneDifficulty or 2,
+        title = self.settings.DefaultNoneTitle or "Kentucky"
     }
 end
 
@@ -155,12 +186,12 @@ end
 function Core:saveChanges(data)
     ModData.add(self.const.modifiedModData, data)
     if isClient() then
-        sendServerCommand(self.commands.modifyZone, data)
+        sendClientCommand(getPlayer(), self.name, self.commands.modifyZone, data)
     else
         fileTools:saveTable(self.const.modifiedLuaFile, data)
     end
 
-    self:getZones(true)
+    self:getZones(true, data)
 end
 
 if isServer() then
@@ -168,13 +199,20 @@ if isServer() then
         Core:ini()
     end)
 end
--- print('- -- -- EVENTS! --  - ')
--- local e = {}
--- for k, v in pairs(Events) do
---     table.insert(e, k)
--- end
--- table.sort(e, function(a, b)
---     return a < b
--- end)
--- Core:printTable(e)
 
+-- local frequencyCheck = 30
+-- Events.OnZombieUpdate.Add(function(zed)
+--     local data = zed:getModData()
+--     if not data.PZChecked or data.PZChecked < getTimestamp() then
+--         print("Checcking zed " .. tostring(zed:getID()))
+--         data.PZChecked = getTimestamp() + frequencyCheck
+--         data.PhunZones = Core:getLocation(zed)
+--         if data.PhunZones.zeds == false then
+--             sendClientCommand(PhunSpawn.name, PhunSpawn.commands.killZombie, {
+--                 id = onlineID
+--             })
+--             zed:removeFromWorld()
+--             zed:removeFromSquare()
+--         end
+--     end
+-- end)

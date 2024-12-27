@@ -52,7 +52,9 @@ function UI.OnOpenPanel(playerObj, data, cb)
         subtitle = data.subtitle,
         difficulty = data.difficulty,
         mods = data.mods,
-        rads = data.rads
+        rads = data.rads,
+        zeds = data.zeds ~= false,
+        bandits = data.bandits ~= false
     }
     instance.cb = cb
 
@@ -78,7 +80,9 @@ function UI.OnOpenPanel(playerObj, data, cb)
         instance.txtZoneDisabled:setVisible(false)
     end
 
-    instance.chkEnabled:setSelected(1, instance.data.enabled == true)
+    instance.chkEnabled:setSelected(1, instance.data.enabled ~= false)
+    instance.chkZeds:setSelected(1, instance.data.zeds == true)
+    instance.chkBandits:setSelected(1, instance.data.bandits == true)
     instance.chkPvP:setSelected(1, instance.data.pvp == true)
     instance.txtMods:setText(tostring(instance.data.mods or ""))
     instance.txtDifficulty:setText(tostring(instance.data.difficulty or 2))
@@ -312,6 +316,24 @@ function UI:createChildren()
 
     y = y + h + 10
 
+    self.chkZeds = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Allow Zed Spawns", self)
+    self.chkZeds:addOption("zeds", nil)
+    self.chkZeds:setSelected(1, true)
+    self.chkZeds:setWidthToFit()
+    self.chkZeds:setY(y)
+    self:addChild(self.chkZeds)
+
+    y = y + h + 10
+
+    self.chkBandits = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Allow Bandit Spawns", self)
+    self.chkBandits:addOption("bandits", nil)
+    self.chkBandits:setSelected(1, true)
+    self.chkBandits:setWidthToFit()
+    self.chkBandits:setY(y)
+    self:addChild(self.chkBandits)
+
+    y = y + h + 10
+
     self.chkEnabled = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Enabled", self)
     self.chkEnabled:addOption("Enabled", nil)
     self.chkEnabled:setSelected(1, true)
@@ -329,9 +351,6 @@ function UI:createChildren()
             zone = self.txtZone:getText()
         }
 
-        if not self.chkEnabled:isSelected(1) then
-            data.enabled = false
-        end
         if self.chkPvP:isSelected(1) then
             data.pvp = true
         end
@@ -346,6 +365,15 @@ function UI:createChildren()
         end
         if self.txtMods:getText() ~= "" then
             data.mods = self.txtMods:getText()
+        end
+        if not self.chkZeds:isSelected(1) then
+            data.zeds = false
+        end
+        if not self.chkBandits:isSelected(1) then
+            data.bandits = false
+        end
+        if not self.chkEnabled:isSelected(1) then
+            data.enabled = false
         end
         if self.cb then
             self.cb(data)
