@@ -9,37 +9,20 @@ Commands[PZ.commands.playerSetup] = function(player)
     local p = player
     local z = PZ
     local data = ModData.get(PZ.const.modifiedModData) or {}
-    print("================")
-    print("playerSetup in server")
-    print("================")
-    if isServer() then
-        PZ:updateModData(p)
-        sendServerCommand(player, PZ.name, PZ.commands.playerSetup, {})
-    else
-        PZ:getZones(true)
-    end
+
+    PZ:getZones(true)
 
 end
 
 Commands[PZ.commands.transmitChanges] = function()
-    print("================")
-    print("transmitChanges in server")
-    print("================")
     -- send any exemption/changes to the client
     ModData.transmit(PZ.const.modifiedModData)
 end
 
 Commands[PZ.commands.modifyZone] = function(player, data)
-    print("================")
-    print("modifyZoner in server")
-    print("================")
     -- send any exemption/changes to the client
     PZ:printTable(data)
-    print("================")
     PZ:saveChanges(data)
-    print("================")
-    print("modifyZonexxx in server")
-    print("================")
 end
 
 Commands[PZ.commands.killZombie] = function(player, args)
@@ -62,6 +45,21 @@ Commands[PZ.commands.killZombie] = function(player, args)
         end
     end
 
+end
+
+Commands[PZ.commands.trackVehicle] = function(player, args)
+
+    args.zone = PZ:getLocation(args.x or 0, args.y or 0)
+    -- PZ:debug("trackVehicle", args, "-----")
+    -- PZ.trackedVehicles[player:getUsername()] = args
+
+    -- local modData = player:getModData()
+    -- if not modData.PhunZoneVehicle then
+    --     modData.PhunZoneVehicle = {}
+    -- end
+    -- modData.PhunZoneVehicle.lastVehicleId = args.id
+    -- modData.PhunZoneVehicle.lastVehicleX = args.x
+    -- modData.PhunZoneVehicle.lastVehicleY = args.y
 end
 
 return Commands

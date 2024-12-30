@@ -81,6 +81,7 @@ function UI.OnOpenPanel(playerObj, data, cb)
     end
 
     instance.chkEnabled:setSelected(1, instance.data.enabled ~= false)
+    instance.chkRv:setSelected(1, instance.data.rv == true)
     instance.chkZeds:setSelected(1, instance.data.zeds == true)
     instance.chkBandits:setSelected(1, instance.data.bandits == true)
     instance.chkPvP:setSelected(1, instance.data.pvp == true)
@@ -334,6 +335,15 @@ function UI:createChildren()
 
     y = y + h + 10
 
+    self.chkBandits = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Is RV Interiors Space", self)
+    self.chkBandits:addOption("rv", nil)
+    self.chkBandits:setSelected(1, true)
+    self.chkBandits:setWidthToFit()
+    self.chkBandits:setY(y)
+    self:addChild(self.chkBandits)
+
+    y = y + h + 10
+
     self.chkEnabled = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Enabled", self)
     self.chkEnabled:addOption("Enabled", nil)
     self.chkEnabled:setSelected(1, true)
@@ -374,6 +384,9 @@ function UI:createChildren()
         end
         if not self.chkEnabled:isSelected(1) then
             data.enabled = false
+        end
+        if self.chkRv:isSelected(1) then
+            data.rv = false
         end
         if self.cb then
             self.cb(data)

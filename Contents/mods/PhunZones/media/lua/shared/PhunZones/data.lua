@@ -4,6 +4,7 @@ return {
         isVoid = true,
         zeds = false,
         bandits = false,
+        rv = true,
         zones = {
             main = {
                 zones = {{21000, 6000, 24899, 13499}}
@@ -42,6 +43,7 @@ return {
     Rosewood = {
         difficulty = 0,
         title = "Rosewood",
+        pvp = true,
         zones = {
             main = {
                 zones = {{7800, 10800, 8699, 12299}}

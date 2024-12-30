@@ -151,9 +151,9 @@ function PZ:getZones(omitMods, modifiedDataSet)
     -- self:printTable(self.data.zones)
     -- print(" /ZONES ")
 
-    -- print("LOOKUP: ")
-    -- self:printTable(self.data.lookup)
-    -- print(" /LOOKUP ")
+    print("LOOKUP: ")
+    self:printTable(self.data.lookup)
+    print(" /LOOKUP ")
 
     return self.data
 end

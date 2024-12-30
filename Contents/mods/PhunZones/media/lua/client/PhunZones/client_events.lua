@@ -18,18 +18,50 @@ end)
 
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone)
     PZ:updatePlayerUI(playerObj, zone)
+    -- PZ:debug("player location changed", zone)
 end)
 
 Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
-    local nextCheck = 0
-    local every = 1
-    local getTimestamp = getTimestamp
-    Events.OnTick.Add(function()
-        if getTimestamp() >= nextCheck then
-            nextCheck = getTimestamp() + every
-            PZ:updatePlayers()
+    -- local nextCheck = 0
+    -- local every = 1
+    -- local getTimestamp = getTimestamp
+
+    -- Events.OnTick.Add(function()
+    --     if getTimestamp() >= nextCheck then
+    --         nextCheck = getTimestamp() + every
+    --         PZ:updatePlayers()
+    --     end
+    -- end)
+
+    -- local nextCheck = 0
+    -- local every = 1
+    -- local getTimestamp = getTimestamp
+    -- local lastMoved = 0
+    -- local lastChecked = 0
+    -- Events.OnPlayerMove.Add(function(player)
+    --     lastMoved = getTimestamp()
+    -- end)
+
+    -- Events.OnTick.Add(function()
+    --     if lastChecked < lastMoved then
+    --         lastChecked = getTimestamp()
+    --         --nextCheck = getTimestamp() + every
+    --         PZ:updatePlayers()
+    --     end
+    -- end)
+end)
+
+Events.OnCreatePlayer.Add(function(id)
+    local playerObj = getSpecificPlayer(id)
+    if playerObj then
+        local data = playerObj:getModData()
+        if not data.PhunZones then
+            data.PhunZones = {}
         end
-    end)
+        if not data.PhunZonesVehicleInfo then
+            data.PhunZonesVehicleInfo = {}
+        end
+    end
 end)
 
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
@@ -39,9 +71,37 @@ Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     end
 end)
 
+Events.OnEnterVehicle.Add(function(player)
+    if player then
+        local vehicle = player:getVehicle();
+        if vehicle then
+            local rvInfo = RVInterior and RVInterior.getVehicleModData(vehicle)
+            local hasInteriorParams = RVInterior and RVInterior.vehicleHasInteriorParameters(vehicle)
+            sendClientCommand(PZ.name, PZ.commands.trackVehicle, {
+                sqlId = vehicle:getSqlId(),
+                id = vehicle:getId(),
+                x = player:getX(),
+                y = player:getY()
+            })
+        end
+        local data = player:getModData().PhunZonesVehicleInfo
+        local id = vehicle:getId()
+        data.lastVehicleId = id
+        data.lastVehicleEntered = {
+            x = player:getX(),
+            y = player:getY()
+        }
+    end
+end)
+
+local lastAttempt = {}
+
 Events.OnServerCommand.Add(function(module, command, arguments)
-    if module == PZ.name and Commands[command] then
-        Commands[command](arguments)
+
+    if module == PZ.name then
+        if Commands[command] then
+            Commands[command](arguments)
+        end
     end
 end)
 

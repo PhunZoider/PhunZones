@@ -49,3 +49,13 @@ option PhunZones.DefaultNoneDifficulty
     page = PhunZones, 
     translation = PhunZonesDefaultNoneDifficulty
 }
+
+option PhunZones.UpdateInterval
+{ 
+    type = integer, 
+    default = 1, 
+    min = 1,
+    max = 1000,
+    page = PhunZones, 
+    translation = PhunZonesDefaultNoneDifficulty
+}

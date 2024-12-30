@@ -1,5 +1,6 @@
 local allLocations = require("PhunZones/data")
 local fileTools = require("PhunZones/files")
+local tableTools = require("PhunZones/table")
 PhunZones = {
     name = 'PhunZones',
     events = {
@@ -10,7 +11,9 @@ PhunZones = {
     },
     const = {
         modifiedLuaFile = "PhunZone_Changes.lua",
-        modifiedModData = "PhunZone_Changes"
+        modifiedModData = "PhunZone_Changes",
+        playerData = "PhunZonesPlayers",
+        trackedVehicles = "PhunZonesTrackedVehicles"
     },
     ui = {},
     data = {},
@@ -19,7 +22,12 @@ PhunZones = {
         transmitChanges = "PhunZonesTransmitChanges",
         modifyZone = "PhunZonesModifyZone",
         killZombie = "PhunZonesKillZombie",
-        cleanPlayersZeds = "PhunZonescleanPlayersZeds"
+        cleanPlayersZeds = "PhunZonescleanPlayersZeds",
+        rvInteriorUpdateVehicle = "PhunZonesRVInteriorUpdateVehicle",
+        rvFinishEnterInterior = "PhunZonesRVFinishEnterInterior",
+        rvFinishExitInterior = "PhunZonesRVFinishExitInterior",
+        trackVehicle = "PhunZonesTrackVehicle",
+        updatePlayerZone = "PhunZonesUpdatePlayerZone"
     }
 }
 
@@ -59,11 +67,12 @@ end
 function Core:ini()
     if not self.inied then
         self.inied = true
-
+        self.players = ModData.getOrCreate(self.const.playerData)
         if (not isClient() and not isServer() and not isCoopHost()) or isServer() then
             -- single player or a server so load changes from file
             print("PhunZones: Loading changes as server")
             self:getZones(true)
+            self.trackedVehicles = ModData.getOrCreate(self.const.trackedVehicles)
         elseif not isServer() then
             print("PhunZones: Loading changes as client")
             -- client so use cached version and then ask server for its changes
@@ -74,44 +83,118 @@ function Core:ini()
     end
 end
 
-function Core:updateModData(obj, skipEvent)
+function Core:getPlayerData(player)
+    local key = nil
+    if type(player) == "string" then
+        key = player
+    else
+        key = player:getUsername()
+    end
+    if key then
+        if not self.players then
+            self.players = {}
+        end
+        if not self.players[key] then
+            self.players[key] = {}
+        end
+        return self.players[key]
+    end
+end
+
+local excludedProps = nil
+local rvInterior = nil
+function Core:updateModData(obj, triggerChangeEvent)
     if not obj or not obj.getModData then
         return
     end
 
-    local existing = obj:getModData().PhunZones or {}
+    if not excludedProps then
+        -- cache excluded properties we don't want to duplicate
+        excludedProps = ArrayList.new()
+        excludedProps:add("rv")
+        excludedProps:add("isVoid")
+        excludedProps:add("bandits")
+        excludedProps:add("zeds")
+        excludedProps:add("zones")
+        excludedProps:add("zone")
+        excludedProps:add("region")
+    end
+    if rvInterior == nil then
+        -- cache for rv interiors support
+        rvInterior = RVInterior or false
+    end
 
-    -- commenting for now as its probably as expensive to do this as it is to just do the lookup
+    local modData = obj:getModData()
 
-    -- if existing.xx then
-    --     -- object hasn't moved more than 5 units so don't bother calculating
-    --     if math.abs(obj:getX() - existing.xx) <= 5 or math.abs(obj:getY() - existing.yy) <= 5 then
-    --         return
-    --     end
-    -- end
-    -- existing.xx = obj:getX()
-    -- existing.yy = obj:getY()
+    if not modData.PhunZones then
+        modData.PhunZones = {}
+    end
+    local existing = modData.PhunZones
+    local ldata = self:getLocation(obj) or {}
+    local doEvent = false
 
-    local data = self:getLocation(obj) or {}
+    if not instanceof(obj, "IsoPlayer") then
+        -- most likely a zed or bandit
+        modData.PhunZones = ldata
+        if triggerChangeEvent and (ldata.region ~= existing.region or ldata.zone ~= existing.zone) then
+            triggerEvent(self.events.OnPhunZonesObjectLocationChanged, obj, modData.PhunZones)
+        end
+    else
+        -- player
+        if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
+            -- Shallow copy the new data
+            existing = tableTools:shallowCopyTable(ldata)
+            -- flag that there has been a material change to the zone
+            doEvent = true
+        end
 
-    if data.region ~= existing.region or data.zone ~= existing.zone then
-        obj:getModData().PhunZones = data
-        if instanceof(obj, "IsoPlayer") then
-            if data.pvp then
-                if obj:getSafety():isEnabled() then
-                    getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
-                end
-            else
-                if not obj:getSafety():isEnabled() then
-                    getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
+        if ldata.rv and rvInterior then
+            -- current zone is an rvInteriors zone. Merge cars location
+            local interior = rvInterior.calculatePlayerInteriorInstance(obj)
+            if interior and self.trackedVehicles then
+                self.trackedVehicles[interior.interiorInstance].zone = self:getLocation(
+                    self.trackedVehicles[interior.interiorInstance].x or 0,
+                    self.trackedVehicles[interior.interiorInstance].y or 0)
+                if self.trackedVehicles[interior.interiorInstance].zone.region ~= existing.mregion or
+                    self.trackedVehicles[interior.interiorInstance].zone.zone ~= existing.mzone then
+                    -- Shallow copy the new data
+                    for k, v in pairs(self.trackedVehicles[interior.interiorInstance].zone or {}) do
+                        if not excludedProps:contains(k) then
+                            existing[k] = v
+                        end
+                    end
+                    existing.mregion = tostring(self.trackedVehicles[interior.interiorInstance].region)
+                    existing.mzone = tostring(self.trackedVehicles[interior.interiorInstance].zone)
+                    doEvent = true
                 end
             end
         end
-        if not skipEvent then
-            triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, data)
+
+        if doEvent then
+            existing.modified = getTimestamp()
+            -- modData.PhunZones = existing
+            obj:getModData().PhunZones = existing
+        end
+
+        if doEvent and isServer() then
+            self:debug("SEND UPDATE TO CLIENT", existing)
+            existing.pid = obj:getOnlineID()
+            sendServerCommand(obj, self.name, self.commands.updatePlayerZone, existing)
+        elseif not isServer() then
+            -- Toggle pvp
+            if existing.pvp and obj:getSafety():isEnabled() then
+                getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
+            elseif not obj:getSafety():isEnabled() then
+                getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
+            end
+        end
+
+        if triggerChangeEvent and doEvent then
+            triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, existing)
         end
     end
-    return data
+
+    return existing
 end
 
 local sandbox = nil

@@ -13,9 +13,6 @@ function PZ:updatePlayerUI(playerObj, info)
                 subtitle = zone.subtitle or nil
             }
         }
-        -- if zone.isVoid then
-        --     data.title = "Hiding"
-        -- end
         panel:setData(data)
     end
 end
@@ -33,19 +30,25 @@ function PZ:showWidget(playerObj)
     self.ui.widget.OnOpenPanel(playerObj)
 end
 
-function PZ:updatePlayers()
-    local players = self:onlinePlayers()
-    for i = 0, players:size() - 1, 1 do
-        local p = players:get(i)
-        self:updatePlayer(p)
+function PZ:rvInteriorFlags(entering, args)
+    local player = nil
+    for i = 0, getOnlinePlayers():size() - 1 do
+        local p = getOnlinePlayers():get(i)
+        if p:getOnlineID() == args.playerId then
+            player = p
+            break
+        end
     end
-end
 
-function PZ:updatePlayer(playerObj)
-    if not (UIManager.getSpeedControls() and UIManager.getSpeedControls():getCurrentGameSpeed() == 0) then
-        self:updateModData(playerObj)
-    else
-        print("is paused")
+    if player then
+        local data = player:getModData().PhunZones
+
+        if data then
+            data.vehicleId = entering and data.lastVehicleId or nil
+            data.inVehicleInterior = entering and args.interiorInstance or nil
+        end
+
+        self:debug("new data", data)
     end
 end
 
