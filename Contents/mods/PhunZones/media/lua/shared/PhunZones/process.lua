@@ -2,7 +2,6 @@ local PZ = PhunZones
 require "PhunZones/core"
 local tableTools = require("PhunZones/table")
 local fileTools = require("PhunZones/files")
-
 local allLocations = require("PhunZones/data")
 
 local excludedKeys = ArrayList:new();
@@ -89,12 +88,9 @@ function PZ:getZones(omitMods, modifiedDataSet)
 
     local core = self:getCoreZones(omitMods)
     local modified = modifiedDataSet or self:getModifiedZones(omitMods)
-
-    -- local results = tableTools:mergeTables(core or {}, modified or {})
     local results = tableTools:mergeTables(modified or {}, core or {})
 
     local lookup = {}
-
     -- set chunks
     local cells = {}
 

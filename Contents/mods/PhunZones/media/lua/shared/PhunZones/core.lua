@@ -21,12 +21,7 @@ PhunZones = {
         playerSetup = "PhunZonesPlayerSetup",
         transmitChanges = "PhunZonesTransmitChanges",
         modifyZone = "PhunZonesModifyZone",
-        killZombie = "PhunZonesKillZombie",
         cleanPlayersZeds = "PhunZonescleanPlayersZeds",
-        rvInteriorUpdateVehicle = "PhunZonesRVInteriorUpdateVehicle",
-        rvFinishEnterInterior = "PhunZonesRVFinishEnterInterior",
-        rvFinishExitInterior = "PhunZonesRVFinishExitInterior",
-        trackVehicle = "PhunZonesTrackVehicle",
         updatePlayerZone = "PhunZonesUpdatePlayerZone"
     }
 }
@@ -144,10 +139,13 @@ function Core:updateModData(obj, triggerChangeEvent)
 
     if not instanceof(obj, "IsoPlayer") then
         -- most likely a zed or bandit
-        modData.PhunZones = ldata
-        if triggerChangeEvent and (ldata.region ~= existing.region or ldata.zone ~= existing.zone) then
+        modData.PhunZones = tableTools:shallowCopyTable(ldata)
+        modData.PhunZones.id = obj:getOnlineID()
+        local id = obj:getOnlineID()
+        if triggerChangeEvent and (id ~= existing.id or ldata.region ~= existing.region or ldata.zone ~= existing.zone) then
             triggerEvent(self.events.OnPhunZonesObjectLocationChanged, obj, modData.PhunZones)
         end
+        return ldata
     else
         -- player
         if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
@@ -198,8 +196,6 @@ function Core:updateModData(obj, triggerChangeEvent)
     return existing
 end
 
-local sandbox = nil
-
 function Core:getLocation(x, y)
 
     local xx, yy = x, y
@@ -229,18 +225,6 @@ function Core:getLocation(x, y)
         difficulty = self.settings.DefaultNoneDifficulty or 2,
         title = self.settings.DefaultNoneTitle or "Kentucky"
     }
-end
-
-function Core:printTable(t, indent)
-    indent = indent or ""
-    for key, value in pairs(t or {}) do
-        if type(value) == "table" then
-            print(indent .. key .. ":")
-            Core:printTable(value, indent .. "  ")
-        elseif type(value) ~= "function" then
-            print(indent .. key .. ": " .. tostring(value))
-        end
-    end
 end
 
 function Core:onlinePlayers(all)
@@ -283,20 +267,3 @@ if isServer() then
         Core:ini()
     end)
 end
-
--- local frequencyCheck = 30
--- Events.OnZombieUpdate.Add(function(zed)
---     local data = zed:getModData()
---     if not data.PZChecked or data.PZChecked < getTimestamp() then
---         print("Checcking zed " .. tostring(zed:getID()))
---         data.PZChecked = getTimestamp() + frequencyCheck
---         data.PhunZones = Core:getLocation(zed)
---         if data.PhunZones.zeds == false then
---             sendClientCommand(PhunSpawn.name, PhunSpawn.commands.killZombie, {
---                 id = onlineID
---             })
---             zed:removeFromWorld()
---             zed:removeFromSquare()
---         end
---     end
--- end)

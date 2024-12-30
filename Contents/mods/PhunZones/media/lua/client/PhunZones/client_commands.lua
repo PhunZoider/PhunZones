@@ -26,11 +26,10 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
     if p then
         args.pid = nil
         local name = p:getUsername()
-        local pz = PZ
-        if not pz.players then
-            pz.players = ModData.getOrCreate(PZ.const.playerData)
+        if not PZ.players then
+            PZ.players = ModData.getOrCreate(PZ.const.playerData)
         end
-        local old = pz:getPlayerData(p)
+        local old = PZ:getPlayerData(p)
         local existing = tableTools:shallowCopyTable(old)
         if existing.title ~= args.title or existing.subtitle ~= args.subtitle and existing.isVoid ~= true then
             PZ.ui.welcome.OnOpenPanel(p, args)

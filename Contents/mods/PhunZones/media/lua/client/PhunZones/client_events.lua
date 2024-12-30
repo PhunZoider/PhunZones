@@ -8,12 +8,36 @@ Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobj
     PZ:showContext(playerObj, context, worldobjects)
 end);
 
-Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
-
+Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
+    -- check if zed is in a nozed zone
+    if instanceof(object, "IsoZombie") then
+        local doRemove = false
+        if zone.zeds == false then
+            PZ:updateModData(object)
+            doRemove = true
+        elseif zone.bandits == false and object:getModData().brain ~= nil then
+            object:getModData().PZChecked = nil
+            doRemove = true
+        end
+        if doRemove then
+            print("Removed zombie " .. tostring(object:getOnlineID()))
+            sendClientCommand(PZ.name, PZ.commands.cleanPlayersZeds, {
+                id = object:getOnlineID()
+            })
+            object:removeFromWorld()
+            object:removeFromSquare()
+        end
+    end
 end)
 
-Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
-
+Events.OnZombieUpdate.Add(function(zed)
+    local md = zed:getModData()
+    local checked = zed:getModData().PZChecked or 0
+    if not md.PhunZones or md.PhunZones.id ~= zed:getOnlineID() or not md.PhunZones.checked or md.PhunZones.checked <
+        getTimestamp() then
+        md.PhunZones = getTimestamp() + (PZ.settings.ZedUpdateFrequency or 10)
+        PZ:updateModData(zed, true)
+    end
 end)
 
 Events.OnCreatePlayer.Add(function(id)
@@ -41,29 +65,11 @@ Events.OnEnterVehicle.Add(function(player)
         local vehicle = player:getVehicle();
         if vehicle then
             PZ:setTrackedVehicleData(vehicle:getId())
-            -- local rvInfo = RVInterior and RVInterior.getVehicleModData(vehicle)
-            -- local hasInteriorParams = RVInterior and RVInterior.vehicleHasInteriorParameters(vehicle)
-            -- sendClientCommand(PZ.name, PZ.commands.trackVehicle, {
-            --     sqlId = vehicle:getSqlId(),
-            --     id = vehicle:getId(),
-            --     x = player:getX(),
-            --     y = player:getY()
-            -- })
         end
-        -- local data = player:getModData().PhunZonesVehicleInfo
-        -- local id = vehicle:getId()
-        -- data.lastVehicleId = id
-        -- data.lastVehicleEntered = {
-        --     x = player:getX(),
-        --     y = player:getY()
-        -- }
     end
 end)
 
-local lastAttempt = {}
-
 Events.OnServerCommand.Add(function(module, command, arguments)
-
     if module == PZ.name then
         if Commands[command] then
             Commands[command](arguments)

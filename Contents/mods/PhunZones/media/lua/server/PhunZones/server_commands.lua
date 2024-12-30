@@ -7,11 +7,7 @@ local PZ = PhunZones
 Commands[PZ.commands.playerSetup] = function(player)
     -- send any exemption/changes to the client
     local p = player
-    local z = PZ
-    local data = ModData.get(PZ.const.modifiedModData) or {}
-
-    PZ:getZones(true)
-
+    sendServerCommand(player, PZ.name, PZ.commands.playerSetup, ModData.get(PZ.const.modifiedModData) or {})
 end
 
 Commands[PZ.commands.transmitChanges] = function()
@@ -20,12 +16,11 @@ Commands[PZ.commands.transmitChanges] = function()
 end
 
 Commands[PZ.commands.modifyZone] = function(player, data)
-    -- send any exemption/changes to the client
-    PZ:printTable(data)
     PZ:saveChanges(data)
+    ModData.transmit(PZ.const.modifiedModData)
 end
 
-Commands[PZ.commands.killZombie] = function(player, args)
+Commands[PZ.commands.cleanPlayersZeds] = function(player, args)
 
     local ids = {}
     local passed = type(args.id) == "table" and args.id or {args.id}
@@ -35,31 +30,18 @@ Commands[PZ.commands.killZombie] = function(player, args)
     end
 
     local zombies = player:getCell():getZombieList()
-
+    print("There are " .. tostring(zombies:size()) .. " zombies in " .. player:getUsername() .. " cell " ..
+              tostring(player:getX()) .. ", " .. tostring(player:getY()))
     for i = 0, zombies:size() - 1 do
         local zombie = zombies:get(i)
         if instanceof(zombie, "IsoZombie") and ids[zombie:getOnlineID()] then
+            print("Cleaning zombie " .. tostring(zombie:getOnlineID()))
             zombie:removeFromWorld()
             zombie:removeFromSquare()
             return
         end
     end
 
-end
-
-Commands[PZ.commands.trackVehicle] = function(player, args)
-
-    args.zone = PZ:getLocation(args.x or 0, args.y or 0)
-    -- PZ:debug("trackVehicle", args, "-----")
-    -- PZ.trackedVehicles[player:getUsername()] = args
-
-    -- local modData = player:getModData()
-    -- if not modData.PhunZoneVehicle then
-    --     modData.PhunZoneVehicle = {}
-    -- end
-    -- modData.PhunZoneVehicle.lastVehicleId = args.id
-    -- modData.PhunZoneVehicle.lastVehicleX = args.x
-    -- modData.PhunZoneVehicle.lastVehicleY = args.y
 end
 
 return Commands
