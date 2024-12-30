@@ -41,8 +41,30 @@ function UI:refreshData()
     self.regions:clear()
     self.regions:addOption(" ")
     local data = PZ:getZones()
-    self.data = data
+
+    local presort = {}
     for k, v in pairs(data.lookup) do
+        v.k = k
+        table.insert(presort, v)
+    end
+    table.sort(presort, function(a, b)
+        if a.order and b.order then
+            return a.order < b.order
+        end
+        if a.title and b.title then
+            return a.title < b.title
+        end
+        return a.k < b.k
+    end)
+
+    local final = {}
+    for _, v in ipairs(presort) do
+        final[v.k] = v
+        final[v.k].k = nil
+    end
+
+    self.data = data
+    for k, v in pairs(final) do
 
         self.regions:addOptionWithData(k, v.main)
 
@@ -199,7 +221,7 @@ function UI:createChildren()
     local h = FONT_HGT_SMALL;
     local w = self.width - 20;
 
-    self.title = ISLabel:new(x, y, h, "Regions", 1, 1, 1, 1, UIFont.Small, true);
+    self.title = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Regions"), 1, 1, 1, 1, UIFont.Small, true);
     self.title:initialise();
     self.title:instantiate();
     self:addChild(self.title);
@@ -222,7 +244,7 @@ function UI:createChildren()
 
     y = self.regions.y + self.regions.height + 10
 
-    self.btnNewRegion = ISButton:new(x, y, 100, h, "Add Region", self, function()
+    self.btnNewRegion = ISButton:new(x, y, 100, h, getText("IGUI_PhunZones_AddRegion"), self, function()
         PZ.ui.editor.OnOpenPanel(self.player, {
             zone = "main"
         }, function(newData)
@@ -234,7 +256,7 @@ function UI:createChildren()
 
     x = x + self.btnNewRegion.width + padding
 
-    self.btnNewSubRegion = ISButton:new(x, y, 100, h, "Add Sub", self, function()
+    self.btnNewSubRegion = ISButton:new(x, y, 100, h, getText("IGUI_PhunZones_AddSub"), self, function()
         if self.selectedData then
             PZ.ui.editor.OnOpenPanel(self.player, {
                 region = self.selectedData.region
@@ -249,7 +271,7 @@ function UI:createChildren()
 
     x = x + self.btnNewSubRegion.width + padding
 
-    self.btnEditRegion = ISButton:new(x, y, 100, h, "Edit Region", self, function()
+    self.btnEditRegion = ISButton:new(x, y, 100, h, getText("IGUI_PhunZones_EditRegion"), self, function()
         if self.selectedData then
             PZ.ui.editor.OnOpenPanel(self.player, self.selectedData, function(newData)
                 self:saveData(newData)
@@ -267,6 +289,8 @@ function UI:createChildren()
     self.title2:initialise();
     self.title2:instantiate();
     self:addChild(self.title2);
+
+    y = y + self.title2.height + padding + HEADER_HGT
 
     self.list = ISScrollingListBox:new(x, y, self:getWidth() - (x * 2), 100);
     self.list:initialise();
@@ -306,8 +330,8 @@ function UI:createChildren()
 
     end
     self.list.drawBorder = true;
-    self.list:addColumn("Property", 0);
-    self.list:addColumn("Value", 199);
+    self.list:addColumn(getText("IGUI_PhunZones_Property"), 0);
+    self.list:addColumn(getText("IGUI_PhunZones_Value"), 199);
     self:addChild(self.list);
 
     y = self.list.y + self.list.height + 50
@@ -321,8 +345,9 @@ function UI:createChildren()
     self.points.font = UIFont.NewSmall;
     self.points.doDrawItem = self.drawPoints;
 
-    self.points.onMouseUp = function(x, y)
+    self.points.onMouseUp = function(_, x, y)
         self.selectedPoint = nil
+        self.btnEditZone.enable = false
         local row = self.points:rowAt(x, y)
         if row == -1 then
             return
@@ -334,6 +359,7 @@ function UI:createChildren()
         end
         local item = self.points.items[self.points.selected].item
         self.selectedPoint = item
+        self.btnEditZone.enable = true
     end
 
     self.points.onRightMouseUp = function(target, x, y, a, b)
@@ -358,7 +384,7 @@ function UI:createChildren()
 
     y = self.points.y + self.points.height + 10
 
-    self.btnNewZone = ISButton:new(x, y, 100, h, "Add Zone", self, function()
+    self.btnNewZone = ISButton:new(x, y, 100, h, getText("IGUI_PhunZones_AddZone"), self, function()
         if self.selectedData then
             PZ.ui.xy.OnOpenPanel(self.player, {
                 region = self.selectedData.region,
@@ -373,7 +399,7 @@ function UI:createChildren()
 
     x = x + self.btnNewZone.width + padding
 
-    self.btnEditZone = ISButton:new(x, y, 100, h, "Edit Zone", self, function()
+    self.btnEditZone = ISButton:new(x, y, 100, h, getText("IGUI_PhunZones_EditZone"), self, function()
         if self.selectedPoint then
             PZ.ui.xy.OnOpenPanel(self.player, {
                 region = self.selectedData.region,

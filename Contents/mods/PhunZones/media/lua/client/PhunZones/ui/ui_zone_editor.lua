@@ -54,7 +54,10 @@ function UI.OnOpenPanel(playerObj, data, cb)
         mods = data.mods,
         rads = data.rads,
         zeds = data.zeds ~= false,
-        bandits = data.bandits ~= false
+        bandits = data.bandits ~= false,
+        noAnnounce = data.noAnnounce == true,
+        rv = data.rv == true,
+        order = data.order or ""
     }
     instance.cb = cb
 
@@ -90,6 +93,8 @@ function UI.OnOpenPanel(playerObj, data, cb)
     instance.txtSubtitle:setText(tostring(instance.data.subtitle or ""))
     instance.txtTitle:setText(tostring(instance.data.title or ""))
     instance.txtRads:setText(tostring(instance.data.rads or ""))
+    instance.chkNoAnnounce:setSelected(1, instance.data.noAnnounce == true)
+    instance.txtOrder:setText(tostring(instance.data.order or ""))
     return instance;
 
 end
@@ -208,7 +213,7 @@ function UI:createChildren()
     local y = 10
     local h = FONT_HGT_MEDIUM
 
-    self.title = ISLabel:new(x, y, h, "Coordinates", 1, 1, 1, 1, UIFont.Small, true);
+    self.title = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Coordinates"), 1, 1, 1, 1, UIFont.Small, true);
     self.title:initialise();
     self.title:instantiate();
     self:addChild(self.title);
@@ -221,140 +226,176 @@ function UI:createChildren()
 
     y = y + self.closeButton.height + 10
 
-    self.lblRegion = ISLabel:new(x, y, h, "Region", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblRegion = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Region"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblRegion:initialise();
     self.lblRegion:instantiate();
     self:addChild(self.lblRegion);
 
-    self.txtRegionDisabled = ISLabel:new(x + 75, y, h, "Zone", 1, 1, 1, 1, UIFont.Small, true);
+    self.txtRegionDisabled = ISLabel:new(x + 75, y, h, getText("IGUI_PhunZones_Region"), 1, 1, 1, 1, UIFont.Small, true);
     self.txtRegionDisabled:initialise();
     self.txtRegionDisabled:instantiate();
     self:addChild(self.txtRegionDisabled);
 
     self.txtRegion = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtRegion:initialise();
+    self.txtRegion.tooltip = getText("IGUI_PhunZones_Region_tooltip")
     self:addChild(self.txtRegion);
 
     y = y + h + 10
 
-    self.lblZone = ISLabel:new(x, y, h, "Zone", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblZone = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Zone"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblZone:initialise();
     self.lblZone:instantiate();
     self:addChild(self.lblZone);
 
-    self.txtZoneDisabled = ISLabel:new(x + 75, y, h, "Zone", 1, 1, 1, 1, UIFont.Small, true);
+    self.txtZoneDisabled = ISLabel:new(x + 75, y, h, getText("IGUI_PhunZones_Zone"), 1, 1, 1, 1, UIFont.Small, true);
     self.txtZoneDisabled:initialise();
     self.txtZoneDisabled:instantiate();
     self:addChild(self.txtZoneDisabled);
 
     self.txtZone = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtZone:initialise();
+    self.txtZone.tooltip = getText("IGUI_PhunZones_Zone_tooltip")
     self:addChild(self.txtZone);
 
     y = y + h + 10
 
-    self.lblTitle = ISLabel:new(x, y, h, "Title", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblTitle = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Title"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblTitle:initialise();
     self.lblTitle:instantiate();
     self:addChild(self.lblTitle);
 
     self.txtTitle = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtTitle:initialise();
+    self.txtTitle.tooltip = getText("IGUI_PhunZones_Title_Tooltip")
     self:addChild(self.txtTitle);
 
     y = y + h + 10
 
-    self.lblSubtitle = ISLabel:new(x, y, h, "Subtitle", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblSubtitle = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Subtitle"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblSubtitle:initialise();
     self.lblSubtitle:instantiate();
     self:addChild(self.lblSubtitle);
 
     self.txtSubtitle = ISTextEntryBox:new("", x + 75, y, 200, h);
+    self.txtSubtitle.tooltip = getText("IGUI_PhunZones_Subtitle_tooltip")
     self.txtSubtitle:initialise();
+
     self:addChild(self.txtSubtitle);
 
     y = y + h + 10
 
-    self.lblDifficulty = ISLabel:new(x, y, h, "Difficulty", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblDifficulty = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Difficulty"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblDifficulty:initialise();
     self.lblDifficulty:instantiate();
     self:addChild(self.lblDifficulty);
 
     self.txtDifficulty = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtDifficulty:initialise();
+    self.txtDifficulty.tooltip = getText("IGUI_PhunZones_Difficulty_tooltip")
     self:addChild(self.txtDifficulty);
 
     y = y + h + 10
 
-    self.lblRads = ISLabel:new(x, y, h, "Rads", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblRads = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Rads"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblRads:initialise();
     self.lblRads:instantiate();
     self:addChild(self.lblRads);
 
     self.txtRads = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtRads:initialise();
+    self.txtRads.tooltip = getText("IGUI_PhunZones_Rads_tooltip")
     self:addChild(self.txtRads);
 
     y = y + h + 10
 
-    self.lblMods = ISLabel:new(x, y, h, "Mods", 1, 1, 1, 1, UIFont.Small, true);
+    self.lblMods = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Mods"), 1, 1, 1, 1, UIFont.Small, true);
     self.lblMods:initialise();
     self.lblMods:instantiate();
     self:addChild(self.lblMods);
 
     self.txtMods = ISTextEntryBox:new("", x + 75, y, 200, h);
     self.txtMods:initialise();
+    self.txtMods.tooltip = getText("IGUI_PhunZones_Mods_tooltip")
     self:addChild(self.txtMods);
 
     y = y + h + 10
 
-    self.chkPvP = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "PvP", self)
-    self.chkPvP:addOption("PvP", nil)
+    self.chkPvP = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_PvP"), self)
+    self.chkPvP:addOption(getText("IGUI_PhunZones_PvP"), nil)
     self.chkPvP:setSelected(1, true)
     self.chkPvP:setWidthToFit()
     self.chkPvP:setY(y)
+    self.chkPvP.tooltip = getText("IGUI_PhunZones_PvP_tooltip")
     self:addChild(self.chkPvP)
 
-    y = y + h + 10
+    -- y = y + h + 10
 
-    self.chkZeds = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Allow Zed Spawns", self)
-    self.chkZeds:addOption("zeds", nil)
+    self.chkZeds = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Zeds"), self)
+    self.chkZeds:addOption(getText("IGUI_PhunZones_Zeds"), nil)
     self.chkZeds:setSelected(1, true)
     self.chkZeds:setWidthToFit()
     self.chkZeds:setY(y)
+    self.chkZeds.tooltip = getText("IGUI_PhunZones_Zeds_tooltip")
     self:addChild(self.chkZeds)
 
     y = y + h + 10
 
-    self.chkBandits = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Allow Bandit Spawns", self)
-    self.chkBandits:addOption("bandits", nil)
+    self.chkBandits = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Bandits"), self)
+    self.chkBandits:addOption(getText("IGUI_PhunZones_Bandits"), nil)
     self.chkBandits:setSelected(1, true)
     self.chkBandits:setWidthToFit()
     self.chkBandits:setY(y)
+    self.chkBandits.tooltip = getText("IGUI_PhunZones_Bandits_tooltip")
     self:addChild(self.chkBandits)
+
+    -- y = y + h + 10
+
+    self.chkRv = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_RVInteriors"), self)
+    self.chkRv:addOption(getText("IGUI_PhunZones_RVInteriors"), nil)
+    self.chkRv:setSelected(1, true)
+    self.chkRv:setWidthToFit()
+    self.chkRv:setY(y)
+    self.chkRv.tooltip = getText("IGUI_PhunZones_RVInteriors_tooltip")
+    self:addChild(self.chkRv)
 
     y = y + h + 10
 
-    self.chkBandits = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Is RV Interiors Space", self)
-    self.chkBandits:addOption("rv", nil)
-    self.chkBandits:setSelected(1, true)
-    self.chkBandits:setWidthToFit()
-    self.chkBandits:setY(y)
-    self:addChild(self.chkBandits)
+    self.chkNoAnnounce = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_NoWelcome"), self)
+    self.chkNoAnnounce:addOption(getText("IGUI_PhunZones_NoWelcome"), nil)
+    self.chkNoAnnounce:setSelected(1, true)
+    self.chkNoAnnounce:setWidthToFit()
+    self.chkNoAnnounce:setY(y)
+    self.chkNoAnnounce.tooltip = getText("IGUI_PhunZones_NoWelcome_tooltip")
+    self:addChild(self.chkNoAnnounce)
 
-    y = y + h + 10
+    -- y = y + h + 10
 
-    self.chkEnabled = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, "Enabled", self)
-    self.chkEnabled:addOption("Enabled", nil)
+    self.chkEnabled = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Enabled"), self)
+    self.chkEnabled:addOption(getText("IGUI_PhunZones_Enabled"), nil)
     self.chkEnabled:setSelected(1, true)
     self.chkEnabled:setWidthToFit()
     self.chkEnabled:setY(y)
+    self.chkEnabled.tooltip = getText("IGUI_PhunZones_Enabled_tooltip")
     self:addChild(self.chkEnabled)
 
     y = y + h + 10
+
+    self.lblOrder = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Order"), 1, 1, 1, 1, UIFont.Small, true);
+    self.lblOrder:initialise();
+    self.lblOrder:instantiate();
+    self:addChild(self.lblOrder);
+
+    self.txtOrder = ISTextEntryBox:new("", x + 75, y, 200, h);
+    self.txtOrder:initialise();
+    self.txtOrder.tooltip = getText("IGUI_PhunZones_Order_tooltip")
+    self:addChild(self.txtOrder);
+
+    y = y + h + 10
+
     -- x = self.btnXY2Set.x + self.btnXY2Set.width + 10
 
-    self.save = ISButton:new(x, y, 80, h, "Save", self, function()
+    self.save = ISButton:new(x, y, 80, h, getText("UI_btn_save"), self, function()
 
         local data = {
             region = self.txtRegion:getText(),
@@ -387,6 +428,12 @@ function UI:createChildren()
         end
         if self.chkRv:isSelected(1) then
             data.rv = false
+        end
+        if not self.chkNoAnnounce:isSelected(1) then
+            data.noAnnounce = true
+        end
+        if self.txtOrder:getText() ~= "" then
+            data.txtOrder = tonumber(self.txtOrder:getText())
         end
         if self.cb then
             self.cb(data)

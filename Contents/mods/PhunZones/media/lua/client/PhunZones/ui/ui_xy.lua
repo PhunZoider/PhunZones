@@ -31,7 +31,7 @@ function UI.OnOpenPanel(playerObj, xy, cb)
 
         UI.instances[playerIndex] = UI:new(x, y, width, height, playerObj, playerIndex);
         UI.instances[playerIndex]:initialise();
-        ISLayoutManager.RegisterWindow(profileName, UI, UI.instances[playerIndex])
+        -- ISLayoutManager.RegisterWindow(profileName, UI, UI.instances[playerIndex])
     end
 
     local instance = UI.instances[playerIndex]
@@ -107,21 +107,21 @@ end
 
 function UI:RestoreLayout(name, layout)
 
-    ISLayoutManager.DefaultRestoreWindow(self, layout)
-    if name == profileName then
-        ISLayoutManager.DefaultRestoreWindow(self, layout)
-        self.userPosition = layout.userPosition == 'true'
-    end
-    self:recalcSize();
+    -- ISLayoutManager.DefaultRestoreWindow(self, layout)
+    -- if name == profileName then
+    --     ISLayoutManager.DefaultRestoreWindow(self, layout)
+    --     self.userPosition = layout.userPosition == 'true'
+    -- end
+    -- self:recalcSize();
 end
 
 function UI:SaveLayout(name, layout)
-    ISLayoutManager.DefaultSaveWindow(self, layout)
-    if self.userPosition then
-        layout.userPosition = 'true'
-    else
-        layout.userPosition = 'false'
-    end
+    -- ISLayoutManager.DefaultSaveWindow(self, layout)
+    -- if self.userPosition then
+    --     layout.userPosition = 'true'
+    -- else
+    --     layout.userPosition = 'false'
+    -- end
 end
 
 function UI:close()
