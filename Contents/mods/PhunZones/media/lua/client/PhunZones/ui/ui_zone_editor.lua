@@ -134,7 +134,7 @@ function UI:new(x, y, width, height, player, playerIndex)
     o.zOffsetLargeFont = 25;
     o.zOffsetMediumFont = 20;
     o.zOffsetSmallFont = 6;
-    -- o:setWantKeyEvents(true)
+    o:setWantKeyEvents(true)
     return o;
 end
 
@@ -407,4 +407,20 @@ function UI:prerender()
 
     ISPanel.prerender(self);
 
+end
+
+--[[
+
+    Keyboad stuff
+
+]] -- ]   
+
+function UI:isKeyConsumed(key)
+    return key == Keyboard.KEY_ESCAPE
+end
+
+function UI:onKeyRelease(key)
+    if key == Keyboard.KEY_ESCAPE then
+        self:close()
+    end
 end

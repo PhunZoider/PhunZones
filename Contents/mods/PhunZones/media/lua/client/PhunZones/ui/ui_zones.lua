@@ -530,6 +530,7 @@ function UI:new(x, y, width, height, player, key)
     o.zOffsetSmallFont = 25;
     o.moveWithMouse = true;
     o.key = key;
+    o:setWantKeyEvents(true)
     self.player = player
     self.playerIndex = player:getPlayerNum()
     return o;
@@ -587,5 +588,15 @@ function UI:SaveLayout(name, layout)
         layout.userPosition = 'true'
     else
         layout.userPosition = 'false'
+    end
+end
+
+function UI:isKeyConsumed(key)
+    return key == Keyboard.KEY_ESCAPE
+end
+
+function UI:onKeyRelease(key)
+    if key == Keyboard.KEY_ESCAPE then
+        self:close()
     end
 end
