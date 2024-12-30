@@ -8,26 +8,21 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
     if module == PZ.name and Commands[command] then
         Commands[command](playerObj, arguments)
     elseif module == "RVInterior" then
-        print("command: ", command)
-        PZ:debug(command, arguments)
         if command == "clientFinishExitInterior" then
-            sendServerCommand(playerObj, PZ.name, PZ.commands.rvFinishExitInterior, {
-                playerIndex = playerObj:getPlayerNum(),
-                vehicleId = arguments.vehicleId
-            })
-        elseif command == "clientFinishEnterInterior" then
-            sendServerCommand(playerObj, PZ.name, PZ.commands.rvFinishEnterInterior, {
-                playerIndex = playerObj:getPlayerNum()
-            })
+            --     sendServerCommand(playerObj, PZ.name, PZ.commands.rvFinishExitInterior, {
+            --         playerIndex = playerObj:getPlayerNum(),
+            --         vehicleId = arguments.vehicleId
+            --     })
+            -- elseif command == "clientFinishEnterInterior" then
+            --     sendServerCommand(playerObj, PZ.name, PZ.commands.rvFinishEnterInterior, {
+            --         playerIndex = playerObj:getPlayerNum()
+            --     })
         elseif command == "updateVehiclePosition" then
             PZ:setTrackedVehicleData(arguments.vehicleId)
         elseif command == "clientStartEnterInterior" then
             -- args will have the vehicleId
             PZ:setTrackedVehicleData(arguments.vehicleId)
-        else
-            PZ:debug(command, arguments)
         end
-        print(" /--- ")
     end
 end)
 

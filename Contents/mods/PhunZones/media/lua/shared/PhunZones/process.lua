@@ -88,11 +88,6 @@ end
 function PZ:getZones(omitMods, modifiedDataSet)
 
     local core = self:getCoreZones(omitMods)
-
-    -- print("\n==============\nCORE: " .. tostring(omitMods))
-
-    -- self:printTable(core)
-
     local modified = modifiedDataSet or self:getModifiedZones(omitMods)
 
     -- local results = tableTools:mergeTables(core or {}, modified or {})
@@ -151,9 +146,9 @@ function PZ:getZones(omitMods, modifiedDataSet)
     -- self:printTable(self.data.zones)
     -- print(" /ZONES ")
 
-    print("LOOKUP: ")
-    self:printTable(self.data.lookup)
-    print(" /LOOKUP ")
+    -- print("LOOKUP: ")
+    -- self:printTable(self.data.lookup)
+    -- print(" /LOOKUP ")
 
     return self.data
 end

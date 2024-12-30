@@ -102,25 +102,31 @@ function Core:getPlayerData(player)
 end
 
 local excludedProps = nil
+local excludedTrackingProps = nil
 local rvInterior = nil
 function Core:updateModData(obj, triggerChangeEvent)
     if not obj or not obj.getModData then
         return
     end
 
-    if not excludedProps then
+    if not excludedTrackingProps then
         -- cache excluded properties we don't want to duplicate
         excludedProps = ArrayList.new()
-        excludedProps:add("rv")
-        excludedProps:add("isVoid")
-        excludedProps:add("bandits")
-        excludedProps:add("zeds")
-        excludedProps:add("zones")
-        excludedProps:add("zone")
-        excludedProps:add("region")
         excludedProps:add("x")
         excludedProps:add("y")
         excludedProps:add("vehicleId")
+
+        excludedTrackingProps = ArrayList.new()
+        excludedTrackingProps:add("rv")
+        excludedTrackingProps:add("isVoid")
+        excludedTrackingProps:add("bandits")
+        excludedTrackingProps:add("zeds")
+        excludedTrackingProps:add("zones")
+        excludedTrackingProps:add("zone")
+        excludedTrackingProps:add("region")
+        excludedTrackingProps:add("x")
+        excludedTrackingProps:add("y")
+        excludedTrackingProps:add("vehicleId")
     end
     if rvInterior == nil then
         -- cache for rv interiors support
@@ -146,7 +152,7 @@ function Core:updateModData(obj, triggerChangeEvent)
         -- player
         if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
             -- Shallow copy the new data
-            existing = tableTools:shallowCopyTable(ldata)
+            existing = tableTools:shallowCopyTable(ldata, excludedProps)
             -- flag that there has been a material change to the zone
             doEvent = true
         end
@@ -162,7 +168,7 @@ function Core:updateModData(obj, triggerChangeEvent)
                 if zone.region ~= existing.mregion or zone.zone ~= existing.mzone then
                     -- Shallow copy the new data
                     for k, v in pairs(zone) do
-                        if not excludedProps:contains(k) then
+                        if not excludedTrackingProps:contains(k) then
                             existing[k] = v
                         end
                     end
@@ -175,7 +181,6 @@ function Core:updateModData(obj, triggerChangeEvent)
 
         if doEvent then
             existing.modified = getTimestamp()
-            -- modData.PhunZones = existing
             obj:getModData().PhunZones = existing
         end
 
