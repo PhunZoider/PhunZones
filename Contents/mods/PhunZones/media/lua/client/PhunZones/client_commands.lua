@@ -1,6 +1,7 @@
 if isServer() then
     return
 end
+local tableTools = require("PhunZones/table")
 local PZ = PhunZones
 
 local Commands = {}
@@ -27,8 +28,13 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
         if not PZ.players then
             PZ.players = ModData.getOrCreate(PZ.const.playerData)
         end
+        local existing = tableTools.shallowCopyTable(PZ:getPlayerData(p))
+        if existing.title ~= args.title or existing.subtitle ~= args.subtitle and existing.isVoid ~= true then
+            PZ.ui.welcome.OnOpenPanel(p, args)
+        end
+        PZ:updatePlayerUI(p, args)
         PZ.players[name] = args
-        triggerEvent(PZ.events.OnPhunZonesPlayerLocationChanged, p, args)
+        triggerEvent(PZ.events.OnPhunZonesPlayerLocationChanged, p, args, existing)
     end
 end
 
