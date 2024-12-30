@@ -40,22 +40,23 @@ Events.OnEnterVehicle.Add(function(player)
     if player then
         local vehicle = player:getVehicle();
         if vehicle then
-            local rvInfo = RVInterior and RVInterior.getVehicleModData(vehicle)
-            local hasInteriorParams = RVInterior and RVInterior.vehicleHasInteriorParameters(vehicle)
-            sendClientCommand(PZ.name, PZ.commands.trackVehicle, {
-                sqlId = vehicle:getSqlId(),
-                id = vehicle:getId(),
-                x = player:getX(),
-                y = player:getY()
-            })
+            PZ:setTrackedVehicleData(vehicle:getId())
+            -- local rvInfo = RVInterior and RVInterior.getVehicleModData(vehicle)
+            -- local hasInteriorParams = RVInterior and RVInterior.vehicleHasInteriorParameters(vehicle)
+            -- sendClientCommand(PZ.name, PZ.commands.trackVehicle, {
+            --     sqlId = vehicle:getSqlId(),
+            --     id = vehicle:getId(),
+            --     x = player:getX(),
+            --     y = player:getY()
+            -- })
         end
-        local data = player:getModData().PhunZonesVehicleInfo
-        local id = vehicle:getId()
-        data.lastVehicleId = id
-        data.lastVehicleEntered = {
-            x = player:getX(),
-            y = player:getY()
-        }
+        -- local data = player:getModData().PhunZonesVehicleInfo
+        -- local id = vehicle:getId()
+        -- data.lastVehicleId = id
+        -- data.lastVehicleEntered = {
+        --     x = player:getX(),
+        --     y = player:getY()
+        -- }
     end
 end)
 

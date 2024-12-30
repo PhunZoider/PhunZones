@@ -118,6 +118,9 @@ function Core:updateModData(obj, triggerChangeEvent)
         excludedProps:add("zones")
         excludedProps:add("zone")
         excludedProps:add("region")
+        excludedProps:add("x")
+        excludedProps:add("y")
+        excludedProps:add("vehicleId")
     end
     if rvInterior == nil then
         -- cache for rv interiors support
@@ -151,20 +154,20 @@ function Core:updateModData(obj, triggerChangeEvent)
         if ldata.rv and rvInterior then
             -- current zone is an rvInteriors zone. Merge cars location
             local interior = rvInterior.calculatePlayerInteriorInstance(obj)
-            if interior and self.trackedVehicles then
-                self.trackedVehicles[interior.interiorInstance].zone = self:getLocation(
-                    self.trackedVehicles[interior.interiorInstance].x or 0,
+            if interior and self.trackedVehicles and self.trackedVehicles[interior.interiorInstance] then
+
+                local zone = self:getLocation(self.trackedVehicles[interior.interiorInstance].x or 0,
                     self.trackedVehicles[interior.interiorInstance].y or 0)
-                if self.trackedVehicles[interior.interiorInstance].zone.region ~= existing.mregion or
-                    self.trackedVehicles[interior.interiorInstance].zone.zone ~= existing.mzone then
+
+                if zone.region ~= existing.mregion or zone.zone ~= existing.mzone then
                     -- Shallow copy the new data
-                    for k, v in pairs(self.trackedVehicles[interior.interiorInstance].zone or {}) do
+                    for k, v in pairs(zone) do
                         if not excludedProps:contains(k) then
                             existing[k] = v
                         end
                     end
-                    existing.mregion = tostring(self.trackedVehicles[interior.interiorInstance].region)
-                    existing.mzone = tostring(self.trackedVehicles[interior.interiorInstance].zone)
+                    existing.mregion = zone.region
+                    existing.mzone = zone.zone
                     doEvent = true
                 end
             end
@@ -180,13 +183,6 @@ function Core:updateModData(obj, triggerChangeEvent)
             self:debug("SEND UPDATE TO CLIENT", existing)
             existing.pid = obj:getOnlineID()
             sendServerCommand(obj, self.name, self.commands.updatePlayerZone, existing)
-        elseif not isServer() then
-            -- Toggle pvp
-            if existing.pvp and obj:getSafety():isEnabled() then
-                getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
-            elseif not obj:getSafety():isEnabled() then
-                getPlayerSafetyUI(obj:getPlayerNum()):toggleSafety()
-            end
         end
 
         if triggerChangeEvent and doEvent then

@@ -24,13 +24,21 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
     end
 
     if p then
+        args.pid = nil
         local name = p:getUsername()
-        if not PZ.players then
-            PZ.players = ModData.getOrCreate(PZ.const.playerData)
+        local pz = PZ
+        if not pz.players then
+            pz.players = ModData.getOrCreate(PZ.const.playerData)
         end
-        local existing = tableTools.shallowCopyTable(PZ:getPlayerData(p))
+        local old = pz:getPlayerData(p)
+        local existing = tableTools:shallowCopyTable(old)
         if existing.title ~= args.title or existing.subtitle ~= args.subtitle and existing.isVoid ~= true then
             PZ.ui.welcome.OnOpenPanel(p, args)
+        end
+        if existing.pvp and p:getSafety():isEnabled() then
+            getPlayerSafetyUI(p:getPlayerNum()):toggleSafety()
+        elseif not p:getSafety():isEnabled() then
+            getPlayerSafetyUI(p:getPlayerNum()):toggleSafety()
         end
         PZ:updatePlayerUI(p, args)
         PZ.players[name] = args
