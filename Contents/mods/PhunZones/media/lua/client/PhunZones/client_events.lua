@@ -31,6 +31,7 @@ Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
 end)
 
 Events.OnZombieUpdate.Add(function(zed)
+    if not zed then return end
     local md = zed:getModData()
     local checked = zed:getModData().PZChecked or 0
     if not md.PhunZones or md.PhunZones.id ~= zed:getOnlineID() or not md.PhunZones.checked or md.PhunZones.checked <

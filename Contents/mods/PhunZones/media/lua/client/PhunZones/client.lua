@@ -18,16 +18,20 @@ function PZ:updatePlayerUI(playerObj, info)
 end
 
 function PZ:showWidgets()
+
     local players = self:onlinePlayers()
     for i = 0, players:size() - 1, 1 do
         local p = players:get(i)
         self:showWidget(p)
         self:updatePlayerUI(p)
     end
+
 end
 
 function PZ:showWidget(playerObj)
-    self.ui.widget.OnOpenPanel(playerObj)
+    if self.settings.Widget then
+        self.ui.widget.OnOpenPanel(playerObj)
+    end
 end
 
 function PZ:rvInteriorFlags(entering, args)
@@ -48,7 +52,7 @@ function PZ:rvInteriorFlags(entering, args)
             data.inVehicleInterior = entering and args.interiorInstance or nil
         end
 
-        self:debug("new data", data)
+        -- self:debug("new data", data)
     end
 end
 

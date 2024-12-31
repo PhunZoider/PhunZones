@@ -183,7 +183,7 @@ function Core:updateModData(obj, triggerChangeEvent)
         end
 
         if doEvent and isServer() then
-            self:debug("SEND UPDATE TO CLIENT", existing)
+            -- self:debug("SEND UPDATE TO CLIENT", existing)
             existing.pid = obj:getOnlineID()
             sendServerCommand(obj, self.name, self.commands.updatePlayerZone, existing)
         end

@@ -1434,9 +1434,10 @@ return {
     },
     NUCExperimentalReactor = {
         cells = {{28, 41}},
+        rads = 75,
         difficulty = 4,
         title = "Reactor",
-        mods = "NUCExperimentalReactor",
+        mods = "NUCExperimentalReactor;PhunRadNUC;",
         zones = {
             main = {
                 zones = {{8490, 12373, 8672, 12550}}

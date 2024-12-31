@@ -16,10 +16,12 @@ local function getEntry(entry, omitMods)
     local process = true
     if omitMods then
         if entry.mods then
+            process = false
             local mods = luautils.split(entry.mods .. ";", ";")
             for _, m in ipairs(mods) do
-                if m and not getActivatedMods():contains(m) then
-                    process = false
+                if m and getActivatedMods():contains(m) then
+                    process = true
+                    break
                 end
             end
         end
@@ -146,6 +148,10 @@ function PZ:getZones(omitMods, modifiedDataSet)
     -- self:printTable(self.data.lookup)
     -- print(" /LOOKUP ")
 
-    return self.data
+    return {
+        cells = cells,
+        zones = results,
+        lookup = lookup
+    }
 end
 

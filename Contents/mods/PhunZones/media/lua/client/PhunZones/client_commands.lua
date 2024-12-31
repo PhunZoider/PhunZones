@@ -31,8 +31,10 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
         end
         local old = PZ:getPlayerData(p)
         local existing = tableTools:shallowCopyTable(old)
-        if existing.title ~= args.title or existing.subtitle ~= args.subtitle and existing.isVoid ~= true then
-            PZ.ui.welcome.OnOpenPanel(p, args)
+        if PZ.settings.ShowZoneChange then
+            if existing.title ~= args.title or existing.subtitle ~= args.subtitle and existing.isVoid ~= true then
+                PZ.ui.welcome.OnOpenPanel(p, args)
+            end
         end
         if existing.pvp and p:getSafety():isEnabled() then
             getPlayerSafetyUI(p:getPlayerNum()):toggleSafety()
