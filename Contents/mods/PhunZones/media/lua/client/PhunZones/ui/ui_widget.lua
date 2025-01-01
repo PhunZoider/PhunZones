@@ -238,14 +238,14 @@ function UI:prerender()
         txtColor = self.hoverTextColor
 
     elseif self.coverMap then
-        self:setX(self.minimap.x)
-        self:setY(self.minimap.y)
+        self:setX(minimap.x)
+        self:setY(minimap.y)
         self:bringToTop()
 
         self:setWidth(0)
         self:setHeight(0)
 
-        local title = self.minimap.titleBar
+        local title = minimap.titleBar
 
         if title:isVisible() then
             return

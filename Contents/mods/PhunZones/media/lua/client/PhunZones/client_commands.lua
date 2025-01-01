@@ -36,12 +36,11 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
                 PZ.ui.welcome.OnOpenPanel(p, args)
             end
         end
-        if existing.pvp and p:getSafety():isEnabled() then
+        if existing.pvp and p.getSafety and p:getSafety():isEnabled() then
             getPlayerSafetyUI(p:getPlayerNum()):toggleSafety()
-        elseif not p:getSafety():isEnabled() then
+        elseif not p.getSafety and p:getSafety():isEnabled() then
             getPlayerSafetyUI(p:getPlayerNum()):toggleSafety()
         end
-        PZ:updatePlayerUI(p, args)
         PZ.players[name] = args
         triggerEvent(PZ.events.OnPhunZonesPlayerLocationChanged, p, args, existing)
     end

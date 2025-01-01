@@ -7,6 +7,12 @@ local PZ = PhunZones
 Commands[PZ.commands.playerSetup] = function(player)
     -- send any exemption/changes to the client
     local p = player
+    local modData = p:getModData()
+
+    if not modData.PhunZones then
+        modData.PhunZones = {}
+    end
+    modData.PhunZones.modified = false
     sendServerCommand(player, PZ.name, PZ.commands.playerSetup, ModData.get(PZ.const.modifiedModData) or {})
 end
 

@@ -5,7 +5,7 @@ option PhunZones.ShowZoneChange
     type = boolean,
     default = true,
     page = PhunZones,
-    translation = PhunZones_ShowZoneChange
+    translation = PhunZones_ShowZoneChange,
 }
 
 option PhunZones.Widget
@@ -13,7 +13,7 @@ option PhunZones.Widget
     type = boolean,
     default = true,
     page = PhunZones,
-    translation = PhunZones_Widget
+    translation = PhunZones_Widget,
 }
 
 option PhunZones.DefaultNoneTitle
@@ -21,7 +21,7 @@ option PhunZones.DefaultNoneTitle
     type = string,
     default = Kentucky, 
     page = PhunZones, 
-    translation = PhunZones_DefaultNoneTitle
+    translation = PhunZones_DefaultNoneTitle,
 }
 
 option PhunZones.DefaultNoneDifficulty
@@ -31,7 +31,7 @@ option PhunZones.DefaultNoneDifficulty
     min = 0,
     max = 4,
     page = PhunZones, 
-    translation = PhunZones_DefaultNoneDifficulty
+    translation = PhunZones_DefaultNoneDifficulty,
 }
 
 option PhunZones.UpdateInterval
@@ -41,7 +41,7 @@ option PhunZones.UpdateInterval
     min = 1,
     max = 1000,
     page = PhunZones, 
-    translation = PhunZones_UpdateInterval
+    translation = PhunZones_UpdateInterval,
 }
 
 option PhunZones.ZedUpdateFrequency
@@ -51,5 +51,5 @@ option PhunZones.ZedUpdateFrequency
     min = 1,
     max = 1000,
     page = PhunZones, 
-    translation = PhunZones_ZedUpdateFrequency
+    translation = PhunZones_ZedUpdateFrequency,
 }

@@ -8,6 +8,10 @@ Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobj
     PZ:showContext(playerObj, context, worldobjects)
 end);
 
+Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
+    PZ:updatePlayerUI(playerObj, zone)
+end)
+
 Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
     -- check if zed is in a nozed zone
     if instanceof(object, "IsoZombie") then
@@ -30,15 +34,19 @@ Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
     end
 end)
 
-Events.OnZombieUpdate.Add(function(zed)
-    if not zed then return end
-    local md = zed:getModData()
-    local checked = zed:getModData().PZChecked or 0
-    if not md.PhunZones or md.PhunZones.id ~= zed:getOnlineID() or not md.PhunZones.checked or md.PhunZones.checked <
-        getTimestamp() then
-        md.PhunZones = getTimestamp() + (PZ.settings.ZedUpdateFrequency or 10)
-        PZ:updateModData(zed, true)
-    end
+Events[PZ.events.OnPhunZoneReady].Add(function()
+    Events.OnZombieUpdate.Add(function(zed)
+        if not zed then
+            return
+        end
+        local md = zed:getModData()
+        local checked = zed:getModData().PZChecked or 0
+        if not md.PhunZones or md.PhunZones.id ~= zed:getOnlineID() or not md.PhunZones.checked or md.PhunZones.checked <
+            getTimestamp() then
+            md.PhunZones = getTimestamp() + (PZ.settings.ZedUpdateFrequency or 10)
+            PZ:updateModData(zed, true)
+        end
+    end)
 end)
 
 Events.OnCreatePlayer.Add(function(id)

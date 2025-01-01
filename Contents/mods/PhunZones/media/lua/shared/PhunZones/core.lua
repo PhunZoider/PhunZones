@@ -177,6 +177,10 @@ function Core:updateModData(obj, triggerChangeEvent)
             end
         end
 
+        if not existing.modified then
+            doEvent = true
+        end
+
         if doEvent then
             existing.modified = getTimestamp()
             obj:getModData().PhunZones = existing
