@@ -22,7 +22,6 @@ return {
     },
     MarchRidge = {
         difficulty = 2,
-        rads = 10,
         title = "March Ridge",
         zones = {
             main = {
@@ -32,7 +31,6 @@ return {
     },
     Muldraugh = {
         difficulty = 1,
-        rads = 10,
         title = "Muldraugh",
         zones = {
             main = {
@@ -43,7 +41,6 @@ return {
     Rosewood = {
         difficulty = 0,
         title = "Rosewood",
-        pvp = true,
         zones = {
             main = {
                 zones = {{7800, 10800, 8699, 12299}}
@@ -316,6 +313,7 @@ return {
     },
     Dirkerdam = {
         difficulty = 2,
+        rads = 10,
         title = "Dirkerdam",
         mods = "Dirkerdam",
         zones = {
@@ -324,6 +322,7 @@ return {
                          {1899, 2118, 2723, 2879}}
             },
             Shipyard = {
+                rads = 30,
                 zones = {{7707, 4527, 8262, 5086}},
                 difficulty = 3,
                 subtitle = "Shipyard"
@@ -1463,6 +1462,18 @@ return {
         zones = {
             main = {
                 zones = {{30000, 30000, 30300, 32300}}
+            }
+        }
+    },
+    shortrest = {
+        difficulty = 0,
+        zeds = false,
+        bandits = false,
+        title = "Shortrest",
+        mods = "Shortrest_City",
+        zones = {
+            main = {
+                zones = {{13200, 6600, 14700, 7500}}
             }
         }
     }
