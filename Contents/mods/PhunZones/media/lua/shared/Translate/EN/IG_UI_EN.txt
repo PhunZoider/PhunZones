@@ -51,5 +51,6 @@ IGUI_EN = {
     IGUI_PhunZones_Enabled_tooltip = "Uncheck to deactivate this zone (and any of its sub zones)",
     IGUI_PhunZones_Order = "Order",
     IGUI_PhunZones_Order_tooltip = "Allows you to override an existing entry in the list. Just make this number higher than what you are wanting to override"
-
+    IGUI_PhunZones_AllZones = "Show All"
+    IGUI_PhunZones_AllZones_tooltip = "Tick to show everything in system - or untick to show just what has been loaded"
 }

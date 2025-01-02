@@ -65,8 +65,20 @@ function PZ:getCoreZones(omitMods)
     local results = {}
     for key, entry in pairs(allLocations) do
         local e = getEntry(entry, omitMods)
+        local sortzones = {}
         if e then
-            results[key] = e
+            e.tmpKey = key
+            table.insert(sortzones, e)
+        end
+        table.sort(sortzones, function(a, b)
+            if a.order ~= b.order then
+                return (a.order or 0) < (b.order or 0)
+            end
+            return false
+        end)
+        for _, v in ipairs(sortzones) do
+            results[v.tmpKey] = v
+            v.tmpKey = nil
         end
     end
     return results
@@ -79,8 +91,20 @@ function PZ:getModifiedZones(omitMods)
     local results = {}
     for key, entry in pairs(data) do
         local e = getEntry(entry, omitMods)
+        local sortzones = {}
         if e then
-            results[key] = e
+            e.tmpKey = key
+            table.insert(sortzones, e)
+        end
+        table.sort(sortzones, function(a, b)
+            if a.order ~= b.order then
+                return (a.order or 0) < (b.order or 0)
+            end
+            return false
+        end)
+        for _, v in ipairs(sortzones) do
+            results[v.tmpKey] = v
+            v.tmpKey = nil
         end
     end
     return results
@@ -90,7 +114,7 @@ function PZ:getZones(omitMods, modifiedDataSet)
 
     local core = self:getCoreZones(omitMods)
     local modified = modifiedDataSet or self:getModifiedZones(omitMods)
-    local results = tableTools:mergeTables(modified or {}, core or {})
+    local results = tableTools:mergeTables(core or {}, modified or {})
 
     local lookup = {}
     -- set chunks

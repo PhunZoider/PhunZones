@@ -9,7 +9,7 @@ local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
 local FONT_HGT_LARGE = getTextManager():getFontHeight(UIFont.Large)
 local HEADER_HGT = FONT_HGT_MEDIUM + 2 * 2
 local FONT_SCALE = FONT_HGT_SMALL / 14
-
+local BUTTON_HGT = FONT_HGT_SMALL + 6
 local profileName = "PhunZonesUIList"
 PZ.ui.zones = ISPanel:derive(profileName);
 PZ.ui.zones.instances = {}
@@ -40,7 +40,7 @@ function UI:refreshData()
     self.list:clear()
     self.regions:clear()
     self.regions:addOption(" ")
-    local data = PZ:getZones()
+    local data = PZ:getZones(not self.chkAll:isSelected(1))
 
     local presort = {}
     for k, v in pairs(data.lookup) do
@@ -225,6 +225,26 @@ function UI:createChildren()
     self.title:initialise();
     self.title:instantiate();
     self:addChild(self.title);
+
+    self.chkAll = ISTickBox:new(self.title.x + self.title.width + padding, y, BUTTON_HGT, BUTTON_HGT,
+        getText("IGUI_PhunZones_AllZones"), self)
+    self.chkAll:addOption(getText("IGUI_PhunZones_AllZones"), nil)
+    self.chkAll:setSelected(1, true)
+    self.chkAll:setWidthToFit()
+    self.chkAll:setY(y)
+    self.chkAll.onMouseUp = function(s, x, y)
+        ISTickBox.onMouseUp(s, x, y)
+
+        self.downY = nil
+        self.downX = nil
+        self.dragging = false
+        self:setCapture(false)
+
+        self:refreshData()
+        return true
+    end
+    self.chkAll.tooltip = getText("IGUI_PhunZones_AllZones_tooltip")
+    self:addChild(self.chkAll)
 
     self.closeButton = ISButton:new(self.width - 25 - x, y, 25, 25, "X", self, function()
         self:setVisible(false);
