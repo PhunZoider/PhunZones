@@ -3,7 +3,7 @@ if isServer() then
 end
 
 local PZ = PhunZones
-
+local mapui = require("PhunZones/ui/ui_map")
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
 local FONT_HGT_LARGE = getTextManager():getFontHeight(UIFont.Large)
@@ -22,10 +22,10 @@ function UI.OnOpenPanel(playerObj, key)
         local playerIndex = playerObj:getPlayerNum()
 
         if not UI.instances[playerIndex] then
-            UI.instances[playerIndex] = UI:new(100, 100, 400, 500, playerObj, key);
+            UI.instances[playerIndex] = UI:new(100, 100, 800, 500, playerObj, key);
             UI.instances[playerIndex]:initialise();
             UI.instances[playerIndex]:instantiate();
-            ISLayoutManager.RegisterWindow(profileName, UI, UI.instances[playerIndex])
+            -- ISLayoutManager.RegisterWindow(profileName, UI, UI.instances[playerIndex])
         end
 
         UI.instances[playerIndex]:addToUIManager();
@@ -209,6 +209,7 @@ function UI:refreshZonePoints(points, selected)
         self.points:ensureVisible(self.points.selected)
         self.selectedPoint = self.points.items[self.points.selected].item
     end
+    self.mapui:setData(points, self.selectedPoint)
 end
 
 function UI:createChildren()
@@ -219,17 +220,32 @@ function UI:createChildren()
     local y = 10
     local padding = 10
     local h = FONT_HGT_SMALL;
-    local w = self.width - 20;
+    local w = 340;
+
+    self.mainPanel = ISPanel:new(x, y, w + 20, self.height - 20);
+    self.mainPanel:initialise();
+    self:addChild(self.mainPanel);
+    x = x + padding
+    y = y + padding
+
+    local mapx = self.mainPanel.x + self.mainPanel.width + padding
+
+    self.mapui = mapui:new(mapx, self.mainPanel.y, self.width - mapx - (padding), self.mainPanel.height, self.player,
+        "map");
+
+    self.mapui:initialise();
+    self.mapui:instantiate();
+    self:addChild(self.mapui);
 
     self.title = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Regions"), 1, 1, 1, 1, UIFont.Small, true);
     self.title:initialise();
     self.title:instantiate();
-    self:addChild(self.title);
+    self.mainPanel:addChild(self.title);
 
     self.chkAll = ISTickBox:new(self.title.x + self.title.width + padding, y, BUTTON_HGT, BUTTON_HGT,
         getText("IGUI_PhunZones_AllZones"), self)
     self.chkAll:addOption(getText("IGUI_PhunZones_AllZones"), nil)
-    self.chkAll:setSelected(1, true)
+    -- self.chkAll:setSelected(1, true)
     self.chkAll:setWidthToFit()
     self.chkAll:setY(y)
     self.chkAll.onMouseUp = function(s, x, y)
@@ -244,23 +260,16 @@ function UI:createChildren()
         return true
     end
     self.chkAll.tooltip = getText("IGUI_PhunZones_AllZones_tooltip")
-    self:addChild(self.chkAll)
+    self.mainPanel:addChild(self.chkAll)
 
-    self.closeButton = ISButton:new(self.width - 25 - x, y, 25, 25, "X", self, function()
-        self:setVisible(false);
-        self:removeFromUIManager();
-        self.instances[self.playerIndex] = nil
-    end);
-    self.closeButton:initialise();
-    self:addChild(self.closeButton);
+    y = y + self.chkAll.height + padding
 
-    y = y + self.closeButton.height + padding
-
-    self.regions = ISComboBox:new(padding, y, self:getWidth() - (padding * 2), FONT_HGT_MEDIUM, self, function()
-        self:setSelection(self.regions.selected)
-    end);
+    self.regions = ISComboBox:new(padding, y, self.mainPanel:getWidth() - (padding * 2), FONT_HGT_MEDIUM, self,
+        function()
+            self:setSelection(self.regions.selected)
+        end);
     self.regions:initialise()
-    self:addChild(self.regions)
+    self.mainPanel:addChild(self.regions)
 
     y = self.regions.y + self.regions.height + 10
 
@@ -287,7 +296,7 @@ function UI:createChildren()
     end);
     self.btnNewSubRegion:initialise();
     self.btnNewSubRegion.enable = false
-    self:addChild(self.btnNewSubRegion);
+    self.mainPanel:addChild(self.btnNewSubRegion);
 
     x = x + self.btnNewSubRegion.width + padding
 
@@ -299,7 +308,7 @@ function UI:createChildren()
         end
     end);
     self.btnEditRegion:initialise();
-    self:addChild(self.btnEditRegion);
+    self.mainPanel:addChild(self.btnEditRegion);
 
     x = 10
 
@@ -308,11 +317,11 @@ function UI:createChildren()
     self.title2 = ISLabel:new(x, y, h, "Zones", 1, 1, 1, 1, UIFont.Small, true);
     self.title2:initialise();
     self.title2:instantiate();
-    self:addChild(self.title2);
+    self.mainPanel:addChild(self.title2);
 
     y = y + self.title2.height + padding + HEADER_HGT
 
-    self.list = ISScrollingListBox:new(x, y, self:getWidth() - (x * 2), 100);
+    self.list = ISScrollingListBox:new(x, y, self.mainPanel:getWidth() - (x * 2), 100);
     self.list:initialise();
     self.list:instantiate();
     self.list.itemheight = FONT_HGT_SMALL + 4 * 2
@@ -352,11 +361,11 @@ function UI:createChildren()
     self.list.drawBorder = true;
     self.list:addColumn(getText("IGUI_PhunZones_Property"), 0);
     self.list:addColumn(getText("IGUI_PhunZones_Value"), 199);
-    self:addChild(self.list);
+    self.mainPanel:addChild(self.list);
 
     y = self.list.y + self.list.height + 50
 
-    self.points = ISScrollingListBox:new(x, y, self:getWidth() - (x * 2), 100);
+    self.points = ISScrollingListBox:new(x, y, self.mainPanel:getWidth() - (x * 2), 100);
     self.points:initialise();
     self.points:instantiate();
     self.points.itemheight = FONT_HGT_SMALL + 4 * 2
@@ -400,7 +409,7 @@ function UI:createChildren()
     self.points:addColumn("Y", 100);
     self.points:addColumn("X2", 200);
     self.points:addColumn("Y2", 300);
-    self:addChild(self.points);
+    self.mainPanel:addChild(self.points);
 
     y = self.points.y + self.points.height + 10
 
@@ -415,7 +424,7 @@ function UI:createChildren()
         end
     end);
     self.btnNewZone:initialise();
-    self:addChild(self.btnNewZone);
+    self.mainPanel:addChild(self.btnNewZone);
 
     x = x + self.btnNewZone.width + padding
 
@@ -435,7 +444,17 @@ function UI:createChildren()
         end
     end);
     self.btnEditZone:initialise();
-    self:addChild(self.btnEditZone);
+    self.mainPanel:addChild(self.btnEditZone);
+
+    x = x + self.btnEditZone.width + padding
+
+    self.closeButton = ISButton:new(x, y, 100, h, "Close", self, function()
+        self:setVisible(false);
+        self:removeFromUIManager();
+        self.instances[self.playerIndex] = nil
+    end);
+    self.closeButton:initialise();
+    self.mainPanel:addChild(self.closeButton);
 
 end
 
@@ -619,23 +638,23 @@ function UI:onMouseMove(dx, dy)
     end
 end
 
-function UI:RestoreLayout(name, layout)
-    if name == profileName then
-        ISLayoutManager.DefaultRestoreWindow(self, layout)
-        self.userPosition = layout.userPosition == 'true'
-    end
-end
+-- function UI:RestoreLayout(name, layout)
+--     if name == profileName then
+--         ISLayoutManager.DefaultRestoreWindow(self, layout)
+--         self.userPosition = layout.userPosition == 'true'
+--     end
+-- end
 
-function UI:SaveLayout(name, layout)
-    ISLayoutManager.DefaultSaveWindow(self, layout)
-    layout.width = nil
-    layout.height = nil
-    if self.userPosition then
-        layout.userPosition = 'true'
-    else
-        layout.userPosition = 'false'
-    end
-end
+-- function UI:SaveLayout(name, layout)
+--     ISLayoutManager.DefaultSaveWindow(self, layout)
+--     layout.width = nil
+--     layout.height = nil
+--     if self.userPosition then
+--         layout.userPosition = 'true'
+--     else
+--         layout.userPosition = 'false'
+--     end
+-- end
 
 function UI:isKeyConsumed(key)
     return key == Keyboard.KEY_ESCAPE

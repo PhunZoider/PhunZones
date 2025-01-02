@@ -108,8 +108,18 @@ return {
                 subtitle = "International Airport",
                 mods = "SimonMDLVInternationalAirport"
             },
+            Hospital = {
+                zones = {{12865, 4200, 12502, 3754}},
+                subtitle = "Hospital",
+                mods = "Battlefield_Louisville_Hospital"
+            },
+            Stadium = {
+                zones = {{12900, 1240, 13050, 1345}},
+                subtitle = "Hospital",
+                mods = "Battlefield_Louisville_Stadium"
+            },
             Port = {
-                zones = {{12300, 4500, 12600, 5000}},
+                zones = {{12289, 3502, 12600, 5000}},
                 difficulty = 2,
                 subtitle = "Shipping Port",
                 mods = "SimonMDLVHarbor"
@@ -130,6 +140,21 @@ return {
                 difficulty = 2,
                 subtitle = "Freddy's Fazbear Pizza",
                 mods = "Frede2"
+            }
+        }
+    },
+    Brasil = {
+        difficulty = 2,
+        title = "Brasiliana",
+        zones = {
+            main = {
+                zones = {{7226, 10870, 7337, 10975}},
+                mods = "Brazil farm"
+            },
+            farm = {
+                zones = {{7226, 10870, 7337, 10975}},
+                subtitle = "Farm",
+                mods = "Brazil farm"
             }
         }
     },
@@ -1466,14 +1491,22 @@ return {
         }
     },
     shortrest = {
-        difficulty = 0,
-        zeds = false,
-        bandits = false,
+        difficulty = 2,
         title = "Shortrest",
         mods = "Shortrest_City",
         zones = {
             main = {
                 zones = {{13200, 6600, 14700, 7500}}
+            }
+        }
+    },
+    jackson = {
+        difficulty = 1,
+        title = "Shortrest",
+        mods = "jackson",
+        zones = {
+            main = {
+                zones = {{10810, 10555, 11377, 10945}}
             }
         }
     }
