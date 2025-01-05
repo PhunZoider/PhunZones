@@ -37,7 +37,7 @@ function PZ:setTrackedVehicleData(vehicleId)
             self.trackedVehicles = {}
         end
         local vehicle = getVehicleById(vehicleId)
-        if vehicle then
+        if vehicle and vehicle.getX then
             if RVInterior.interior[vehicle:getScript():getFullName()] then
                 local vehicleModData = RVInterior.getVehicleModData(vehicle)
                 if vehicleModData then
