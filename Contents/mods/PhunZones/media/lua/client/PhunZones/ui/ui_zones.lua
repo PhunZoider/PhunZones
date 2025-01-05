@@ -214,7 +214,7 @@ end
 
 function UI:createChildren()
 
-    ISPanel.createChildren(self);
+    -- ISPanel.createChildren(self);
 
     local x = 10
     local y = 10
@@ -222,16 +222,15 @@ function UI:createChildren()
     local h = FONT_HGT_SMALL;
     local w = 340;
 
-    self.mainPanel = ISPanel:new(x, y, w + 20, self.height - 20);
-    self.mainPanel:initialise();
-    self:addChild(self.mainPanel);
-    x = x + padding
-    y = y + padding
+    -- self.mainPanel = ISPanel:new(x, y, w + 20, self.height - 20);
+    -- self.mainPanel:initialise();
+    -- self:addChild(self.mainPanel);
+    -- x = x + padding
+    -- y = y + padding
 
-    local mapx = self.mainPanel.x + self.mainPanel.width + padding
+    local mapx = w + padding
 
-    self.mapui = mapui:new(mapx, self.mainPanel.y, self.width - mapx - (padding), self.mainPanel.height, self.player,
-        "map");
+    self.mapui = mapui:new(mapx, y, self.width - mapx - (padding), self.height - (padding * 2), self.player, "map");
 
     self.mapui:initialise();
     self.mapui:instantiate();
@@ -240,36 +239,31 @@ function UI:createChildren()
     self.title = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Regions"), 1, 1, 1, 1, UIFont.Small, true);
     self.title:initialise();
     self.title:instantiate();
-    self.mainPanel:addChild(self.title);
+    self:addChild(self.title);
 
     self.chkAll = ISTickBox:new(self.title.x + self.title.width + padding, y, BUTTON_HGT, BUTTON_HGT,
         getText("IGUI_PhunZones_AllZones"), self)
     self.chkAll:addOption(getText("IGUI_PhunZones_AllZones"), nil)
     -- self.chkAll:setSelected(1, true)
     self.chkAll:setWidthToFit()
-    self.chkAll:setY(y)
     self.chkAll.onMouseUp = function(s, x, y)
         ISTickBox.onMouseUp(s, x, y)
-
         self.downY = nil
         self.downX = nil
         self.dragging = false
         self:setCapture(false)
-
         self:refreshData()
         return true
     end
     self.chkAll.tooltip = getText("IGUI_PhunZones_AllZones_tooltip")
-    self.mainPanel:addChild(self.chkAll)
+    self:addChild(self.chkAll)
 
     y = y + self.chkAll.height + padding
-
-    self.regions = ISComboBox:new(padding, y, self.mainPanel:getWidth() - (padding * 2), FONT_HGT_MEDIUM, self,
-        function()
-            self:setSelection(self.regions.selected)
-        end);
+    self.regions = ISComboBox:new(padding, y, w - (padding * 2), FONT_HGT_MEDIUM, self, function()
+        self:setSelection(self.regions.selected)
+    end);
     self.regions:initialise()
-    self.mainPanel:addChild(self.regions)
+    self:addChild(self.regions)
 
     y = self.regions.y + self.regions.height + 10
 
@@ -296,7 +290,7 @@ function UI:createChildren()
     end);
     self.btnNewSubRegion:initialise();
     self.btnNewSubRegion.enable = false
-    self.mainPanel:addChild(self.btnNewSubRegion);
+    self:addChild(self.btnNewSubRegion);
 
     x = x + self.btnNewSubRegion.width + padding
 
@@ -308,7 +302,7 @@ function UI:createChildren()
         end
     end);
     self.btnEditRegion:initialise();
-    self.mainPanel:addChild(self.btnEditRegion);
+    self:addChild(self.btnEditRegion);
 
     x = 10
 
@@ -317,11 +311,11 @@ function UI:createChildren()
     self.title2 = ISLabel:new(x, y, h, "Zones", 1, 1, 1, 1, UIFont.Small, true);
     self.title2:initialise();
     self.title2:instantiate();
-    self.mainPanel:addChild(self.title2);
+    self:addChild(self.title2);
 
     y = y + self.title2.height + padding + HEADER_HGT
 
-    self.list = ISScrollingListBox:new(x, y, self.mainPanel:getWidth() - (x * 2), 100);
+    self.list = ISScrollingListBox:new(x, y, w - (x * 2), 100);
     self.list:initialise();
     self.list:instantiate();
     self.list.itemheight = FONT_HGT_SMALL + 4 * 2
@@ -361,11 +355,11 @@ function UI:createChildren()
     self.list.drawBorder = true;
     self.list:addColumn(getText("IGUI_PhunZones_Property"), 0);
     self.list:addColumn(getText("IGUI_PhunZones_Value"), 199);
-    self.mainPanel:addChild(self.list);
+    self:addChild(self.list);
 
     y = self.list.y + self.list.height + 50
 
-    self.points = ISScrollingListBox:new(x, y, self.mainPanel:getWidth() - (x * 2), 100);
+    self.points = ISScrollingListBox:new(x, y, w - (x * 2), 100);
     self.points:initialise();
     self.points:instantiate();
     self.points.itemheight = FONT_HGT_SMALL + 4 * 2
@@ -409,7 +403,7 @@ function UI:createChildren()
     self.points:addColumn("Y", 100);
     self.points:addColumn("X2", 200);
     self.points:addColumn("Y2", 300);
-    self.mainPanel:addChild(self.points);
+    self:addChild(self.points);
 
     y = self.points.y + self.points.height + 10
 
@@ -424,7 +418,7 @@ function UI:createChildren()
         end
     end);
     self.btnNewZone:initialise();
-    self.mainPanel:addChild(self.btnNewZone);
+    self:addChild(self.btnNewZone);
 
     x = x + self.btnNewZone.width + padding
 
@@ -444,7 +438,7 @@ function UI:createChildren()
         end
     end);
     self.btnEditZone:initialise();
-    self.mainPanel:addChild(self.btnEditZone);
+    self:addChild(self.btnEditZone);
 
     x = x + self.btnEditZone.width + padding
 
@@ -454,7 +448,7 @@ function UI:createChildren()
         self.instances[self.playerIndex] = nil
     end);
     self.closeButton:initialise();
-    self.mainPanel:addChild(self.closeButton);
+    self:addChild(self.closeButton);
 
 end
 

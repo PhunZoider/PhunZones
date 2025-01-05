@@ -78,9 +78,6 @@ function tools:loadTable(filename, createIfNotExists)
     local startsWithReturn = nil
     while line do
         if startsWithReturn == nil then
-            luautils.stringStarts = function(String, Start)
-                return string.sub(String, 1, string.len(Start)) == Start;
-            end
             startsWithReturn = luautils.stringStarts(line, "return")
         end
         data[#data + 1] = line

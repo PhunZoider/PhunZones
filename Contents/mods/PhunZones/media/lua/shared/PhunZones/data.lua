@@ -21,11 +21,16 @@ return {
         }
     },
     MarchRidge = {
-        difficulty = 2,
+        difficulty = 3,
         title = "March Ridge",
         zones = {
             main = {
                 zones = {{9600, 12600, 10499, 13199}}
+            },
+            checkpoint = {
+                zones = {{10300, 12300, 10400, 12420}},
+                subtitle = "Checkpoint",
+                mods = "Checkpoint_March_Ridge"
             }
         }
     },
@@ -35,6 +40,12 @@ return {
         zones = {
             main = {
                 zones = {{10490, 9160, 11000, 10700}}
+            },
+            ncheckpoint = {
+                difficulty = 3,
+                zones = {{10560, 9110, 10660, 9200}},
+                subtitle = "Checkpoint",
+                mods = "Checkpoint_North_Muldraugh"
             }
         }
     },
@@ -77,6 +88,12 @@ return {
                 zones = {{6900, 5100, 7199, 5699}},
                 title = "East Side",
                 mods = "catball_eastriverside"
+            },
+            checkpoint = {
+                zones = {{6750, 5700, 6835, 5768}},
+                difficulty = 3,
+                subtitle = "Checkpoint",
+                mods = "Checkpoint_South_Riverside"
             }
         }
     },
@@ -143,18 +160,53 @@ return {
             }
         }
     },
-    Brasil = {
-        difficulty = 2,
-        title = "Brasiliana",
+    Crossroads = {
+        difficulty = 3,
+        title = "Crossroads",
+        subtitle = "Checkpoint",
         zones = {
             main = {
-                zones = {{7226, 10870, 7337, 10975}},
+                zones = {{10515, 11125, 10670, 11285}}
+            }
+        }
+    },
+    Brasil = {
+        difficulty = 1,
+        title = "Brasiliana",
+        mods = "Brazil farm",
+        zones = {
+            main = { -- respawn checked - failed
+                title = "Brasiliana",
+                difficulty = 1,
+                zones = {{7225, 10800, 7800, 10975}, {7500, 10800, 7800, 11700}, {7226, 10870, 7337, 10975},
+                         {7800, 11100, 8100, 11400}},
                 mods = "Brazil farm"
             },
-            farm = {
+            farm = { -- respawn checked - failed
                 zones = {{7226, 10870, 7337, 10975}},
                 subtitle = "Farm",
                 mods = "Brazil farm"
+            },
+            nova = { -- respawn checked - failed
+                zones = {{7500, 10800, 7800, 11100}},
+                subtitle = "Nova",
+                mods = "NovaRosewood"
+            },
+            recanto = { -- respawn checked - failed
+                zones = {{7500, 11400, 7800, 11700}},
+                subtitle = "Recanto",
+                mods = "recanto"
+            },
+            salinas = { -- respawn checked - failed
+                zones = {{7500, 11100, 7800, 11400}},
+                difficulty = 2,
+                subtitle = "Salinas",
+                mods = "salinas"
+            },
+            entrada = { -- respawn checked - failed
+                zones = {{7800, 11100, 8100, 11400}},
+                subtitle = "Entrada",
+                mods = "entrada"
             }
         }
     },
@@ -285,7 +337,7 @@ return {
             }
         }
     },
-    AmusementPark = {
+    AmusementPark = { -- respawn checked
         difficulty = 3,
         title = "Amusement Park",
         mods = "SimonMDValuTechAmusementPark",
@@ -336,7 +388,7 @@ return {
             }
         }
     },
-    Dirkerdam = {
+    Dirkerdam = { -- respawn checked - failed
         difficulty = 2,
         rads = 10,
         title = "Dirkerdam",
@@ -398,7 +450,7 @@ return {
             }
         }
     },
-    Crowlake = {
+    Crowlake = { -- respawn checked
         difficulty = 2,
         title = "Crowlake",
         mods = "Crowlake",
@@ -459,13 +511,13 @@ return {
             }
         }
     },
-    BedfordFalls = {
+    BedfordFalls = { -- respawn checked
         difficulty = 2,
         title = "Bedford Falls",
         mods = "BedfordFalls",
         zones = {
             main = {
-                zones = {{12600, 7500, 14399, 13199}}
+                zones = {{12600, 10800, 12900, 11400}, {12900, 9900, 13500, 11400}, {13500, 7500, 14400, 13200}}
             }
         }
     },
@@ -519,7 +571,7 @@ return {
             }
         }
     },
-    Ashenwood = {
+    Ashenwood = { -- respawn checked
         difficulty = 2,
         title = "Ashenwood",
         mods = "Ashenwood",
@@ -539,13 +591,13 @@ return {
             }
         }
     },
-    AddamsMansion = {
+    AddamsMansion = { -- respawn checked
         difficulty = 2,
         title = "Addams Mansion",
         mods = "AddamsMansion",
         zones = {
             main = {
-                zones = {{11100, 9300, 11399, 9599}}
+                zones = {{11290, 9400, 11399, 9570}}
             }
         }
     },
@@ -611,7 +663,7 @@ return {
             }
         }
     },
-    CorOTRroad = {
+    CorOTRroad = { -- respawn checked
         difficulty = 2,
         title = "BFE",
         mods = "CorOTRroad",
@@ -676,7 +728,7 @@ return {
             }
         }
     },
-    Chernaville = {
+    Chernaville = { -- respawn checked
         difficulty = 2,
         title = "Chernaville",
         mods = "Chernaville",
@@ -717,7 +769,7 @@ return {
             }
         }
     },
-    CONRTF = {
+    CONRTF = { -- respawn checked
         difficulty = 2,
         title = "C.O.N. Research & Testing Facility",
         mods = "CONRTF",
@@ -743,11 +795,12 @@ return {
         mods = "Pitstop",
         zones = {
             main = {
-                zones = {{9000, 10500, 10700, 11699}}
+                zones = {{9000, 10500, 9300, 11700}, {9300, 11100, 10500, 11700}, {10500, 11400, 10800, 11700},
+                         {13800, 1200, 14400, 1500}}
             }
         }
     },
-    BetsysFarm = {
+    BetsysFarm = { -- respawn checked - failed
         difficulty = 2,
         title = "Betsy's Farm",
         mods = "DJBetsysFarm",
@@ -787,7 +840,7 @@ return {
             }
         }
     },
-    EdsAuto = {
+    EdsAuto = { -- respawn checked - failed
         difficulty = 2,
         title = "Ed's Auto Salvage",
         mods = "EdsAutoSalvage",
@@ -847,7 +900,7 @@ return {
             }
         }
     },
-    Blackwood = {
+    Blackwood = { -- respawn checked
         difficulty = 2,
         title = "Blackwood",
         mods = "Blackwood",
@@ -982,7 +1035,7 @@ return {
             }
         }
     },
-    BearLake = {
+    BearLake = { -- respawn checked
         rads = 10,
         difficulty = 2,
         title = "Big Bear Lake",
@@ -1003,7 +1056,7 @@ return {
             }
         }
     },
-    Chinatown = {
+    Chinatown = { -- respawn checked
         rads = 10,
         difficulty = 2,
         title = "Chinatown",
@@ -1024,7 +1077,7 @@ return {
             }
         }
     },
-    Chestown = {
+    Chestown = { -- respawn checked
         difficulty = 2,
         title = "Chestown",
         mods = "Chestown",
@@ -1132,7 +1185,7 @@ return {
             }
         }
     },
-    CanvasbackStudios = {
+    CanvasbackStudios = { -- respawn checked
         difficulty = 2,
         title = "Canvasback Studios",
         mods = "Canvasback Studios",
@@ -1322,16 +1375,6 @@ return {
             }
         }
     },
-    NovaRosewood = {
-        difficulty = 2,
-        title = "Nova Rosewood",
-        mods = "NovaRosewood",
-        zones = {
-            main = {
-                zones = {{7500, 10800, 7800, 11100}}
-            }
-        }
-    },
     Ztardew = {
         difficulty = 2,
         title = "Ztardew Valley",
@@ -1413,7 +1456,7 @@ return {
             }
         }
     },
-    ConstowmWithRCandFR = {
+    ConstowmWithRCandFR = { -- respawn checked - failed
         difficulty = 3,
         title = "Constown",
         mods = "constownwithRCandFR",
@@ -1445,7 +1488,7 @@ return {
             }
         }
     },
-    BitterrootRanch = {
+    BitterrootRanch = { -- respawn checked - failed
         cells = {{35, 24}, {35, 25}},
         difficulty = 3,
         title = "Bitterroot",
@@ -1468,7 +1511,7 @@ return {
             }
         }
     },
-    DenseWoods = {
+    DenseWoods = { -- respawn checked - failed
         difficulty = 3,
         title = "Woods",
         mods = "AbandonedSurvivorBase",

@@ -144,7 +144,7 @@ function UI:render()
         self.map:drawRectBorder(x, y, math.abs(x2 - x), math.abs(y2 - y), borderColor.a, borderColor.r, borderColor.g,
             borderColor.b);
     end
-
+    self:clearStencilRect()
 end
 
 function UI:addSymbol(worldX, worldY)
@@ -244,6 +244,12 @@ end
 
 ]] --
 function UI:InitPlayer()
+
+    print("INI PLAYER FOR ZONES")
+    if not ISWorldMap_instance then
+        ISWorldMap.ShowWorldMap(self.playerIndex)
+        ISWorldMap.HideWorldMap(self.playerIndex)
+    end
     local mini = self.map
     local api = mini.mapAPI
 
@@ -251,6 +257,7 @@ function UI:InitPlayer()
     for i = 1, dirs:size() do
 
         local file = 'media/maps/' .. dirs:get(i - 1) .. '/worldmap.xml'
+        print("ADDING MAP DATA: " .. file)
         if fileExists(file) then
             mini.mapAPI:addData(file)
         end
