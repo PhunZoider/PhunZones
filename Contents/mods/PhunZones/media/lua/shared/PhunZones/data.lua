@@ -1178,7 +1178,7 @@ return {
     tikitown = {
         difficulty = 2,
         title = "Tikitown",
-        mods = "tikitown",
+
         zones = {
             main = {
                 zones = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7469}}

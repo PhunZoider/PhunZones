@@ -135,6 +135,7 @@ function Core:updateModData(obj, triggerChangeEvent)
     end
     local existing = modData.PhunZones
     local ldata = self:getLocation(obj) or {}
+    self:debug("ldata", ldata)
     local doEvent = false
 
     if not instanceof(obj, "IsoPlayer") then
@@ -185,9 +186,9 @@ function Core:updateModData(obj, triggerChangeEvent)
             existing.modified = getTimestamp()
             obj:getModData().PhunZones = existing
         end
-
+        -- self:debug("UPDATE MOD DATA " .. tostring(doEvent), obj:getModData().PhunZones)
         if doEvent and isServer() then
-            -- self:debug("SEND UPDATE TO CLIENT", existing)
+            self:debug("SEND UPDATE TO CLIENT", existing)
             existing.pid = obj:getOnlineID()
             sendServerCommand(obj, self.name, self.commands.updatePlayerZone, existing)
         end
@@ -209,7 +210,8 @@ function Core:getLocation(x, y)
     end
 
     local ckey = math.floor(xx / 300) .. "_" .. math.floor(yy / 300)
-
+    print("Getting location for chunk " .. tostring(ckey) .. " " .. tostring(xx) .. " " .. tostring(yy))
+    self:debug(self.data.cells[ckey])
     for _, v in ipairs(self.data.cells[ckey] or {}) do
         -- 1 = region key
         -- 2 = zone key

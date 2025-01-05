@@ -127,12 +127,12 @@ function PZ:getZones(omitMods, modifiedDataSet)
 
         for zoneKey, zoneData in pairs(regionData.zones or {}) do
             for _, v in ipairs(zoneData.zones) do
-                local xIterations = math.floor((v[3] - v[1]) / 300)
-                local yIterations = math.floor((v[4] - v[2]) / 300)
+                local xIterations = math.ceil((v[3] - v[1]) / 300)
+                local yIterations = math.ceil((v[4] - v[2]) / 300)
                 for x = 0, xIterations do
                     for y = 0, yIterations do
-                        local cx = math.floor(v[1] / 300) + x
-                        local cy = math.floor(v[2] / 300) + y
+                        local cx = math.ceil(v[1] / 300) + x
+                        local cy = math.ceil(v[2] / 300) + y
                         local ckey = cx .. "_" .. cy
                         if not cells[ckey] then
                             cells[ckey] = {}
