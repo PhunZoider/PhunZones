@@ -1178,7 +1178,7 @@ return {
     tikitown = {
         difficulty = 2,
         title = "Tikitown",
-
+        mod = "tikitown",
         zones = {
             main = {
                 zones = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7469}}
@@ -1230,7 +1230,7 @@ return {
         title = "Lighthouse",
         mods = "Lighthousematrioshka",
         zones = {
-            Lighthouse = {
+            main = {
                 zones = {{10800, 6300, 11100, 6600}}
             }
         }
@@ -1499,15 +1499,23 @@ return {
             }
         }
     },
-    NUCExperimentalReactor = {
-        cells = {{28, 41}},
+    NuclearReactor = {
         rads = 75,
         difficulty = 4,
         title = "Reactor",
         mods = "NUCExperimentalReactor;PhunRadNUC;",
         zones = {
             main = {
+                rads = 25,
+                zones = {{8390, 12273, 8772, 12650}}
+            },
+            outer = {
+                rads = 50,
                 zones = {{8490, 12373, 8672, 12550}}
+            },
+            core = {
+                rads = 75,
+                zones = {{8537, 12421, 8617, 12475}}
             }
         }
     },

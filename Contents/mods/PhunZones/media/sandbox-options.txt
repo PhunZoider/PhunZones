@@ -24,6 +24,14 @@ option PhunZones.DefaultNoneTitle
     translation = PhunZones_DefaultNoneTitle,
 }
 
+option PhunZones.VehicleTracking
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones, 
+    translation = PhunZones_VehicleTracking,
+}
+
 option PhunZones.DefaultNoneDifficulty
 { 
     type = integer, 

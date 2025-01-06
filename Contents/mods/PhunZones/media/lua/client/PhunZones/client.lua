@@ -5,6 +5,9 @@ local PZ = PhunZones
 
 function PZ:updatePlayerUI(playerObj, info)
     local zone = info or playerObj:getModData().PhunZones or {}
+
+    -- self:debug("UPDATE PLAYER UI", zone)
+
     local panel = PZ.ui.widget.OnOpenPanel(playerObj)
     if panel then
         local data = {
@@ -35,6 +38,9 @@ function PZ:showWidget(playerObj)
 end
 
 function PZ:rvInteriorFlags(entering, args)
+    if not self.settings.VehicleTracking then
+        return
+    end
     local player = nil
     for i = 0, getOnlinePlayers():size() - 1 do
         local p = getOnlinePlayers():get(i)

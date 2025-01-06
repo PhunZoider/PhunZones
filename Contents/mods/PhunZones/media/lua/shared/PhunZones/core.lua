@@ -99,6 +99,7 @@ end
 local excludedProps = nil
 local excludedTrackingProps = nil
 local rvInterior = nil
+local playersInitialized = {}
 function Core:updateModData(obj, triggerChangeEvent)
     if not obj or not obj.getModData then
         return
@@ -135,7 +136,7 @@ function Core:updateModData(obj, triggerChangeEvent)
     end
     local existing = modData.PhunZones
     local ldata = self:getLocation(obj) or {}
-    self:debug("ldata", ldata)
+    -- self:debug("ldata", ldata)
     local doEvent = false
 
     if not instanceof(obj, "IsoPlayer") then
@@ -156,7 +157,7 @@ function Core:updateModData(obj, triggerChangeEvent)
             doEvent = true
         end
 
-        if ldata.rv and rvInterior then
+        if self.settings.VehicleTracking and ldata.rv and rvInterior then
             -- current zone is an rvInteriors zone. Merge cars location
             local interior = rvInterior.calculatePlayerInteriorInstance(obj)
             if interior and self.trackedVehicles and self.trackedVehicles[interior.interiorInstance] then
@@ -182,13 +183,24 @@ function Core:updateModData(obj, triggerChangeEvent)
             doEvent = true
         end
 
+        if not playersInitialized[obj:getOnlineID()] then
+            playersInitialized[obj:getOnlineID()] = true
+            doEvent = true
+            triggerChangeEvent = true
+        end
+
+        if doEvent and triggerChangeEvent then
+            print(" doEvent=" .. tostring(doEvent) .. " triggerChangeEvent=" .. tostring(triggerChangeEvent))
+            self:debug(existing)
+        end
+
         if doEvent then
             existing.modified = getTimestamp()
             obj:getModData().PhunZones = existing
         end
         -- self:debug("UPDATE MOD DATA " .. tostring(doEvent), obj:getModData().PhunZones)
         if doEvent and isServer() then
-            self:debug("SEND UPDATE TO CLIENT", existing)
+            -- self:debug("SEND UPDATE TO CLIENT", existing)
             existing.pid = obj:getOnlineID()
             sendServerCommand(obj, self.name, self.commands.updatePlayerZone, existing)
         end
@@ -210,8 +222,8 @@ function Core:getLocation(x, y)
     end
 
     local ckey = math.floor(xx / 300) .. "_" .. math.floor(yy / 300)
-    print("Getting location for chunk " .. tostring(ckey) .. " " .. tostring(xx) .. " " .. tostring(yy))
-    self:debug(self.data.cells[ckey])
+    -- print("Getting location for chunk " .. tostring(ckey) .. " " .. tostring(xx) .. " " .. tostring(yy))
+    -- self:debug(self.data.cells[ckey])
     for _, v in ipairs(self.data.cells[ckey] or {}) do
         -- 1 = region key
         -- 2 = zone key

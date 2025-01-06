@@ -70,7 +70,7 @@ Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
 end)
 
 Events.OnEnterVehicle.Add(function(player)
-    if player then
+    if player and PZ.settings.VehicleTracking then
         local vehicle = player:getVehicle();
         if vehicle then
             PZ:setTrackedVehicleData(vehicle:getId())

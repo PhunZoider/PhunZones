@@ -7,7 +7,7 @@ local PZ = PhunZones
 Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
     if module == PZ.name and Commands[command] then
         Commands[command](playerObj, arguments)
-    elseif module == "RVInterior" then
+    elseif module == "RVInterior" and PZ.settings.VehicleTracking then
         if command == "updateVehiclePosition" then
             PZ:setTrackedVehicleData(arguments.vehicleId)
         elseif command == "clientStartEnterInterior" then
@@ -24,6 +24,7 @@ end)
 Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
     if not isClient() then
         local nextCheck = 0
+
         Events.OnTick.Add(function()
             if getTimestamp() >= nextCheck then
                 nextCheck = getTimestamp() + (PZ.settings.updateInterval or 1)
