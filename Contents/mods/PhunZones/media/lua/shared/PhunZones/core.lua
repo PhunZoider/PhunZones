@@ -189,10 +189,10 @@ function Core:updateModData(obj, triggerChangeEvent)
             triggerChangeEvent = true
         end
 
-        if doEvent and triggerChangeEvent then
-            print(" doEvent=" .. tostring(doEvent) .. " triggerChangeEvent=" .. tostring(triggerChangeEvent))
-            self:debug(existing)
-        end
+        -- if doEvent and triggerChangeEvent then
+        --     print(" doEvent=" .. tostring(doEvent) .. " triggerChangeEvent=" .. tostring(triggerChangeEvent))
+        --     self:debug(existing)
+        -- end
 
         if doEvent then
             existing.modified = getTimestamp()

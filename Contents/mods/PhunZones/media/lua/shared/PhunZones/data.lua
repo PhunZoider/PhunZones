@@ -37,6 +37,7 @@ return {
     Muldraugh = {
         difficulty = 1,
         title = "Muldraugh",
+        rads = 5,
         zones = {
             main = {
                 zones = {{10490, 9160, 11000, 10700}}
@@ -1507,14 +1508,18 @@ return {
         zones = {
             main = {
                 rads = 25,
-                zones = {{8390, 12273, 8772, 12650}}
+                zones = {{8390, 12273, 8472, 12750}}
             },
-            outer = {
+            approach = {
                 rads = 50,
+                zones = {{8400, 12300, 8772, 12650}}
+            },
+            grounds = {
+                rads = 75,
                 zones = {{8490, 12373, 8672, 12550}}
             },
             core = {
-                rads = 75,
+                rads = 100,
                 zones = {{8537, 12421, 8617, 12475}}
             }
         }
