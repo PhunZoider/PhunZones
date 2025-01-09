@@ -1508,7 +1508,7 @@ return {
         zones = {
             main = {
                 rads = 25,
-                zones = {{8390, 12273, 8472, 12750}}
+                zones = {{8390, 12273, 8872, 12750}}
             },
             approach = {
                 rads = 50,

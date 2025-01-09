@@ -86,6 +86,8 @@ Events.OnServerCommand.Add(function(module, command, arguments)
     end
 end)
 
+Events.EveryTenMinutes.Add(shit)
+
 local function setup()
     Events.OnTick.Remove(setup)
     PZ:ini()
