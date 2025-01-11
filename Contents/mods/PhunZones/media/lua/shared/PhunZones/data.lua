@@ -1534,6 +1534,16 @@ return {
             }
         }
     },
+    Hartburg = {
+        difficulty = 3,
+        title = "Hartburg",
+        mods = "hartburg",
+        zones = {
+            main = {
+                zones = {{6600, 11100, 6897, 11696}}
+            }
+        }
+    },
     hospital = {
         difficulty = 0,
         zeds = false,
