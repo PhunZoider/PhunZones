@@ -42,6 +42,7 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
             getPlayerSafetyUI(p:getPlayerNum()):toggleSafety()
         end
         PZ.players[name] = args
+        p:getModData().PhunZones = args
         triggerEvent(PZ.events.OnPhunZonesPlayerLocationChanged, p, args, existing)
     end
 end
