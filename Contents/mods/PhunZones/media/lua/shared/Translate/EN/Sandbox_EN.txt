@@ -1,0 +1,23 @@
+Sandbox_EN = {
+    Sandbox_PhunZones = "PhunZones"
+
+
+    Sandbox_PhunZones_Widget = "Show Widget",
+    Sandbox_PhunZones_Widget_tooltip = "Displays the PhunZones widget. May require a client restart for this to take effect",
+
+    Sandbox_PhunZones_ShowZoneChange = "Show Zone Change",
+    Sandbox_PhunZones_ShowZoneChange_tooltip = "Display the welcome marquee when entering a new zone",
+
+    Sandbox_PhunZones_DefaultNoneTitle= "Default title",
+    Sandbox_PhunZones_DefaultNoneTitle_tooltip = "Title to display when player is not inside a defined zone",
+
+    Sandbox_PhunZones_DefaultNoneDifficulty = "Default difficulty",
+    Sandbox_PhunZones_DefaultNoneDifficulty_tooltip = "Value to use for difficulty when player is not within a zone",
+
+    Sandbox_PhunZones_UpdateInterval = "Zone check frequency",
+    Sandbox_PhunZones_UpdateInterval_tooltip = "The number of seconds between scanning for zone changes. Higher number is easier on the server",
+
+    Sandbox_PhunZones_ZedUpdateFrequency = "Zed check frequency",
+    Sandbox_PhunZones_ZedUpdateFrequency_tooltip = "The number of seconds between updating zeds with zone information used for removing them and by other mods. The higher the number, the less resource intensive it is",
+
+}

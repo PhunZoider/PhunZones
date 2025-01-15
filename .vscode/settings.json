@@ -4,13 +4,43 @@
         "commands": [
             {
                 "match": ".*",
-                "isAsync": true,
-                "cmd": "xcopy ${workspaceFolder}\\Contents ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones\\Contents /Y /I /E /F /EXCLUDE:xclude"
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\media 2>nul"
             },
             {
-                "match": "Contents\\.*",
-                "isAsync": true,
-                "cmd": "xcopy ${workspaceFolder}\\Contents\\mods ${env.USERPROFILE}\\Zomboid\\mods /Y /I /E /F"
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42 2>nul"
+            },            
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder}\\Contents\\mods ${env.USERPROFILE}\\Zomboid\\mods /Y /I /E /F /EXCLUDE:xclude"
+            },
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder}\\Contents\\mods\\PhunZones\\media ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\media /Y /I /E /F"
+            },
+            {
+                "match": ".*",
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\mod.info /Y"
+            },
+            {
+                "match": ".*",
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\poster.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\poster.png /Y"
+            },
+            {
+                "match": ".*",
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\icon.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\icon.png /Y"
+            },
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones 2>nul"
+            },
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder} ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones /Y /I /E /F /EXCLUDE:xclude"
+            },
+            {
+                "match": ".*",
+                "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones\\Contents\\mods\\PhunZones /Y /I /E /F"
             },
         ]
     },

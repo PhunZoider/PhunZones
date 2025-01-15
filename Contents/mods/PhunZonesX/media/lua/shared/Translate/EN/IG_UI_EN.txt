@@ -1,9 +1,0 @@
-IGUI_EN = {
-    IGUI_PhunZones_PvPOn = "PvP On",
-    IGUI_PhunZones_PvPOff = "PvP Off",
-    IGUI_PhunZones_Mild = "Mild",
-    IGUI_PhunZones_Medium = "Medium",
-    IGUI_PhunZones_Spicy = "Spicy",
-    IGUI_PhunZones_SuperSpicy = "Super Spicy",
-
-}

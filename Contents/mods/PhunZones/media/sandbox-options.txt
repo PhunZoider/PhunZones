@@ -1,0 +1,63 @@
+VERSION = 1,
+
+option PhunZones.ShowZoneChange
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones,
+    translation = PhunZones_ShowZoneChange,
+}
+
+option PhunZones.Widget
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones,
+    translation = PhunZones_Widget,
+}
+
+option PhunZones.DefaultNoneTitle
+{ 
+    type = string,
+    default = Kentucky, 
+    page = PhunZones, 
+    translation = PhunZones_DefaultNoneTitle,
+}
+
+option PhunZones.VehicleTracking
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones, 
+    translation = PhunZones_VehicleTracking,
+}
+
+option PhunZones.DefaultNoneDifficulty
+{ 
+    type = integer, 
+    default = 2, 
+    min = 0,
+    max = 4,
+    page = PhunZones, 
+    translation = PhunZones_DefaultNoneDifficulty,
+}
+
+option PhunZones.UpdateInterval
+{ 
+    type = integer, 
+    default = 1, 
+    min = 1,
+    max = 1000,
+    page = PhunZones, 
+    translation = PhunZones_UpdateInterval,
+}
+
+option PhunZones.ZedUpdateFrequency
+{ 
+    type = integer, 
+    default = 10, 
+    min = 1,
+    max = 1000,
+    page = PhunZones, 
+    translation = PhunZones_ZedUpdateFrequency,
+}
