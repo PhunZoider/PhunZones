@@ -57,7 +57,9 @@ function UI.OnOpenPanel(playerObj, data, cb)
         bandits = data.bandits ~= false,
         noAnnounce = data.noAnnounce == true,
         rv = data.rv == true,
-        order = data.order or ""
+        order = data.order or "",
+        isVoid = data.isVoid == true,
+        safehouse = data.safehouse == true
     }
     instance.cb = cb
 
@@ -88,6 +90,7 @@ function UI.OnOpenPanel(playerObj, data, cb)
     instance.chkZeds:setSelected(1, instance.data.zeds == true)
     instance.chkBandits:setSelected(1, instance.data.bandits == true)
     instance.chkPvP:setSelected(1, instance.data.pvp == true)
+    instance.chkSafehouse:setSelected(1, instance.data.safehouse ~= true)
     instance.txtMods:setText(tostring(instance.data.mods or ""))
     instance.txtDifficulty:setText(tostring(instance.data.difficulty or 2))
     instance.txtSubtitle:setText(tostring(instance.data.subtitle or ""))
@@ -369,8 +372,6 @@ function UI:createChildren()
     self.chkNoAnnounce.tooltip = getText("IGUI_PhunZones_NoWelcome_tooltip")
     self:addChild(self.chkNoAnnounce)
 
-    -- y = y + h + 10
-
     self.chkEnabled = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Enabled"), self)
     self.chkEnabled:addOption(getText("IGUI_PhunZones_Enabled"), nil)
     self.chkEnabled:setSelected(1, true)
@@ -378,6 +379,62 @@ function UI:createChildren()
     self.chkEnabled:setY(y)
     self.chkEnabled.tooltip = getText("IGUI_PhunZones_Enabled_tooltip")
     self:addChild(self.chkEnabled)
+
+    y = y + h + 10
+
+    self.chkSafehouse = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_SafeHouse"), self)
+    self.chkSafehouse:addOption(getText("IGUI_PhunZones_SafeHouse"), nil)
+    self.chkSafehouse:setSelected(1, true)
+    self.chkSafehouse:setWidthToFit()
+    self.chkSafehouse:setY(y)
+    self.chkSafehouse.tooltip = getText("IGUI_PhunZones_Safehouse_tooltip")
+    self:addChild(self.chkSafehouse)
+
+    self.chkBuilding =
+        ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Building"), self)
+    self.chkBuilding:addOption(getText("IGUI_PhunZones_Building"), nil)
+    self.chkBuilding:setSelected(1, true)
+    self.chkBuilding:setWidthToFit()
+    self.chkBuilding:setY(y)
+    self.chkBuilding.tooltip = getText("IGUI_PhunZones_Building_tooltip")
+    self:addChild(self.chkBuilding)
+
+    y = y + h + 10
+
+    self.chkPlacing = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Placing"), self)
+    self.chkPlacing:addOption(getText("IGUI_PhunZones_Placing"), nil)
+    self.chkPlacing:setSelected(1, true)
+    self.chkPlacing:setWidthToFit()
+    self.chkPlacing:setY(y)
+    self.chkPlacing.tooltip = getText("IGUI_PhunZones_Placing_tooltip")
+    self:addChild(self.chkPlacing)
+
+    self.chkDestruction = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT,
+        getText("IGUI_PhunZones_Destruction"), self)
+    self.chkDestruction:addOption(getText("IGUI_PhunZones_Destruction"), nil)
+    self.chkDestruction:setSelected(1, true)
+    self.chkDestruction:setWidthToFit()
+    self.chkDestruction:setY(y)
+    self.chkDestruction.tooltip = getText("IGUI_PhunZones_Destruction_tooltip")
+    self:addChild(self.chkDestruction)
+
+    y = y + h + 10
+
+    self.chkFire = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Fire"), self)
+    self.chkFire:addOption(getText("IGUI_PhunZones_Fire"), nil)
+    self.chkFire:setSelected(1, true)
+    self.chkFire:setWidthToFit()
+    self.chkFire:setY(y)
+    self.chkFire.tooltip = getText("IGUI_PhunZones_Fire_tooltip")
+    self:addChild(self.chkFire)
+
+    self.chkLocked = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Locked"), self)
+    self.chkLocked:addOption(getText("IGUI_PhunZones_Locked"), nil)
+    self.chkLocked:setSelected(1, true)
+    self.chkLocked:setWidthToFit()
+    self.chkLocked:setY(y)
+    self.chkLocked.tooltip = getText("IGUI_PhunZones_Locked_tooltip")
+    self:addChild(self.chkLocked)
 
     y = y + h + 10
 

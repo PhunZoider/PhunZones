@@ -15,6 +15,7 @@ PhunZones = {
         playerData = "PhunZonesPlayers",
         trackedVehicles = "PhunZonesTrackedVehicles"
     },
+    extended = {},
     ui = {},
     data = {},
     commands = {
@@ -66,12 +67,12 @@ function Core:ini()
         if (not isClient() and not isServer() and not isCoopHost()) or isServer() then
             -- single player or a server so load changes from file
             print("PhunZones: Loading changes as server")
-            self:getZones(true)
+            self:updateZoneData(true)
             self.trackedVehicles = ModData.getOrCreate(self.const.trackedVehicles)
         elseif not isServer() then
             print("PhunZones: Loading changes as client")
             -- client so use cached version and then ask server for its changes
-            self:getZones(true, ModData.getOrCreate(self.const.modifiedModData))
+            self:updateZoneData(true, ModData.getOrCreate(self.const.modifiedModData))
         end
         print("PhunZones: Triggering OnPhunZoneReady")
         triggerEvent(self.events.OnPhunZoneReady)
@@ -277,7 +278,7 @@ function Core:saveChanges(data)
         fileTools:saveTable(self.const.modifiedLuaFile, data)
     end
 
-    self:getZones(true, data)
+    self:updateZoneData(true, data)
 end
 
 if isServer() then

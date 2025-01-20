@@ -12,7 +12,7 @@ excludedKeys:add("zones")
 local function getEntry(entry, omitMods)
 
     local row = nil
-
+    local entries = 0
     local process = true
     if omitMods then
         if entry.mods then
@@ -32,16 +32,20 @@ local function getEntry(entry, omitMods)
         return nil
     end
 
-    local mainzones = tableTools:shallowCopyTable(entry.zones)
     row.zones = {
-        main = {
-            zones = mainzones
-        }
+        main = {}
     }
 
-    if entry.zones then
-        for k, v in pairs(entry.zones) do
-            local process = true
+    local mainzones = tableTools:shallowCopyTable(entry.points)
+    if mainzones then
+        entries = entries + 1
+        row.zones.main.points = mainzones
+    end
+
+    if entry.subzones then
+        for k, v in pairs(entry.subzones) do
+            local process = v.points and #v.points > 0
+
             if omitMods then
                 if v.mods then
                     local mods = luautils.split(v.mods .. ";", ";")
@@ -54,8 +58,13 @@ local function getEntry(entry, omitMods)
             end
             if process then
                 row.zones[k] = tableTools:shallowCopyTable(v)
+                entries = entries + 1
             end
         end
+    end
+    if entries == 0 then
+        -- no entries have any valid points so meh
+        return nil
     end
     return row
 end
@@ -65,24 +74,30 @@ function PZ:getCoreZones(omitMods)
     local results = {}
     local order = 0
     for key, entry in pairs(allLocations) do
-        local e = getEntry(entry, omitMods)
-        local sortzones = {}
-        if e then
-            e.tmpKey = key
-            table.insert(sortzones, e)
-        end
-        table.sort(sortzones, function(a, b)
-            if a.order ~= b.order then
-                return (a.order or 0) < (b.order or 0)
+        local status, err = pcall(function()
+            local e = getEntry(entry, omitMods)
+            local sortzones = {}
+            if e then
+                e.tmpKey = key
+                table.insert(sortzones, e)
             end
-            return false
+            table.sort(sortzones, function(a, b)
+                if a.order ~= b.order then
+                    return (a.order or 0) < (b.order or 0)
+                end
+                return false
+            end)
+            for _, v in ipairs(sortzones) do
+                order = order + 1
+                v.order = v.order or order
+                results[v.tmpKey] = v
+                v.tmpKey = nil
+            end
         end)
-        for _, v in ipairs(sortzones) do
-            order = order + 1
-            v.order = v.order or order
-            results[v.tmpKey] = v
-            v.tmpKey = nil
+        if not status then
+            print("Error caught in " .. key .. ": " .. tostring(err))
         end
+
     end
     return results
 end
@@ -94,33 +109,72 @@ function PZ:getModifiedZones(omitMods)
     local results = {}
     local order = 0
     for key, entry in pairs(data) do
-        local e = getEntry(entry, omitMods)
-        local sortzones = {}
-        if e then
-            e.tmpKey = key
-            table.insert(sortzones, e)
-        end
-        table.sort(sortzones, function(a, b)
-            if a.order ~= b.order then
-                return (a.order or 0) < (b.order or 0)
+        local status, err = pcall(function()
+            local e = getEntry(entry, omitMods)
+            local sortzones = {}
+            if e then
+                e.tmpKey = key
+                table.insert(sortzones, e)
             end
-            return false
+            table.sort(sortzones, function(a, b)
+                if a.order ~= b.order then
+                    return (a.order or 0) < (b.order or 0)
+                end
+                return false
+            end)
+            for _, v in ipairs(sortzones) do
+                order = order + 1
+                v.order = v.order or order
+                results[v.tmpKey] = v
+                v.tmpKey = nil
+            end
         end)
-        for _, v in ipairs(sortzones) do
-            order = order + 1
-            v.order = v.order or order
-            results[v.tmpKey] = v
-            v.tmpKey = nil
+        if not status then
+            print("Error caught in " .. key .. ": " .. tostring(err))
         end
     end
     return results
 end
 
-function PZ:getZones(omitMods, modifiedDataSet)
+-- Other mods data which gets added in last 
+function PZ:getExtendedData(omitmods)
+    local results = {}
+    local order = 0
+    for key, entry in pairs(self.extended or {}) do
+        local status, err = pcall(function()
+            local e = getEntry(entry, omitmods)
+            local sortzones = {}
+            if e then
+                e.tmpKey = key
+                table.insert(sortzones, e)
+            end
+            table.sort(sortzones, function(a, b)
+                if a.order ~= b.order then
+                    return (a.order or 0) < (b.order or 0)
+                end
+                return false
+            end)
+            for _, v in ipairs(sortzones) do
+                order = order + 1
+                v.order = v.order or order
+                results[v.tmpKey] = v
+                v.tmpKey = nil
+            end
+        end)
+        if not status then
+            print("Error caught in " .. key .. ": " .. tostring(err))
+        end
+    end
+    return results
+end
+
+function PZ:updateZoneData(omitMods, modifiedDataSet)
 
     local core = self:getCoreZones(omitMods)
+    local others = self:getExtendedData(omitMods)
     local modified = modifiedDataSet or self:getModifiedZones(omitMods)
-    local results = tableTools:mergeTables(core or {}, modified or {})
+    local results = tableTools:mergeTables(core or {}, others or {})
+    results = tableTools:mergeTables(results, modified or {})
 
     -- Flatten all entries down into a single array for sorting
     local flattened = {}
@@ -130,7 +184,7 @@ function PZ:getZones(omitMods, modifiedDataSet)
             if v2.order then
                 order = math.max(order, v2.order)
             end
-            for k3, v3 in pairs(v2.zones) do
+            for k3, v3 in pairs(v2.points) do
                 table.insert(flattened, {k, k2, v2.order, v3[1], v3[2], v3[3], v3[4]})
             end
         end
@@ -190,24 +244,24 @@ function PZ:getZones(omitMods, modifiedDataSet)
     for regionKey, regionData in pairs(results or {}) do
 
         for zoneKey, zoneData in pairs(regionData.zones or {}) do
-            for _, v in ipairs(zoneData.zones) do
-                -- local xIterations = (math.floor((v[3] - v[1]) / 300) + 1)
-                -- local yIterations = (math.floor((v[4] - v[2]) / 300) + 1)
-                -- for x = 0, xIterations do
-                --     for y = 0, yIterations do
-                --         local cx = math.floor(v[1] / 300) + x
-                --         local cy = math.floor(v[2] / 300) + y
-                --         local ckey = cx .. "_" .. cy
-                --         if not cells[ckey] then
-                --             cells[ckey] = {}
-                --         end
-                --         table.insert(cells[ckey], {regionKey, zoneKey, v[1], v[2], v[3], v[4]})
-                --     end
-                -- end
-                if zoneData.zeds == false then
-                    table.insert(self.zedless, v)
-                end
-            end
+            -- for _, v in ipairs(zoneData.zones) do
+            --     -- local xIterations = (math.floor((v[3] - v[1]) / 300) + 1)
+            --     -- local yIterations = (math.floor((v[4] - v[2]) / 300) + 1)
+            --     -- for x = 0, xIterations do
+            --     --     for y = 0, yIterations do
+            --     --         local cx = math.floor(v[1] / 300) + x
+            --     --         local cy = math.floor(v[2] / 300) + y
+            --     --         local ckey = cx .. "_" .. cy
+            --     --         if not cells[ckey] then
+            --     --             cells[ckey] = {}
+            --     --         end
+            --     --         table.insert(cells[ckey], {regionKey, zoneKey, v[1], v[2], v[3], v[4]})
+            --     --     end
+            --     -- end
+            --     if zoneData.zeds == false then
+            --         table.insert(self.zedless, v)
+            --     end
+            -- end
             local z = tableTools:shallowCopyTable(zoneData, excludedKeys) or {}
 
             z.region = regionKey

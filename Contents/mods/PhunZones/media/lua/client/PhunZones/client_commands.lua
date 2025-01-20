@@ -9,7 +9,7 @@ local Commands = {}
 Commands[PZ.commands.playerSetup] = function(data)
     -- send any exemption/changes to the client
     ModData.add(PZ.const.modifiedModData, data)
-    PZ:getZones(true, data)
+    PZ:updateZoneData(true, data)
 
 end
 

@@ -16,7 +16,7 @@ return {
         difficulty = 3,
         title = "March Ridge",
         points = {{9600, 12600, 10499, 13199}},
-        subpoints = {
+        subzones = {
             checkpoint = {
                 points = {{10300, 12300, 10400, 12420}},
                 subtitle = "Checkpoint",

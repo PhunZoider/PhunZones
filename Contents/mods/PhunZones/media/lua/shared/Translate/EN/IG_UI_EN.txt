@@ -53,4 +53,23 @@ IGUI_EN = {
     IGUI_PhunZones_Order_tooltip = "Allows you to override an existing entry in the list. Just make this number higher than what you are wanting to override"
     IGUI_PhunZones_AllZones = "Show All"
     IGUI_PhunZones_AllZones_tooltip = "Tick to show everything in system - or untick to show just what has been loaded"
+
+    IGUI_PhunZones_SafeHouse = "Allow Safehouses"
+    IGUI_PhunZones_Safehouse_tooltip = "Untick to explicitly forbid safhouse creation in zone"
+
+    IGUI_PhunZones_Building = "Building"
+    IGUI_PhunZones_Building_tooltip = "Untick to explicitly forbid building items like walls and such in zone"
+
+    IGUI_PhunZones_Placing = "Placing"
+    IGUI_PhunZones_Placing_tooltip = "Untick to explicitly forbid placing items like TV's and suck in zone"
+
+    IGUI_PhunZones_Destruction = "Destruction"
+    IGUI_PhunZones_Destruction_tooltip = "Untick to explicitly forbid using a sledgehammer or dissasembly in zone"
+
+    IGUI_PhunZones_Fire = "Fire"
+    IGUI_PhunZones_Fire_tooltip = "Untick to explicitly forbid fire from spreading in zone"
+
+    IGUI_PhunZones_Locked = "Locked"
+    IGUI_PhunZones_Locked_tooltip = "Tick to explicitly prevent non admins from entering zone"
+    
 }

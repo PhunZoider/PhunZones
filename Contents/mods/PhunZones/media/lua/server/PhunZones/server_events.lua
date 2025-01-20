@@ -18,7 +18,7 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
 end)
 
 Events.OnServerStarted.Add(function()
-    PZ:getZones(true)
+    PZ:updateZoneData(true)
 end)
 
 Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)

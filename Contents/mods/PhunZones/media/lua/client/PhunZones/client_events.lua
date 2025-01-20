@@ -65,7 +65,7 @@ end)
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == PZ.const.modifiedModData then
         ModData.add(PZ.const.modifiedModData, tableData)
-        PZ:getZones(true, tableData)
+        PZ:updateZoneData(true, tableData)
     end
 end)
 

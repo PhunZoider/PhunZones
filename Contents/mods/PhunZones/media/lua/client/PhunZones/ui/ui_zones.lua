@@ -40,7 +40,7 @@ function UI:refreshData()
     self.list:clear()
     self.regions:clear()
     self.regions:addOption(" ")
-    local data = PZ:getZones(not self.chkAll:isSelected(1))
+    local data = PZ:updateZoneData(not self.chkAll:isSelected(1))
 
     local presort = {}
     for k, v in pairs(data.lookup) do
@@ -123,7 +123,7 @@ function UI:refreshProperties(data, selected)
         self.list:ensureVisible(self.list.selected)
         self.selectedProperty = self.list.items[1].item
     end
-    self:refreshZonePoints(zone.zones)
+    self:refreshZonePoints(zone.points)
 end
 
 function UI:saveData(data)
@@ -131,20 +131,20 @@ function UI:saveData(data)
     if not md[data.region] then
         md[data.region] = {}
     end
-    if not md[data.region].zones then
-        md[data.region].zones = {}
+    if not md[data.region].subzones then
+        md[data.region].subzones = {}
     end
-    if not md[data.region].zones[data.zone] then
-        md[data.region].zones[data.zone] = {}
+    if not md[data.region].subzones[data.zone] then
+        md[data.region].subzones[data.zone] = {}
     end
-    if not md[data.region].zones[data.zone].zones then
-        md[data.region].zones[data.zone].zones = {}
+    if not md[data.region].subzones[data.zone].points then
+        md[data.region].subzones[data.zone].points = {}
     end
 
     local fields = {"enabled", "pvp", "title", "subtitle", "difficulty", "mods", "rads", "zeds", "bandits"}
 
     for _, v in ipairs(fields) do
-        md[data.region].zones[data.zone][v] = data[v]
+        md[data.region].subzones[data.zone][v] = data[v]
     end
     -- -- reset any existing keys
     -- for k, v in pairs(md[data.region].zones[data.zone]) do
