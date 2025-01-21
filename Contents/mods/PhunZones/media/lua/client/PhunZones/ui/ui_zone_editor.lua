@@ -14,7 +14,7 @@ local BUTTON_HGT = FONT_HGT_SMALL + 6
 local LABEL_HGT = FONT_HGT_MEDIUM + 6
 
 local profileName = "PhunZonesUIEditor"
-PZ.ui.editor = ISPanel:derive(profileName);
+PZ.ui.editor = ISCollapsableWindowJoypad:derive(profileName);
 PZ.ui.editor.instances = {}
 local UI = PZ.ui.editor
 
@@ -43,68 +43,39 @@ function UI.OnOpenPanel(playerObj, data, cb)
 
     instance:addToUIManager();
     instance:setVisible(true);
-    instance.data = {
-        region = data.region,
-        zone = data.zone,
-        enabled = data.enabled ~= false,
-        pvp = data.pvp == true,
-        title = data.title,
-        subtitle = data.subtitle,
-        difficulty = data.difficulty,
-        mods = data.mods,
-        rads = data.rads,
-        zeds = data.zeds ~= false,
-        bandits = data.bandits ~= false,
-        noAnnounce = data.noAnnounce == true,
-        rv = data.rv == true,
-        order = data.order or "",
-        isVoid = data.isVoid == true,
-        safehouse = data.safehouse == true
-    }
+
+    instance.data = {}
+    for k, v in pairs(PZ.fields) do
+        if v.type == "string" or v.type == "int" then
+            instance.data[k] = data[k] or ""
+            instance.controls[k]:setText(tostring(instance.data[k]))
+
+            if v.disableOnEdit then
+                instance.controls["_" .. k]:setName(tostring(instance.data[k]))
+                if (k == "zone" and instance.data[k] == "main") or (k ~= "zone" and tostring(instance.data[k]) ~= "") then
+                    instance.controls[k]:setVisible(false)
+                    instance.controls["_" .. k]:setVisible(true)
+                else
+                    instance.controls[k]:setVisible(true)
+                    instance.controls["_" .. k]:setVisible(false)
+                end
+            end
+
+        elseif v.type == "boolean" then
+            instance.data[k] = v.trueIsNil and data[k] == nil
+            instance.controls[k]:setSelected(1, instance.data[k] == true)
+        end
+    end
+    instance.title = (instance.data.region or "New Zone") .. " - " .. (instance.data.zone or "")
     instance.cb = cb
 
-    instance.txtRegion:setText(tostring(instance.data.region or ""))
-    instance.txtRegionDisabled:setName(tostring(instance.data.region or ""))
-
-    if data and data.region then
-        instance.txtRegion:setVisible(false)
-        instance.txtRegionDisabled:setVisible(true)
-    else
-        instance.txtRegion:setVisible(true)
-        instance.txtRegionDisabled:setVisible(false)
-    end
-
-    instance.txtZone:setText(tostring(instance.data.zone or "main"))
-    instance.txtZoneDisabled:setName(tostring(instance.data.zone or "main"))
-
-    if data and data.zone == "main" then
-        instance.txtZone:setVisible(false)
-        instance.txtZoneDisabled:setVisible(true)
-    else
-        instance.txtZone:setVisible(true)
-        instance.txtZoneDisabled:setVisible(false)
-    end
-
-    instance.chkEnabled:setSelected(1, instance.data.enabled ~= false)
-    instance.chkRv:setSelected(1, instance.data.rv == true)
-    instance.chkZeds:setSelected(1, instance.data.zeds == true)
-    instance.chkBandits:setSelected(1, instance.data.bandits == true)
-    instance.chkPvP:setSelected(1, instance.data.pvp == true)
-    instance.chkSafehouse:setSelected(1, instance.data.safehouse ~= true)
-    instance.txtMods:setText(tostring(instance.data.mods or ""))
-    instance.txtDifficulty:setText(tostring(instance.data.difficulty or 2))
-    instance.txtSubtitle:setText(tostring(instance.data.subtitle or ""))
-    instance.txtTitle:setText(tostring(instance.data.title or ""))
-    instance.txtRads:setText(tostring(instance.data.rads or ""))
-    instance.chkNoAnnounce:setSelected(1, instance.data.noAnnounce == true)
-    instance.txtOrder:setText(tostring(instance.data.order or ""))
     return instance;
 
 end
 
 function UI:new(x, y, width, height, player, playerIndex)
     local o = {};
-    o = ISPanel:new(x, y, width, height, player);
+    o = ISCollapsableWindowJoypad:new(x, y, width, height, player);
     setmetatable(o, self);
     self.__index = self;
 
@@ -146,360 +117,134 @@ function UI:new(x, y, width, height, player, playerIndex)
     return o;
 end
 
-function UI:RestoreLayout(name, layout)
-
-    -- ISLayoutManager.DefaultRestoreWindow(self, layout)
-    -- if name == profileName then
-    --     ISLayoutManager.DefaultRestoreWindow(self, layout)
-    --     self.userPosition = layout.userPosition == 'true'
-    -- end
-    -- self:recalcSize();
-end
-
-function UI:SaveLayout(name, layout)
-    -- ISLayoutManager.DefaultSaveWindow(self, layout)
-    -- if self.userPosition then
-    --     layout.userPosition = 'true'
-    -- else
-    --     layout.userPosition = 'false'
-    -- end
-end
-
 function UI:close()
-    ISPanel.close(self);
+    ISCollapsableWindowJoypad.close(self);
     self:setVisible(false);
     self:removeFromUIManager();
     self.instances[self.playerIndex] = nil
 end
 
-function UI:onMouseDown(x, y)
-    self.downX = self:getMouseX()
-    self.downY = self:getMouseY()
-    return true
-end
-function UI:onMouseUp(x, y)
-    self.downY = nil
-    self.downX = nil
-    if not self.dragging then
-        if self.onClick then
-            self:onClick()
-        end
-    else
-        self.dragging = false
-        self:setCapture(false)
-    end
-    return true
-end
-
-function UI:onMouseMove(dx, dy)
-
-    if self.downY and self.downX and not self.dragging then
-        if math.abs(self.downX - dx) > 4 or math.abs(self.downY - dy) > 4 then
-            self.dragging = true
-            self:setCapture(true)
-        end
-    end
-
-    if self.dragging then
-        local dx = self:getMouseX() - self.downX
-        local dy = self:getMouseY() - self.downY
-        self.userPosition = true
-        self:setX(self.x + dx)
-        self:setY(self.y + dy)
-    end
-end
-
 function UI:createChildren()
-    ISPanel.createChildren(self);
+    ISCollapsableWindowJoypad.createChildren(self);
 
-    local x = 10
-    local y = 10
+    local offset = 10
+    local x = offset
+    local y = HEADER_HGT
     local h = FONT_HGT_MEDIUM
 
-    self.title = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Coordinates"), 1, 1, 1, 1, UIFont.Small, true);
-    self.title:initialise();
-    self.title:instantiate();
-    self:addChild(self.title);
-
-    self.closeButton = ISButton:new(self.width - 25 - x, y, 25, 25, "X", self, function()
-        self:close();
-    end);
-    self.closeButton:initialise();
-    self:addChild(self.closeButton);
-
-    y = y + self.closeButton.height + 10
-
-    self.lblRegion = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Region"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblRegion:initialise();
-    self.lblRegion:instantiate();
-    self:addChild(self.lblRegion);
-
-    self.txtRegionDisabled = ISLabel:new(x + 75, y, h, getText("IGUI_PhunZones_Region"), 1, 1, 1, 1, UIFont.Small, true);
-    self.txtRegionDisabled:initialise();
-    self.txtRegionDisabled:instantiate();
-    self:addChild(self.txtRegionDisabled);
-
-    self.txtRegion = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtRegion:initialise();
-    self.txtRegion.tooltip = getText("IGUI_PhunZones_Region_tooltip")
-    self:addChild(self.txtRegion);
-
-    y = y + h + 10
-
-    self.lblZone = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Zone"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblZone:initialise();
-    self.lblZone:instantiate();
-    self:addChild(self.lblZone);
-
-    self.txtZoneDisabled = ISLabel:new(x + 75, y, h, getText("IGUI_PhunZones_Zone"), 1, 1, 1, 1, UIFont.Small, true);
-    self.txtZoneDisabled:initialise();
-    self.txtZoneDisabled:instantiate();
-    self:addChild(self.txtZoneDisabled);
-
-    self.txtZone = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtZone:initialise();
-    self.txtZone.tooltip = getText("IGUI_PhunZones_Zone_tooltip")
-    self:addChild(self.txtZone);
-
-    y = y + h + 10
-
-    self.lblTitle = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Title"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblTitle:initialise();
-    self.lblTitle:instantiate();
-    self:addChild(self.lblTitle);
-
-    self.txtTitle = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtTitle:initialise();
-    self.txtTitle.tooltip = getText("IGUI_PhunZones_Title_Tooltip")
-    self:addChild(self.txtTitle);
-
-    y = y + h + 10
-
-    self.lblSubtitle = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Subtitle"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblSubtitle:initialise();
-    self.lblSubtitle:instantiate();
-    self:addChild(self.lblSubtitle);
-
-    self.txtSubtitle = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtSubtitle.tooltip = getText("IGUI_PhunZones_Subtitle_tooltip")
-    self.txtSubtitle:initialise();
-
-    self:addChild(self.txtSubtitle);
-
-    y = y + h + 10
-
-    self.lblDifficulty = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Difficulty"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblDifficulty:initialise();
-    self.lblDifficulty:instantiate();
-    self:addChild(self.lblDifficulty);
-
-    self.txtDifficulty = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtDifficulty:initialise();
-    self.txtDifficulty.tooltip = getText("IGUI_PhunZones_Difficulty_tooltip")
-    self:addChild(self.txtDifficulty);
-
-    y = y + h + 10
-
-    self.lblRads = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Rads"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblRads:initialise();
-    self.lblRads:instantiate();
-    self:addChild(self.lblRads);
-
-    self.txtRads = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtRads:initialise();
-    self.txtRads.tooltip = getText("IGUI_PhunZones_Rads_tooltip")
-    self:addChild(self.txtRads);
-
-    y = y + h + 10
-
-    self.lblMods = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Mods"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblMods:initialise();
-    self.lblMods:instantiate();
-    self:addChild(self.lblMods);
-
-    self.txtMods = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtMods:initialise();
-    self.txtMods.tooltip = getText("IGUI_PhunZones_Mods_tooltip")
-    self:addChild(self.txtMods);
-
-    y = y + h + 10
-
-    self.chkPvP = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_PvP"), self)
-    self.chkPvP:addOption(getText("IGUI_PhunZones_PvP"), nil)
-    self.chkPvP:setSelected(1, true)
-    self.chkPvP:setWidthToFit()
-    self.chkPvP:setY(y)
-    self.chkPvP.tooltip = getText("IGUI_PhunZones_PvP_tooltip")
-    self:addChild(self.chkPvP)
-
-    -- y = y + h + 10
-
-    self.chkZeds = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Zeds"), self)
-    self.chkZeds:addOption(getText("IGUI_PhunZones_Zeds"), nil)
-    self.chkZeds:setSelected(1, true)
-    self.chkZeds:setWidthToFit()
-    self.chkZeds:setY(y)
-    self.chkZeds.tooltip = getText("IGUI_PhunZones_Zeds_tooltip")
-    self:addChild(self.chkZeds)
-
-    y = y + h + 10
-
-    self.chkBandits = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Bandits"), self)
-    self.chkBandits:addOption(getText("IGUI_PhunZones_Bandits"), nil)
-    self.chkBandits:setSelected(1, true)
-    self.chkBandits:setWidthToFit()
-    self.chkBandits:setY(y)
-    self.chkBandits.tooltip = getText("IGUI_PhunZones_Bandits_tooltip")
-    self:addChild(self.chkBandits)
-
-    -- y = y + h + 10
-
-    self.chkRv = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_RVInteriors"), self)
-    self.chkRv:addOption(getText("IGUI_PhunZones_RVInteriors"), nil)
-    self.chkRv:setSelected(1, true)
-    self.chkRv:setWidthToFit()
-    self.chkRv:setY(y)
-    self.chkRv.tooltip = getText("IGUI_PhunZones_RVInteriors_tooltip")
-    self:addChild(self.chkRv)
-
-    y = y + h + 10
-
-    self.chkNoAnnounce = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_NoWelcome"), self)
-    self.chkNoAnnounce:addOption(getText("IGUI_PhunZones_NoWelcome"), nil)
-    self.chkNoAnnounce:setSelected(1, true)
-    self.chkNoAnnounce:setWidthToFit()
-    self.chkNoAnnounce:setY(y)
-    self.chkNoAnnounce.tooltip = getText("IGUI_PhunZones_NoWelcome_tooltip")
-    self:addChild(self.chkNoAnnounce)
-
-    self.chkEnabled = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Enabled"), self)
-    self.chkEnabled:addOption(getText("IGUI_PhunZones_Enabled"), nil)
-    self.chkEnabled:setSelected(1, true)
-    self.chkEnabled:setWidthToFit()
-    self.chkEnabled:setY(y)
-    self.chkEnabled.tooltip = getText("IGUI_PhunZones_Enabled_tooltip")
-    self:addChild(self.chkEnabled)
-
-    y = y + h + 10
-
-    self.chkSafehouse = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_SafeHouse"), self)
-    self.chkSafehouse:addOption(getText("IGUI_PhunZones_SafeHouse"), nil)
-    self.chkSafehouse:setSelected(1, true)
-    self.chkSafehouse:setWidthToFit()
-    self.chkSafehouse:setY(y)
-    self.chkSafehouse.tooltip = getText("IGUI_PhunZones_Safehouse_tooltip")
-    self:addChild(self.chkSafehouse)
-
-    self.chkBuilding =
-        ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Building"), self)
-    self.chkBuilding:addOption(getText("IGUI_PhunZones_Building"), nil)
-    self.chkBuilding:setSelected(1, true)
-    self.chkBuilding:setWidthToFit()
-    self.chkBuilding:setY(y)
-    self.chkBuilding.tooltip = getText("IGUI_PhunZones_Building_tooltip")
-    self:addChild(self.chkBuilding)
-
-    y = y + h + 10
-
-    self.chkPlacing = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Placing"), self)
-    self.chkPlacing:addOption(getText("IGUI_PhunZones_Placing"), nil)
-    self.chkPlacing:setSelected(1, true)
-    self.chkPlacing:setWidthToFit()
-    self.chkPlacing:setY(y)
-    self.chkPlacing.tooltip = getText("IGUI_PhunZones_Placing_tooltip")
-    self:addChild(self.chkPlacing)
-
-    self.chkDestruction = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT,
-        getText("IGUI_PhunZones_Destruction"), self)
-    self.chkDestruction:addOption(getText("IGUI_PhunZones_Destruction"), nil)
-    self.chkDestruction:setSelected(1, true)
-    self.chkDestruction:setWidthToFit()
-    self.chkDestruction:setY(y)
-    self.chkDestruction.tooltip = getText("IGUI_PhunZones_Destruction_tooltip")
-    self:addChild(self.chkDestruction)
-
-    y = y + h + 10
-
-    self.chkFire = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Fire"), self)
-    self.chkFire:addOption(getText("IGUI_PhunZones_Fire"), nil)
-    self.chkFire:setSelected(1, true)
-    self.chkFire:setWidthToFit()
-    self.chkFire:setY(y)
-    self.chkFire.tooltip = getText("IGUI_PhunZones_Fire_tooltip")
-    self:addChild(self.chkFire)
-
-    self.chkLocked = ISTickBox:new(self.width / 2, y, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_Locked"), self)
-    self.chkLocked:addOption(getText("IGUI_PhunZones_Locked"), nil)
-    self.chkLocked:setSelected(1, true)
-    self.chkLocked:setWidthToFit()
-    self.chkLocked:setY(y)
-    self.chkLocked.tooltip = getText("IGUI_PhunZones_Locked_tooltip")
-    self:addChild(self.chkLocked)
-
-    y = y + h + 10
-
-    self.lblOrder = ISLabel:new(x, y, h, getText("IGUI_PhunZones_Order"), 1, 1, 1, 1, UIFont.Small, true);
-    self.lblOrder:initialise();
-    self.lblOrder:instantiate();
-    self:addChild(self.lblOrder);
-
-    self.txtOrder = ISTextEntryBox:new("", x + 75, y, 200, h);
-    self.txtOrder:initialise();
-    self.txtOrder.tooltip = getText("IGUI_PhunZones_Order_tooltip")
-    self:addChild(self.txtOrder);
-
-    y = y + h + 10
-
-    -- x = self.btnXY2Set.x + self.btnXY2Set.width + 10
-
-    self.save = ISButton:new(x, y, 80, h, getText("UI_btn_save"), self, function()
-
-        local data = {
-            region = self.txtRegion:getText(),
-            zone = self.txtZone:getText()
-        }
-
-        if self.chkPvP:isSelected(1) then
-            data.pvp = true
+    self.controls = {}
+    self.controls._panel = ISPanel:new(x, y, self.width - self.scrollwidth - offset * 2,
+        self.height - y - 10 - BUTTON_HGT - offset);
+    self.controls._panel:initialise();
+    self.controls._panel:instantiate();
+    self.controls._panel:setAnchorRight(true)
+    self.controls._panel:setAnchorLeft(true)
+    self.controls._panel:setAnchorTop(true)
+    self.controls._panel:setAnchorBottom(true)
+    self.controls._panel:addScrollBars()
+    self.controls._panel.vscroll:setVisible(true)
+    self.controls._panel.prerender = function(s)
+        s:setStencilRect(0, 0, s.width, s.height);
+        ISPanel.prerender(s)
+    end
+    self.controls._panel.render = function(s)
+        ISPanel.render(s)
+        s:clearStencilRect()
+    end
+    self.controls._panel.onMouseWheel = function(s, del)
+        if s:getScrollHeight() > 0 then
+            s:setYScroll(s:getYScroll() - (del * 40))
+            return true
         end
-        if self.txtTitle:getText() ~= "" then
-            data.title = self.txtTitle:getText()
+        return false
+    end
+
+    self:addChild(self.controls._panel);
+
+    for k, v in pairs(PZ.fields) do
+
+        if v.type == "string" or v.type == "int" then
+            local label = ISLabel:new(x, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1, UIFont.Small, true);
+            label:initialise();
+            label:instantiate();
+            self.controls["label_" .. k] = label
+            self.controls._panel:addChild(label);
+
+            self.controls[k] = ISTextEntryBox:new("", x + 75, y, 200, h);
+            self.controls[k]:initialise();
+            self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
+            self.controls._panel:addChild(self.controls[k]);
+
+            if v.disableOnEdit then
+                local label = ISLabel:new(x + 75, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1,
+                    UIFont.Small, true);
+                label:initialise();
+                label:instantiate();
+                self.controls["_" .. k] = label
+                self.controls._panel:addChild(label);
+            end
+
+        elseif v.type == "boolean" then
+            self.controls[k] = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getTextOrNull(v.label) or v.label or k, self)
+            self.controls[k]:addOption(getTextOrNull(v.label) or v.label or k, nil)
+            self.controls[k]:setSelected(1, true)
+            self.controls[k]:setWidthToFit()
+            self.controls[k]:setY(y)
+            self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
+            self.controls._panel:addChild(self.controls[k])
         end
-        if self.txtSubtitle:getText() ~= "" then
-            data.subtitle = self.txtSubtitle:getText()
-        end
-        if self.txtDifficulty:getText() ~= "" then
-            data.difficulty = tonumber(self.txtDifficulty:getText())
-        end
-        if self.txtMods:getText() ~= "" then
-            data.mods = self.txtMods:getText()
-        end
-        if not self.chkZeds:isSelected(1) then
-            data.zeds = false
-        end
-        if not self.chkBandits:isSelected(1) then
-            data.bandits = false
-        end
-        if not self.chkEnabled:isSelected(1) then
-            data.enabled = false
-        end
-        if self.chkRv:isSelected(1) then
-            data.rv = false
-        end
-        if not self.chkNoAnnounce:isSelected(1) then
-            data.noAnnounce = true
-        end
-        if self.txtOrder:getText() ~= "" then
-            data.txtOrder = tonumber(self.txtOrder:getText())
-        end
-        if self.cb then
-            self.cb(data)
-        end
-        self:close()
-    end);
-    self.save.internal = "SAVE";
-    self.save:initialise();
-    self:addChild(self.save);
+
+        y = y + h + 10
+
+    end
+    self.controls._panel:setScrollHeight(y + h + 10);
+    self.controls._panel:setScrollChildren(true)
+
+    self.controls._save = ISButton:new(x, self.height - BUTTON_HGT - offset, self.width - offset * 2, BUTTON_HGT,
+        getText("UI_btn_save"), self, function()
+
+            local data = {}
+
+            for k, v in pairs(PZ.fields) do
+                if v.type == "string" then
+                    local text = self.controls[k]:getText()
+                    if text ~= "" then
+                        data[k] = text
+                    else
+                        data[k] = nil
+                    end
+                elseif v.type == "int" then
+                    local text = self.controls[k]:getText():gsub("%D", "")
+                    if text ~= "" then
+                        data[k] = tonumber(text)
+                    else
+                        data[k] = nil
+                    end
+                elseif v.type == "boolean" then
+                    if self.controls[k]:isSelected(1) then
+                        if v.trueIsNil then
+                            data[k] = nil
+                        else
+                            data[k] = true
+                        end
+                    else
+                        if v.trueIsNil then
+                            data[k] = false
+                        else
+                            data[k] = nil
+                        end
+                    end
+                end
+            end
+
+            if self.cb then
+                self.cb(data)
+            end
+            self:close()
+        end);
+    self.controls._save.internal = "SAVE";
+    self.controls._save:initialise();
+    self:addChild(self.controls._save);
 
 end
 
@@ -508,9 +253,19 @@ function UI:setData(data)
 end
 
 function UI:prerender()
+    ISCollapsableWindowJoypad.prerender(self)
+    local offset = 10
+    self.controls._panel:setWidth(self.width - self.scrollwidth - offset * 2)
+    self.controls._panel:setHeight(self.controls._save.y - self:titleBarHeight() - offset * 2)
+    self.controls._panel:updateScrollbars();
+    -- self.controls._save:setX(self.width - self.scrollwidth - 80 - offset)
+    self.controls._save:setX(offset)
+    self.controls._save:setY(self.height - BUTTON_HGT - offset)
+    self.controls._save:setWidth(self.width - offset * 2)
+end
 
-    ISPanel.prerender(self);
-
+function UI:render()
+    ISCollapsableWindowJoypad.render(self)
 end
 
 --[[

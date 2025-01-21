@@ -6,4 +6,5 @@ description=
 description=beta testing! Currently play testing and balance tweaking on PhunZoid server
 description=[url=https://github.com/PhunZoider/PhunZones]Repo and more info[/url]
 tags=
+require=phunlib
 visibility=unlisted

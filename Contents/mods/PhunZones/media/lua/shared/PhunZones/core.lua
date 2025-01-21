@@ -1,6 +1,8 @@
+require "PhunLib/core"
+local PL = PhunLib
 local allLocations = require("PhunZones/data")
-local fileTools = require("PhunZones/files")
-local tableTools = require("PhunZones/table")
+local fileTools = PL.file
+local tableTools = PL.table
 PhunZones = {
     name = 'PhunZones',
     events = {
@@ -24,6 +26,121 @@ PhunZones = {
         modifyZone = "PhunZonesModifyZone",
         cleanPlayersZeds = "PhunZonescleanPlayersZeds",
         updatePlayerZone = "PhunZonesUpdatePlayerZone"
+    },
+    fields = {
+        region = {
+            label = "IGUI_PhunZones_Region",
+            type = "string",
+            tooltip = "IGUI_PhunZones_Region_tooltip",
+            disableOnEdit = true
+        },
+        zone = {
+            label = "IGUI_PhunZones_Zone",
+            type = "string",
+            tooltip = "IGUI_PhunZones_Zone_tooltip",
+            disableOnEdit = true
+        },
+        title = {
+            label = "IGUI_PhunZones_Title",
+            type = "string",
+            tooltip = "IGUI_PhunZones_Title_Tooltip"
+        },
+        subtitle = {
+            label = "IGUI_PhunZones_Subtitle",
+            type = "string",
+            tooltip = "IGUI_PhunZones_Subtitle_tooltip"
+        },
+        difficulty = {
+            label = "IGUI_PhunZones_Difficulty",
+            type = "int",
+            tooltip = "IGUI_PhunZones_Difficulty_tooltip"
+        },
+        rads = {
+            label = "IGUI_PhunZones_Rads",
+            type = "int",
+            tooltip = "IGUI_PhunZones_Rads_tooltip"
+        },
+        mods = {
+            label = "IGUI_PhunZones_Mods",
+            type = "string",
+            tooltip = "IGUI_PhunZones_Mods_tooltip"
+        },
+        pvp = {
+            label = "IGUI_PhunZones_PvP",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_PvP_tooltip"
+        },
+        zeds = {
+            label = "IGUI_PhunZones_Zeds",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Zeds_tooltip",
+            trueIsNil = true
+        },
+        bandits = {
+            label = "IGUI_PhunZones_Bandits",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Bandits_tooltip",
+            trueIsNil = true
+        },
+        rv = {
+            label = "IGUI_PhunZones_RVInteriors",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_RVInteriors_tooltip"
+        },
+        noAnnounce = {
+            label = "IGUI_PhunZones_NoWelcome",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_NoWelcome_tooltip",
+            trueIsNil = true
+        },
+        enabled = {
+            label = "IGUI_PhunZones_Enabled",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Enabled_tooltip",
+            trueIsNil = true
+        },
+        safhouse = {
+            label = "IGUI_PhunZones_SafeHouse",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Safehouse_tooltip",
+            trueIsNil = true
+        },
+        building = {
+            label = "IGUI_PhunZones_Building",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Building_tooltip",
+            trueIsNil = true
+        },
+        placing = {
+            label = "IGUI_PhunZones_Placing",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Placing_tooltip",
+            trueIsNil = true
+        },
+        destruction = {
+            label = "IGUI_PhunZones_Destruction",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Destruction_tooltip",
+            trueIsNil = true
+        },
+        fire = {
+            label = "IGUI_PhunZones_Fire",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Fire_tooltip",
+            trueIsNil = true
+        },
+        players = {
+            label = "IGUI_PhunZones_Players",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Players_tooltip",
+            trueIsNil = true
+        },
+        order = {
+            label = "IGUI_PhunZones_Order",
+            type = "int",
+            tooltip = "IGUI_PhunZones_Order_tooltip"
+        }
+
     }
 }
 
@@ -142,7 +259,7 @@ function Core:updateModData(obj, triggerChangeEvent)
 
     if not instanceof(obj, "IsoPlayer") then
         -- most likely a zed or bandit
-        modData.PhunZones = tableTools:shallowCopyTable(ldata)
+        modData.PhunZones = tableTools.shallowCopy(ldata)
         modData.PhunZones.id = obj:getOnlineID()
         local id = obj:getOnlineID()
         if triggerChangeEvent and (id ~= existing.id or ldata.region ~= existing.region or ldata.zone ~= existing.zone) then
@@ -153,7 +270,7 @@ function Core:updateModData(obj, triggerChangeEvent)
         -- player
         if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
             -- Shallow copy the new data
-            existing = tableTools:shallowCopyTable(ldata, excludedProps)
+            existing = tableTools.shallowCopy(ldata, excludedProps)
             -- flag that there has been a material change to the zone
             doEvent = true
         end
@@ -275,7 +392,7 @@ function Core:saveChanges(data)
     if isClient() then
         sendClientCommand(getPlayer(), self.name, self.commands.modifyZone, data)
     else
-        fileTools:saveTable(self.const.modifiedLuaFile, data)
+        fileTools.saveTable(self.const.modifiedLuaFile, data)
     end
 
     self:updateZoneData(true, data)

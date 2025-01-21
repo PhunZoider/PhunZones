@@ -5,7 +5,7 @@ function ISBuildingObject:isValid(square)
     if not square then
         return false
     end
-    local zone = Core.getZone(square)
+    local zone = Core:getLocation(square)
     if zone and zone.build == false then
         return false
     end

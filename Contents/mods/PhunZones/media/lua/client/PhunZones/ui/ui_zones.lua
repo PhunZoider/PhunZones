@@ -30,12 +30,13 @@ function UI.OnOpenPanel(playerObj, key)
 
         UI.instances[playerIndex]:addToUIManager();
         UI.instances[playerIndex]:setVisible(true);
-        UI.instances[playerIndex]:refreshData()
+        UI.instances[playerIndex]:refreshData(PZ:getLocation(playerObj))
+
         return UI.instances[playerIndex];
     end
 end
 
-function UI:refreshData()
+function UI:refreshData(zone)
 
     self.list:clear()
     self.regions:clear()
@@ -63,20 +64,31 @@ function UI:refreshData()
         final[v.k].k = nil
     end
 
+    local selectedIndex = nil
+    local index = 1
     self.data = data
     for k, v in pairs(final) do
+
+        index = index + 1
+        if zone and zone.region == k and zone.zone == "main" then
+            selectedIndex = index
+        end
 
         self.regions:addOptionWithData(k, v.main)
 
         for zkey, zval in pairs(v) do
             if zkey ~= "main" then
+                index = index + 1
+                if zone and zone.region == k and zone.zone == zkey then
+                    selectedIndex = index
+                end
                 self.regions:addOptionWithData(("  |- " .. zkey), zval)
             end
         end
 
     end
     self.regions:addOption(" ")
-    self:setSelection(1)
+    self:setSelection(selectedIndex or 1)
 
 end
 

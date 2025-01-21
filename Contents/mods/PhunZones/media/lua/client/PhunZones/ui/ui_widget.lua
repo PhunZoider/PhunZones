@@ -224,7 +224,7 @@ function UI:prerender()
     local minimap = getPlayerMiniMap(self.playerIndex)
 
     if not minimap then
-
+        -- player does not minimap
         local width = getTextManager():MeasureStringX(UIFont.small, self.data.title or "") + x
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
@@ -238,6 +238,7 @@ function UI:prerender()
         txtColor = self.hoverTextColor
 
     elseif self.coverMap then
+        -- draw over the map
         self:setX(minimap.x)
         self:setY(minimap.y)
         self:bringToTop()
@@ -251,19 +252,24 @@ function UI:prerender()
             return
         end
     else
+
+        -- Draw behind/over the map?
+        if minimap.titleBar:isVisible() then
+            self.y = minimap.y - 50
+        else
+            self.y = minimap.y - 50 - minimap.titleBar.height
+        end
+
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
         self:setWidth(minimap.width)
-        self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
+        self:setHeight(50 + minimap.titleBar.height)
+        -- self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
         self.x = minimap.x
-        if minimap.titleBar:isVisible() then
-            self.y = minimap.y - self.height - 2
-        else
-            self.y = minimap.y - self.height - 22
-        end
+
         -- self:setX(minimap.x)
         -- self:setY(minimap.y - self.height - 2)
-        self:bringToTop()
+        -- self:bringToTop()
 
         txtColor = self.hoverTextColor
 

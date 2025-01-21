@@ -30,7 +30,7 @@ Commands[PZ.commands.updatePlayerZone] = function(args)
             PZ.players = ModData.getOrCreate(PZ.const.playerData)
         end
         local old = PZ:getPlayerData(p)
-        local existing = tableTools:shallowCopyTable(old)
+        local existing = tableTools.shallowCopy(old)
         if PZ.settings.ShowZoneChange then
             if existing.title ~= args.title or existing.subtitle ~= args.subtitle and existing.isVoid ~= true then
                 PZ.ui.welcome.OnOpenPanel(p, args)

@@ -1,13 +1,15 @@
 local PZ = PhunZones
 require "PhunZones/core"
-local tableTools = require("PhunZones/table")
-local fileTools = require("PhunZones/files")
+require "PhunLib/core"
+local PL = PhunLib
+local fileTools = PL.file
+local tableTools = PL.table
 local allLocations = require("PhunZones/data")
 
 local excludedKeys = ArrayList:new();
 local getActivatedMods = getActivatedMods
-excludedKeys:add("children")
-excludedKeys:add("zones")
+excludedKeys:add("points")
+excludedKeys:add("subzones")
 
 local function getEntry(entry, omitMods)
 
@@ -27,7 +29,7 @@ local function getEntry(entry, omitMods)
         end
     end
     if process == true then
-        row = tableTools:shallowCopyTable(entry, excludedKeys)
+        row = tableTools.shallowCopy(entry, excludedKeys)
     else
         return nil
     end
@@ -36,7 +38,7 @@ local function getEntry(entry, omitMods)
         main = {}
     }
 
-    local mainzones = tableTools:shallowCopyTable(entry.points)
+    local mainzones = tableTools.shallowCopy(entry.points)
     if mainzones then
         entries = entries + 1
         row.zones.main.points = mainzones
@@ -57,7 +59,7 @@ local function getEntry(entry, omitMods)
                 end
             end
             if process then
-                row.zones[k] = tableTools:shallowCopyTable(v)
+                row.zones[k] = tableTools.shallowCopy(v)
                 entries = entries + 1
             end
         end
@@ -104,7 +106,7 @@ end
 
 function PZ:getModifiedZones(omitMods)
 
-    local data = fileTools:loadTable(self.const.modifiedLuaFile) or {}
+    local data = fileTools.loadTable(self.const.modifiedLuaFile) or {}
     ModData.add(self.const.modifiedModData, data)
     local results = {}
     local order = 0
@@ -173,8 +175,8 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
     local core = self:getCoreZones(omitMods)
     local others = self:getExtendedData(omitMods)
     local modified = modifiedDataSet or self:getModifiedZones(omitMods)
-    local results = tableTools:mergeTables(core or {}, others or {})
-    results = tableTools:mergeTables(results, modified or {})
+    local results = tableTools.merge(core or {}, others or {})
+    results = tableTools.merge(results, modified or {})
 
     -- Flatten all entries down into a single array for sorting
     local flattened = {}
@@ -262,11 +264,11 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
             --         table.insert(self.zedless, v)
             --     end
             -- end
-            local z = tableTools:shallowCopyTable(zoneData, excludedKeys) or {}
+            local z = tableTools.shallowCopy(zoneData, excludedKeys) or {}
 
             z.region = regionKey
             z.zone = zoneKey
-            local merged = tableTools:mergeTables(regionData, z, excludedKeys)
+            local merged = tableTools.merge(regionData, z, excludedKeys)
             if not lookup[regionKey] then
                 lookup[regionKey] = {}
             end
