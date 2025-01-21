@@ -18,9 +18,6 @@ IGUI_EN = {
     IGUI_PhunZones_EditZone = "Edit Zone",
 
 
-
-
-
     IGUI_PhunZones_Coordinates = "Coordinates",
     IGUI_PhunZones_Region = "Region",
     IGUI_PhunZones_Regions = "Regions",
@@ -33,8 +30,6 @@ IGUI_EN = {
     IGUI_PhunZones_Subtitle_tooltip = "Optional subtitle that is displayed to the player",
     IGUI_PhunZones_Difficulty = "Difficulty",
     IGUI_PhunZones_Difficulty_tooltip = "Zone difficulty level (0-4). Primarily for use with PhunRunners mod, though any mod could leverage it",
-    IGUI_PhunZones_Rads = "Rads",
-    IGUI_PhunZones_Rads_tooltip = "Radiation strength in this zone. Primarily for use with PhunRad mod, though I suppose any mod could use it.",
     IGUI_PhunZones_Mods = "Mods",
     IGUI_PhunZones_Mods_tooltip = "Mods that are required to be activated for this zone to be active. You can add multiple mods by separating each with a semi-colon",
     IGUI_PhunZones_PvP = "PvP On",

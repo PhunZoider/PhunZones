@@ -12,8 +12,8 @@ PhunZones = {
         OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked"
     },
     const = {
-        modifiedLuaFile = "PhunZone_Changes.lua",
-        modifiedModData = "PhunZone_Changes",
+        modifiedLuaFile = "PhunZones.lua",
+        modifiedModData = "PhunZones",
         playerData = "PhunZonesPlayers",
         trackedVehicles = "PhunZonesTrackedVehicles"
     },
@@ -54,11 +54,6 @@ PhunZones = {
             label = "IGUI_PhunZones_Difficulty",
             type = "int",
             tooltip = "IGUI_PhunZones_Difficulty_tooltip"
-        },
-        rads = {
-            label = "IGUI_PhunZones_Rads",
-            type = "int",
-            tooltip = "IGUI_PhunZones_Rads_tooltip"
         },
         mods = {
             label = "IGUI_PhunZones_Mods",
@@ -214,6 +209,10 @@ function Core:getPlayerData(player)
     end
 end
 
+function Core:addExtendedData(data)
+    self.extended = tableTools.merge(self.extended or {}, data)
+end
+
 local excludedProps = nil
 local excludedTrackingProps = nil
 local rvInterior = nil
@@ -339,21 +338,23 @@ function Core:getLocation(x, y)
         xx, yy = x:getX(), x:getY()
     end
 
-    local ckey = math.floor(xx / 300) .. "_" .. math.floor(yy / 300)
-    -- print("Getting location for chunk " .. tostring(ckey) .. " " .. tostring(xx) .. " " .. tostring(yy))
-    -- self:debug(self.data.cells[ckey])
-    for _, v in ipairs(self.data.cells[ckey] or {}) do
-        -- 1 = region key
-        -- 2 = zone key
-        -- 3 = x1
-        -- 4 = y1
-        -- 5 = x2
-        -- 6 = y2
-        if xx >= v[3] and xx <= v[5] and yy >= v[4] and yy <= v[6] then
-            return self.data.lookup[v[1]][v[2]]
+    if self.data and self.data.cells then
+
+        local ckey = math.floor(xx / 300) .. "_" .. math.floor(yy / 300)
+        -- print("Getting location for chunk " .. tostring(ckey) .. " " .. tostring(xx) .. " " .. tostring(yy))
+        -- self:debug(self.data.cells[ckey])
+        for _, v in ipairs(self.data.cells[ckey] or {}) do
+            -- 1 = region key
+            -- 2 = zone key
+            -- 3 = x1
+            -- 4 = y1
+            -- 5 = x2
+            -- 6 = y2
+            if xx >= v[3] and xx <= v[5] and yy >= v[4] and yy <= v[6] then
+                return self.data.lookup[v[1]][v[2]]
+            end
         end
     end
-
     return {
         region = "none",
         zone = "main",
@@ -392,7 +393,10 @@ function Core:saveChanges(data)
     if isClient() then
         sendClientCommand(getPlayer(), self.name, self.commands.modifyZone, data)
     else
-        fileTools.saveTable(self.const.modifiedLuaFile, data)
+        fileTools.saveTable(self.const.modifiedLuaFile, {
+            version = 1,
+            data = data
+        })
     end
 
     self:updateZoneData(true, data)

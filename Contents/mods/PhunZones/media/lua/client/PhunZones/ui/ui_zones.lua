@@ -119,7 +119,7 @@ function UI:refreshProperties(data, selected)
     end
     local zone = self.data.zones[data.region].zones[data.zone]
     for k, v in pairs(data) do
-        if k ~= "region" and k ~= "zone" then
+        if k ~= "region" and k ~= "zone" and k ~= "zones" then
 
             -- is this value overwriting the parent?
 
@@ -146,31 +146,32 @@ function UI:saveData(data)
     if not md[data.region].subzones then
         md[data.region].subzones = {}
     end
-    if not md[data.region].subzones[data.zone] then
-        md[data.region].subzones[data.zone] = {}
-    end
-    if not md[data.region].subzones[data.zone].points then
-        md[data.region].subzones[data.zone].points = {}
+    local segment = nil
+    if data.zone ~= "main" then
+        if not md[data.region].subzones[data.zone] then
+            md[data.region].subzones[data.zone] = {}
+        end
+        if not md[data.region].subzones[data.zone].points then
+            md[data.region].subzones[data.zone].points = {}
+        end
+        segment = md[data.region].subzones[data.zone]
+    else
+        md[data.region].points = {}
+        segment = md[data.region]
     end
 
     local fields = {"enabled", "pvp", "title", "subtitle", "difficulty", "mods", "rads", "zeds", "bandits"}
 
-    for _, v in ipairs(fields) do
-        md[data.region].subzones[data.zone][v] = data[v]
+    for _, v in ipairs(PZ.fields) do
+        -- these should already be cast to the correct type
+        if v.type == "string" then
+            segment[v.key] = data[v.key]
+        elseif v.type == "int" then
+            segment[v.key] = tonumber(data[v.key])
+        elseif v.type == "boolean" then
+            segment[v.key] = data[v.key]
+        end
     end
-    -- -- reset any existing keys
-    -- for k, v in pairs(md[data.region].zones[data.zone]) do
-    --     if k ~= "region" and k ~= "zone" and k ~= "zones" then
-    --         md[data.region].zones[data.zone][k] = nil
-    --     end
-    -- end
-
-    -- -- copy over passed keys
-    -- for k, v in pairs(data) do
-    --     if k ~= "region" and k ~= "zone" and k ~= "zones" then
-    --         md[data.region].zones[data.zone][k] = v
-    --     end
-    -- end
 
     PZ:saveChanges(md)
     self:refreshData()
@@ -178,31 +179,41 @@ end
 
 function UI:savePoint(xy, pointIndex)
     local zone = self.data.zones[xy.region].zones[xy.zone]
-    local point = zone.zones[xy.point]
+    local point = zone.points[xy.point]
 
     local md = ModData.getOrCreate(PZ.const.modifiedModData)
     if not md[xy.region] then
         md[xy.region] = {}
     end
-    if not md[xy.region].zones then
-        md[xy.region].zones = {}
-    end
-    if not md[xy.region].zones[xy.zone] then
-        md[xy.region].zones[xy.zone] = {}
-    end
+    if xy.zone ~= "main" then
+        if not md[xy.region].subzones then
+            md[xy.region].subzones = {}
+        end
+        if not md[xy.region].subzones[xy.zone] then
+            md[xy.region].subzones[xy.zone] = {}
+        end
 
-    -- copy all existing points into modified data
-    md[xy.region].zones[xy.zone].zones = zone.zones
+        -- copy all existing points into modified data
+        md[xy.region].subzones[xy.zone].points = zone.points
 
-    if pointIndex then
-        zone.zones[pointIndex] = {xy.x, xy.y, xy.x2, xy.y2}
+        if pointIndex then
+            zone.points[pointIndex] = {xy.x, xy.y, xy.x2, xy.y2}
+        else
+            table.insert(zone.points, {xy.x, xy.y, xy.x2, xy.y2})
+        end
     else
-        table.insert(zone.zones, {xy.x, xy.y, xy.x2, xy.y2})
+
+        if pointIndex then
+            self.data.zones[xy.region].zones[xy.zone].points[pointIndex] = {xy.x, xy.y, xy.x2, xy.y2}
+        else
+            table.insert(self.data.zones[xy.region].zones[xy.zone].points, {xy.x, xy.y, xy.x2, xy.y2})
+        end
+        md[xy.region].points = self.data.zones[xy.region].zones[xy.zone].points
     end
 
     PZ:saveChanges(md)
     -- probably need to rebuild everything too
-    self:refreshZonePoints(zone.zones, self.points.selected)
+    self:refreshZonePoints(zone.points, self.points.selected)
 end
 
 function UI:refreshZonePoints(points, selected)
@@ -217,6 +228,12 @@ function UI:refreshZonePoints(points, selected)
         })
     end
     if self.points.items and #self.points.items > 0 then
+        if not selected or selected == 0 then
+            selected = 1
+        end
+        if selected > #self.points.items then
+            selected = #self.points.items
+        end
         self.points.selected = selected or 1
         self.points:ensureVisible(self.points.selected)
         self.selectedPoint = self.points.items[self.points.selected].item
@@ -412,9 +429,9 @@ function UI:createChildren()
     end
     self.points.drawBorder = true;
     self.points:addColumn("X", 0);
-    self.points:addColumn("Y", 100);
-    self.points:addColumn("X2", 200);
-    self.points:addColumn("Y2", 300);
+    self.points:addColumn("Y", 75);
+    self.points:addColumn("X2", 150);
+    self.points:addColumn("Y2", 225);
     self:addChild(self.points);
 
     y = self.points.y + self.points.height + 10

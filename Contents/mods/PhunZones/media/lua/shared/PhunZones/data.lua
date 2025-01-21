@@ -27,7 +27,6 @@ return {
     Muldraugh = {
         difficulty = 1,
         title = "Muldraugh",
-        rads = 5,
         points = {{10490, 9160, 11000, 10700}},
         subzones = {
             ncheckpoint = {
@@ -84,7 +83,6 @@ return {
     },
     Louisville = {
         difficulty = 3,
-        rads = 60,
         title = "Louisville",
         points = {{12400, 3904, 12545, 4483}, {11700, 300, 14699, 3899}},
         subzones = {
@@ -184,7 +182,6 @@ return {
         }
     },
     Taylorsville = {
-        rads = 10,
         difficulty = 2,
         title = "Bridge",
         mods = "Taylorsville",
@@ -197,7 +194,6 @@ return {
         }
     },
     Romero = {
-        rads = 20,
         difficulty = 4,
         title = "The Romero",
         mods = "TheRomero",
@@ -256,7 +252,6 @@ return {
         points = {{7499, 9590, 8099, 10198}}
     },
     Coryerdon = {
-        rads = 30,
         difficulty = 3,
         title = "Coryerdon",
         mods = "coryerdon",
@@ -299,7 +294,6 @@ return {
         points = {{6600, 6600, 6890, 6890}}
     },
     VSTOWN = {
-        rads = 10,
         difficulty = 3,
         title = "Valley Station Town",
         mods = "VSTOWN",
@@ -307,13 +301,11 @@ return {
     },
     Dirkerdam = { -- respawn checked - failed
         difficulty = 2,
-        rads = 10,
         title = "Dirkerdam",
         mods = "Dirkerdam",
         points = {{6271, 2068, 8770, 4504}, {8829, 5606, 9067, 5978}, {8782, 4517, 9579, 4915}, {1899, 2118, 2723, 2879}},
         subzones = {
             Shipyard = {
-                rads = 30,
                 points = {{7707, 4527, 8262, 5086}},
                 difficulty = 3,
                 subtitle = "Shipyard"
@@ -377,7 +369,6 @@ return {
         points = {{8400, 10500, 8700, 11400}, {8700, 11100, 9000, 11400}, {9000, 10500, 9600, 11400}}
     },
     LCv2 = {
-        rads = 20,
         difficulty = 2,
         title = "Lake Cumberland",
         mods = "LCv2",
@@ -450,14 +441,12 @@ return {
         points = {{11290, 9400, 11399, 9570}}
     },
     TeraMartEast = {
-        rads = 10,
         difficulty = 2,
         title = "TeraMart East",
         mods = "TeraMart - East Side",
         points = {{10800, 11100, 11099, 11399}}
     },
     UncleReds = {
-        rads = 40,
         difficulty = 2,
         title = "Uncle Red's Bunker",
         mods = "UncleRedsBunkerRedux",
@@ -506,7 +495,6 @@ return {
         }
     },
     militaryfueldepot = {
-        rads = 70,
         difficulty = 2,
         title = "Military Fuel Depot",
         mods = "military fuel depot",
@@ -543,7 +531,6 @@ return {
         points = {{9600, 9300, 9899, 9599}}
     },
     Militaryairport = {
-        rads = 60,
         difficulty = 2,
         title = "Military Airport",
         mods = "Militaryairport",
@@ -667,7 +654,6 @@ return {
         points = {{7200, 9600, 7499, 9899}}
     },
     NewEkron = {
-        rads = 10,
         difficulty = 2,
         title = "New Ekron",
         mods = "NewEkron",
@@ -717,7 +703,6 @@ return {
         points = {{5400, 11100, 5999, 12299}}
     },
     BearLake = { -- respawn checked
-        rads = 10,
         difficulty = 2,
         title = "Big Bear Lake",
         mods = "BBL",
@@ -730,7 +715,6 @@ return {
         points = {{4800, 5700, 5099, 5999}}
     },
     Chinatown = { -- respawn checked
-        rads = 10,
         difficulty = 2,
         title = "Chinatown",
         mods = "Chinatown",
@@ -767,7 +751,6 @@ return {
         points = {{3600, 6300, 3899, 6599}}
     },
     RavenCreek = {
-        rads = 30,
         difficulty = 3,
         title = "Raven Creek Village",
         mods = "RavenCreek",
@@ -1010,18 +993,14 @@ return {
         title = "Reactor",
         mods = "NUCExperimentalReactor;PhunRadNUC;",
         points = {{8390, 12273, 8872, 12750}},
-        rads = 25,
         subzones = {
             approach = {
-                rads = 50,
                 points = {{8400, 12300, 8772, 12650}}
             },
             grounds = {
-                rads = 75,
                 points = {{8490, 12373, 8672, 12550}}
             },
             core = {
-                rads = 100,
                 points = {{8537, 12421, 8617, 12475}}
             }
         }

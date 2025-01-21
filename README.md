@@ -68,7 +68,6 @@ Notes:
 | pvp        | bool\*   | false   | Explicitly set players pvp flag when entering zone                                                                                                                                                                                                                                  | `pvp=true`                                                          |
 | enabled    | bool\*   | true    | set to false to disable loading of this zone                                                                                                                                                                                                                                        | `enabled=false`                                                     |
 | difficulty | number\* | nil     | 0 is none and 4 is maximum. For use in PhunRunners                                                                                                                                                                                                                                  | `difficulty=4`                                                      |
-| rads       | number\* | nil     | Used in PhunRad                                                                                                                                                                                                                                                                     | `rads=4`                                                            |
 | isVoid     | bool\*   | false   | used to flag the area isnt a real location. Used for the insides of RV interiors or basement mods                                                                                                                                                                                   | `isVoid=false`                                                      |
 | zeds       | bool\*   | true    | allow zeds to spawn in zone                                                                                                                                                                                                                                                         | `zeds=true`                                                         |
 | bandits    | bool\*   | true    | allow bandits to spawn in zone (requires bandits mod)                                                                                                                                                                                                                               | `bandits=true`                                                      |
@@ -84,13 +83,13 @@ Notes:
 The order of processing is as follows:
 
 - Load all internal included data points, omitting any which have mods not activated
-- Load any of the zones from the filesystem located in `lua/PhunZone_Changes.lua`
+- Load any of the zones from the filesystem located in `lua/PhunZones.lua`
 - Load any data added by mods through extending the system outlined below
 
 Notes:
 
 - subzones inherit the parent zones properties
-- A zone in PhunZone_Changes.lua with the key "MarchRidge" will overwrite the MarchRidge properties PhunZones ships with
+- A zone in PhunZones.lua with the key "MarchRidge" will overwrite the MarchRidge properties PhunZones ships with
 - Overwriting happens sequentially, but if you want something for sure to be processed last (and thus prevented from being overwritten) then give it a high order property
 
 ## Shaping
@@ -102,23 +101,39 @@ This is accomplished by either putting the subzones in order from grey to blue t
 
 ## Extending PhunZones
 
-There are a couple ways to extend PhunZones. One way would be to add whatever additional properties you want when
+There are a couple ways to extend PhunZones. If you want to add custom properties that users can set values for, add the field to PhunZones and optionally add some default values to existing zones
 
 ```lua
---media/lua/client/mymod.lua
+--media/lua/shared/mymod.lua
 
-Events[PhunZones.events.OnPhunZoneReady].Add(function()
-    if PhunZones.data.zones.MarchRidge then
-      PhunZones.data.zones.MarchRidget.isPhun=true
-    end
-end)
+require "PhunZones/core"
+-- Add a setting for radiation level to the PhunZones mod
+PhunZones.fields.rads = { -- rads is this properties unique key
+    label = "IGUI_PhunZones_Rads",
+    type = "int", -- or string or boolean
+    tooltip = "IGUI_PhunZones_Rads_tooltip"
+}
+
+-- optionally add some default values to existing zones
+PZ:addExtendedData({
+    Louisville = {
+        rads = 60
+    },
+    Dirkerdam = {
+        rads = 20,
+        subzones = {
+            Shipyard = {
+                rads = 30
+            }
+        }
+    }})
 ```
 
-And listen out for when players location changes. Zone will contain all properties (including those that are inherited)
+Optionally listen out for when a players location changes. Zone will contain all properties (including those that are inherited)
 
 ```lua
 Events[PunZones.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
-    if zone.isPhun then
+    if zone.rads then
       -- yay.
     end
 end)
@@ -130,6 +145,8 @@ You can also obtain all the current zone properties via the PhunZones field of t
 
 - In admin and/or debug mode, right click anywhere and choose "PhunZones Admin"
 - The drop down list will be populated with each of the currently loaded zones. Click the "Show All" checkbox to view all zones even if they were not loaded into current game (eg a required mod was not activated)
--
+- The UI is still a bit experimental so not every feature may be functional yet
 
 ## Customising Zones in file
+
+- Edit lua\PhunZones.lua file

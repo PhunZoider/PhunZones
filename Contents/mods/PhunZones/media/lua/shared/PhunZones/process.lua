@@ -75,7 +75,8 @@ function PZ:getCoreZones(omitMods)
 
     local results = {}
     local order = 0
-    for key, entry in pairs(allLocations) do
+    local all = tableTools.merge(allLocations, self.extended or {})
+    for key, entry in pairs(all) do
         local status, err = pcall(function()
             local e = getEntry(entry, omitMods)
             local sortzones = {}
@@ -101,15 +102,21 @@ function PZ:getCoreZones(omitMods)
         end
 
     end
-    return results
+    return results, order
 end
 
-function PZ:getModifiedZones(omitMods)
+function PZ:getModifiedZones(omitMods, maxOrder)
 
     local data = fileTools.loadTable(self.const.modifiedLuaFile) or {}
+    if not data.version then
+        -- this was an old file, so just ignore it
+        data = {}
+    else
+        data = data.data
+    end
     ModData.add(self.const.modifiedModData, data)
     local results = {}
-    local order = 0
+    local order = (maxOrder or 0) + 1
     for key, entry in pairs(data) do
         local status, err = pcall(function()
             local e = getEntry(entry, omitMods)
@@ -138,55 +145,21 @@ function PZ:getModifiedZones(omitMods)
     return results
 end
 
--- Other mods data which gets added in last 
-function PZ:getExtendedData(omitmods)
-    local results = {}
-    local order = 0
-    for key, entry in pairs(self.extended or {}) do
-        local status, err = pcall(function()
-            local e = getEntry(entry, omitmods)
-            local sortzones = {}
-            if e then
-                e.tmpKey = key
-                table.insert(sortzones, e)
-            end
-            table.sort(sortzones, function(a, b)
-                if a.order ~= b.order then
-                    return (a.order or 0) < (b.order or 0)
-                end
-                return false
-            end)
-            for _, v in ipairs(sortzones) do
-                order = order + 1
-                v.order = v.order or order
-                results[v.tmpKey] = v
-                v.tmpKey = nil
-            end
-        end)
-        if not status then
-            print("Error caught in " .. key .. ": " .. tostring(err))
-        end
-    end
-    return results
-end
-
 function PZ:updateZoneData(omitMods, modifiedDataSet)
 
-    local core = self:getCoreZones(omitMods)
-    local others = self:getExtendedData(omitMods)
-    local modified = modifiedDataSet or self:getModifiedZones(omitMods)
-    local results = tableTools.merge(core or {}, others or {})
-    results = tableTools.merge(results, modified or {})
-
+    local core, maxOrder = self:getCoreZones(omitMods)
+    local modified = modifiedDataSet or self:getModifiedZones(omitMods, maxOrder)
+    -- ocal results = tableTools.merge(core or {}, modified or {})
+    local results = tableTools.merge(modified or {}, core or {})
     -- Flatten all entries down into a single array for sorting
     local flattened = {}
     local order = 0
     for k, v in pairs(results) do
-        for k2, v2 in pairs(v.zones) do
+        for k2, v2 in pairs(v.zones or {}) do
             if v2.order then
                 order = math.max(order, v2.order)
             end
-            for k3, v3 in pairs(v2.points) do
+            for k3, v3 in pairs(v2.points or {}) do
                 table.insert(flattened, {k, k2, v2.order, v3[1], v3[2], v3[3], v3[4]})
             end
         end
