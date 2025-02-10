@@ -9,7 +9,7 @@
             {
                 "match": ".*",
                 "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42 2>nul"
-            },            
+            },
             {
                 "match": ".*",
                 "cmd": "xcopy ${workspaceFolder}\\Contents\\mods ${env.USERPROFILE}\\Zomboid\\mods /Y /I /E /F /EXCLUDE:xclude"
@@ -41,6 +41,14 @@
             {
                 "match": ".*",
                 "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones\\Contents\\mods\\PhunZones /Y /I /E /F"
+            },
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\pz41\\mods\\PhunZones 2>nul"
+            },
+            {
+                "match": ".*",
+                "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\pz41\\mods\\PhunZones /Y /I /E /F /EXCLUDE:xclude"
             },
         ]
     },
