@@ -251,14 +251,20 @@ function UI:createChildren()
     x = self.btnXY2Set.x + self.btnXY2Set.width + 10
 
     self.save = ISButton:new(x, y, 80, h, "Save", self, function()
+
+        local x = tonumber(self.txtX:getText())
+        local y = tonumber(self.txtY:getText())
+        local x2 = tonumber(self.txtX2:getText())
+        local y2 = tonumber(self.txtY2:getText())
+
         local xy = {
             region = self.xy.region,
             zone = self.xy.zone,
             point = self.xy.point,
-            x = tonumber(self.txtX:getText()),
-            y = tonumber(self.txtY:getText()),
-            x2 = tonumber(self.txtX2:getText()),
-            y2 = tonumber(self.txtY2:getText())
+            x = math.min(x, x2),
+            y = math.min(y, y2),
+            x2 = math.max(x, x2),
+            y2 = math.max(y, y2)
         }
         if self.cb then
             self.cb(xy)

@@ -16,20 +16,20 @@ option PhunZones.Widget
     translation = PhunZones_Widget,
 }
 
-option PhunZones.DefaultNoneTitle
-{ 
-    type = string,
-    default = Kentucky, 
-    page = PhunZones, 
-    translation = PhunZones_DefaultNoneTitle,
-}
-
 option PhunZones.VehicleTracking
 { 
     type = boolean,
     default = true,
     page = PhunZones, 
     translation = PhunZones_VehicleTracking,
+}
+
+option PhunZones.DefaultNoneTitle
+{ 
+    type = string,
+    default = Kentucky, 
+    page = PhunZones, 
+    translation = PhunZones_DefaultNoneTitle,
 }
 
 option PhunZones.DefaultNoneDifficulty

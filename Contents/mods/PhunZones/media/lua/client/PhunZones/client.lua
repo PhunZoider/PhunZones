@@ -8,6 +8,23 @@ function PZ:updatePlayerUI(playerObj, info)
 
     -- self:debug("UPDATE PLAYER UI", zone)
 
+    -- local name = playerObj:getUsername()
+    -- if not PZ.players then
+    --     PZ.players = ModData.getOrCreate(PZ.const.playerData)
+    -- end
+    local existing = PZ:getPlayerData(playerObj)
+
+    if PZ.settings.ShowZoneChange then
+        if existing.title ~= zone.title or existing.subtitle ~= zone.subtitle and existing.noAnnounce ~= true then
+            PZ.ui.welcome.OnOpenPanel(playerObj, zone)
+        end
+    end
+    if existing.pvp and playerObj.getSafety and playerObj:getSafety():isEnabled() then
+        getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
+    elseif not playerObj.getSafety and playerObj:getSafety():isEnabled() then
+        getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
+    end
+
     local panel = PZ.ui.widget.OnOpenPanel(playerObj)
     if panel then
         local data = {

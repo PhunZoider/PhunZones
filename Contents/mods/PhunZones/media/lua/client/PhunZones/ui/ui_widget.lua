@@ -232,7 +232,7 @@ function UI:prerender()
         self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
 
         self:setX(getCore():getScreenWidth() - self.width - 2)
-        self:setY(getCore():getScreenHeight() - self.height - 30)
+        self:setY(getCore():getScreenHeight() - self.height - 40)
         self:bringToTop()
 
         txtColor = self.hoverTextColor

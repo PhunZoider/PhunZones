@@ -20,4 +20,7 @@ Sandbox_EN = {
     Sandbox_PhunZones_ZedUpdateFrequency = "Zed check frequency",
     Sandbox_PhunZones_ZedUpdateFrequency_tooltip = "The number of seconds between updating zeds with zone information used for removing them and by other mods. The higher the number, the less resource intensive it is",
 
+    Sandbox_PhunZones_VehicleTracking = "Vehicle Tracking",
+    Sandbox_PhunZones_VehicleTracking_tooltip = "Use the location of the last vehicle entered as the players current location. Ideal for RV Interiors",    
+
 }

@@ -977,7 +977,7 @@ return {
     ErikasFurnitureStore = {
         cells = {{38, 27}},
         difficulty = 3,
-        title = "Ellroy",
+        title = "Erikas",
         mods = "Erikas_Furniture_Store",
         points = {{11486, 8229, 11584, 8322}}
     },

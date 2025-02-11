@@ -24,8 +24,16 @@
             },
             {
                 "match": ".*",
-                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\poster.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\poster.png /Y"
+                "cmd": "del ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\media\\lua\\shared\\PhunZones\\data.lua"
             },
+            {
+                "match": ".*",
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\42\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\mod.info /Y"
+            },
+            {
+                "match": ".*",
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\poster.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\poster.png /Y"
+            },            
             {
                 "match": ".*",
                 "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\icon.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\icon.png /Y"
@@ -50,6 +58,7 @@
                 "match": ".*",
                 "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\pz41\\mods\\PhunZones /Y /I /E /F /EXCLUDE:xclude"
             },
+                                              
         ]
     },
     "editor.formatOnSave": true,
