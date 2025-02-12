@@ -796,7 +796,7 @@ return {
     tikitown = {
         difficulty = 2,
         title = "Tikitown",
-        mod = "tikitown",
+        mods = "tikitown",
         points = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7469}}
     },
     CanvasbackStudios = { -- respawn checked

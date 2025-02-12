@@ -62,7 +62,7 @@ function UI.OnOpenPanel(playerObj, data, cb)
             end
 
         elseif v.type == "boolean" then
-            instance.data[k] = v.trueIsNil and data[k] == nil
+            instance.data[k] = v.trueIsNil and data[k] == nil or data[k] == true
             instance.controls[k]:setSelected(1, instance.data[k] == true)
         end
     end

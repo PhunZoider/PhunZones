@@ -5,13 +5,6 @@ local PZ = PhunZones
 
 function PZ:updatePlayerUI(playerObj, info)
     local zone = info or playerObj:getModData().PhunZones or {}
-
-    -- self:debug("UPDATE PLAYER UI", zone)
-
-    -- local name = playerObj:getUsername()
-    -- if not PZ.players then
-    --     PZ.players = ModData.getOrCreate(PZ.const.playerData)
-    -- end
     local existing = PZ:getPlayerData(playerObj)
 
     if PZ.settings.ShowZoneChange then
@@ -74,8 +67,6 @@ function PZ:rvInteriorFlags(entering, args)
             data.vehicleId = entering and data.lastVehicleId or nil
             data.inVehicleInterior = entering and args.interiorInstance or nil
         end
-
-        -- self:debug("new data", data)
     end
 end
 

@@ -38,14 +38,14 @@ local function getEntry(entry, omitMods)
         main = {}
     }
 
-    local mainzones = tableTools.shallowCopy(entry.points)
+    local mainzones = tableTools.shallowCopy(entry.points or {})
     if mainzones then
         entries = entries + 1
         row.zones.main.points = mainzones
     end
 
     if entry.subzones then
-        for k, v in pairs(entry.subzones) do
+        for k, v in pairs(entry.subzones or {}) do
             local process = v.points and #v.points > 0
 
             if omitMods then
@@ -107,14 +107,19 @@ end
 
 function PZ:getModifiedZones(omitMods, maxOrder)
 
-    local data = fileTools.loadTable(self.const.modifiedLuaFile) or {}
-    if not data.version then
-        -- this was an old file, so just ignore it
-        data = {}
-    else
-        data = data.data
+    local data = {}
+    if not isClient() then
+        local d = fileTools.loadTable(self.const.modifiedLuaFile) or {}
+        ModData.add(self.const.modifiedModData, d.data or {})
     end
-    ModData.add(self.const.modifiedModData, data)
+    data = ModData.get(self.const.modifiedModData)
+    -- if not data.version then
+    --     -- this was an old file, so just ignore it
+    --     data = {}
+    -- else
+    --     data = data.data
+    -- end
+
     local results = {}
     local order = (maxOrder or 0) + 1
     for key, entry in pairs(data) do
@@ -149,7 +154,6 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
 
     local core, maxOrder = self:getCoreZones(omitMods)
     local modified = modifiedDataSet or self:getModifiedZones(omitMods, maxOrder)
-    -- ocal results = tableTools.merge(core or {}, modified or {})
     local results = tableTools.merge(modified or {}, core or {})
     -- Flatten all entries down into a single array for sorting
     local flattened = {}
@@ -256,14 +260,6 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
             lookup = lookup
         }
     end
-
-    -- print("ZONES: ")
-    -- self:printTable(self.data.zones)
-    -- print(" /ZONES ")
-
-    -- print("LOOKUP: ")
-    -- self:printTable(self.data.lookup)
-    -- print(" /LOOKUP ")
 
     return {
         cells = cells,
