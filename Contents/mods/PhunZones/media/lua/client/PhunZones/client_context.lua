@@ -27,26 +27,26 @@ function PZ:showContext(playerObj, context, worldobjects)
 
     local md = getSpecificPlayer(playerObj):getModData().PhunZones
 
-    if md.sledgehammer == false then
-        for i, option in ipairs(context.options) do
-            if option.name == getText("ContextMenu_Destroy") and option.notAvailable == false then
-                option.notAvailable = true
-                option.toolTip = getText("Tooltip_NoSledgehammerHere")
-            elseif option.name == getText("ContextMenu_Dismantle") or option.name == getText("ContextMenu_Disassemble") and
-                option.notAvailable == false then
-                option.notAvailable = true
-                option.toolTip = getText("Tooltip_NoDissasembleHere")
-            end
-        end
-    end
+    -- if md.sledgehammer == false then
+    --     for i, option in ipairs(context.options) do
+    --         if option.name == getText("ContextMenu_Destroy") and option.notAvailable == false then
+    --             option.notAvailable = true
+    --             option.toolTip = getText("Tooltip_NoSledgehammerHere")
+    --         elseif option.name == getText("ContextMenu_Dismantle") or option.name == getText("ContextMenu_Disassemble") and
+    --             option.notAvailable == false then
+    --             option.notAvailable = true
+    --             option.toolTip = getText("Tooltip_NoDissasembleHere")
+    --         end
+    --     end
+    -- end
 
-    if md.safehouse == false then
-        for i, option in ipairs(context.options) do
-            if option.name == getText("ContextMenu_SafehouseClaim") and option.notAvailable == false then
-                option.noAvailable = true
-                option.toolTip = getText("Tooltip_NoClaimHere")
-            end
-        end
-    end
+    -- if md.safehouse == false then
+    --     for i, option in ipairs(context.options) do
+    --         if option.name == getText("ContextMenu_SafehouseClaim") and option.notAvailable == false then
+    --             option.noAvailable = true
+    --             option.toolTip = getText("Tooltip_NoClaimHere")
+    --         end
+    --     end
+    -- end
 
 end

@@ -61,4 +61,3 @@ function PZ:setTrackedVehicleData(vehicleId)
         end
     end
 end
-

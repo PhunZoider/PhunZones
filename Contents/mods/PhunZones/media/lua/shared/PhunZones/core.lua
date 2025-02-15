@@ -94,7 +94,7 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Enabled_tooltip",
             trueIsNil = true
         },
-        safhouse = {
+        safehouse = {
             label = "IGUI_PhunZones_SafeHouse",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Safehouse_tooltip",

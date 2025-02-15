@@ -88,12 +88,43 @@ end)
 
 Events.EveryTenMinutes.Add(shit)
 
+local sh = nil
 local function setup()
     Events.OnTick.Remove(setup)
     PZ:ini()
     PZ:showWidgets()
     sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
+
+    if sh == nil then
+        sh = SafeHouse.canBeSafehouse
+        SafeHouse.canBeSafehouse = function(square, player)
+            local md = player:getModData().PhunZones
+            if md.safehouse == false then
+                return getText("IGUI_PhunZones_NoSafeHouse")
+            end
+
+            return sh(square, player)
+        end
+    end
 end
 
 Events.OnTick.Add(setup)
 
+local oldDestroyStuffAction = ISDestroyStuffAction["isValid"];
+
+ISDestroyStuffAction["isValid"] = function(self)
+
+    if self.character then
+
+        local p = self.character
+        local md = p:getModData().PhunZones
+
+        if md.destruction == false then
+            p:setHaloNote("You cannot use a sledgehammer in this area", 255, 255, 0, 300);
+            return false
+        end
+
+    end
+    return oldDestroyStuffAction(self)
+
+end

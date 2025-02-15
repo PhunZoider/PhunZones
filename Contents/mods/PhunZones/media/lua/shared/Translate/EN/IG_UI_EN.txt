@@ -17,6 +17,7 @@ IGUI_EN = {
     IGUI_PhunZones_AddZone = "Add Zone",
     IGUI_PhunZones_EditZone = "Edit Zone",
 
+    IGUI_PhunZones_NoSafeHouse = "You cannot create a safehouse in this area"
 
     IGUI_PhunZones_Coordinates = "Coordinates",
     IGUI_PhunZones_Region = "Region",
@@ -50,7 +51,7 @@ IGUI_EN = {
     IGUI_PhunZones_AllZones_tooltip = "Tick to show everything in system - or untick to show just what has been loaded"
 
     IGUI_PhunZones_SafeHouse = "Allow Safehouses"
-    IGUI_PhunZones_Safehouse_tooltip = "Untick to explicitly forbid safhouse creation in zone"
+    IGUI_PhunZones_Safehouse_tooltip = "Untick to explicitly forbid safehouse creation in zone"
 
     IGUI_PhunZones_Building = "Building"
     IGUI_PhunZones_Building_tooltip = "Untick to explicitly forbid building items like walls and such in zone"

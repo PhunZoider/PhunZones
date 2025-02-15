@@ -221,19 +221,20 @@ function UI:createChildren()
                         data[k] = nil
                     end
                 elseif v.type == "boolean" then
-                    if self.controls[k]:isSelected(1) then
-                        if v.trueIsNil then
-                            data[k] = nil
-                        else
-                            data[k] = true
-                        end
-                    else
-                        if v.trueIsNil then
-                            data[k] = false
-                        else
-                            data[k] = nil
-                        end
-                    end
+                    data[k] = self.controls[k]:isSelected(1)
+                    -- if self.controls[k]:isSelected(1) then
+                    --     if v.trueIsNil then
+                    --         data[k] = nil
+                    --     else
+                    --         data[k] = true
+                    --     end
+                    -- else
+                    --     if v.trueIsNil then
+                    --         data[k] = false
+                    --     else
+                    --         data[k] = nil
+                    --     end
+                    -- end
                 end
             end
 

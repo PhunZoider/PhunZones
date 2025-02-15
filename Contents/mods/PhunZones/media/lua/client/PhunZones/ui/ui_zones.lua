@@ -160,17 +160,27 @@ function UI:saveData(data)
         segment = md[data.region]
     end
 
-    local fields = {"enabled", "pvp", "title", "subtitle", "difficulty", "mods", "rads", "zeds", "bandits"}
-
     for k, v in pairs(PZ.fields) do
         -- these should already be cast to the correct type
-        if data[k] then
+        if data[k] ~= nil then
             if v.type == "string" then
                 segment[k] = data[k]
             elseif v.type == "int" then
                 segment[k] = tonumber(data[k])
             elseif v.type == "boolean" then
-                segment[k] = data[k]
+                if v.trueIsNil then
+                    if data[k] then
+                        segment[k] = nil
+                    else
+                        segment[k] = false
+                    end
+                else
+                    if data[k] then
+                        segment[k] = true
+                    else
+                        segment[k] = nil
+                    end
+                end
             end
         end
     end
