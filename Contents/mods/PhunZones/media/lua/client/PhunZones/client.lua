@@ -47,6 +47,20 @@ function PZ:showWidget(playerObj)
     end
 end
 
+local isoBurning = nil
+function PZ:checkFire(fire)
+    if isoBurning == nil then
+        isoBurning = IsoFlagType.burning
+    end
+    local square = fire:getSquare()
+    if square and square:Is(isoBurning) then
+        if self:getLocation(square).fire == false then
+            square:transmitStopFire()
+            square:stopFire()
+        end
+    end
+end
+
 function PZ:rvInteriorFlags(entering, args)
     if not self.settings.VehicleTracking then
         return

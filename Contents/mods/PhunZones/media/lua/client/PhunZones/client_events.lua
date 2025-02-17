@@ -108,6 +108,10 @@ local function setup()
     end
 end
 
+Events.OnNewFire.Add(function(fire)
+    PZ:checkFire(fire)
+end)
+
 Events.OnTick.Add(setup)
 
 local oldDestroyStuffAction = ISDestroyStuffAction["isValid"];

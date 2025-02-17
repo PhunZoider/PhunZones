@@ -9,6 +9,8 @@ A Project Zomboid mod for changing game behaviours depending on where the player
   - Title which can be displayed to players when entering
   - Toggle PvP
   - Toggle zed spawning
+  - Prevent safehouse creation
+  - Prevent fire spreading
   - Toggle bandit spawning (for Bandits mod)
   - Toggle Radiation levels (for PhunRad mod)
   - Set difficulty (for PhunRunners, PhunRewards and other Phun mods)

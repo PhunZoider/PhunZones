@@ -62,8 +62,8 @@ IGUI_EN = {
     IGUI_PhunZones_Destruction = "Destruction"
     IGUI_PhunZones_Destruction_tooltip = "Untick to explicitly forbid using a sledgehammer or dissasembly in zone"
 
-    IGUI_PhunZones_Fire = "Fire - not yet implemented"
-    IGUI_PhunZones_Fire_tooltip = "Untick to explicitly forbid fire from spreading in zone"
+    IGUI_PhunZones_Fire = "Fire"
+    IGUI_PhunZones_Fire_tooltip = "Untick to explicitly forbid fire from spreading in zone. Note that animations may show briefly, but will quickly fizzle out and no damage will occur"
 
     IGUI_PhunZones_Players = "Players - not yet implemented"
     IGUI_PhunZones_Players_tooltip = "Tick to explicitly prevent non admins from entering zone"
