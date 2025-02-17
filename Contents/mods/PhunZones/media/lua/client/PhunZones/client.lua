@@ -61,6 +61,18 @@ function PZ:checkFire(fire)
     end
 end
 
+function PZ:portPlayer(player, x, y, z)
+    player:setX(x)
+    player:setY(y)
+    player:setZ(z)
+    if player.setLx then
+        -- b41?
+        player:setLx(x)
+        player:setLy(y)
+        player:setLz(z)
+    end
+end
+
 function PZ:rvInteriorFlags(entering, args)
     if not self.settings.VehicleTracking then
         return

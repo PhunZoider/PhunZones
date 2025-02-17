@@ -25,7 +25,8 @@ PhunZones = {
         transmitChanges = "PhunZonesTransmitChanges",
         modifyZone = "PhunZonesModifyZone",
         cleanPlayersZeds = "PhunZonescleanPlayersZeds",
-        updatePlayerZone = "PhunZonesUpdatePlayerZone"
+        updatePlayerZone = "PhunZonesUpdatePlayerZone",
+        playerTeleport = "PhunZonesPlayerTeleport"
     },
     fields = {
         region = {
@@ -252,6 +253,7 @@ function Core:updateModData(obj, triggerChangeEvent)
         modData.PhunZones = {}
     end
     local existing = modData.PhunZones
+    local new = existing
     local ldata = self:getLocation(obj) or {}
     local doEvent = false
 
@@ -267,8 +269,26 @@ function Core:updateModData(obj, triggerChangeEvent)
     else
         -- player
         if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
+
+            if ldata.players == false and existing.last then
+                -- player is not allowed here!
+                if isServer() then
+                    sendServerCommand(obj, self.name, self.commands.playerTeleport, {
+                        username = obj:getUsername(),
+                        x = existing.last.x,
+                        y = existing.last.y,
+                        z = existing.last.z
+                    })
+                else
+                    self:portPlayer(obj, existing.last.x, existing.last.y, existing.last.z)
+                end
+                return
+            end
+
+            -- Shallow copy the existing data
+            existing = tableTools.shallowCopy(existing, excludedProps)
             -- Shallow copy the new data
-            existing = tableTools.shallowCopy(ldata, excludedProps)
+            new = tableTools.shallowCopy(ldata, excludedProps)
             -- flag that there has been a material change to the zone
             doEvent = true
         end
@@ -288,14 +308,14 @@ function Core:updateModData(obj, triggerChangeEvent)
                             existing[k] = v
                         end
                     end
-                    existing.mregion = zone.region
-                    existing.mzone = zone.zone
+                    new.mregion = zone.region
+                    new.mzone = zone.zone
                     doEvent = true
                 end
             end
         end
 
-        if not existing.modified then
+        if not new.modified then
             doEvent = true
         end
 
@@ -306,17 +326,24 @@ function Core:updateModData(obj, triggerChangeEvent)
         end
 
         if doEvent then
-            existing.modified = getTimestamp()
-            obj:getModData().PhunZones = existing
+            new.modified = getTimestamp()
+            obj:getModData().PhunZones = new
         end
 
+        -- store last known location
+        obj:getModData().PhunZones.last = {
+            x = obj:getX(),
+            y = obj:getY(),
+            z = obj:getZ()
+        }
+
         if doEvent and isServer() then
-            existing.pid = obj:getOnlineID()
-            sendServerCommand(obj, self.name, self.commands.updatePlayerZone, existing)
+            new.pid = obj:getOnlineID()
+            sendServerCommand(obj, self.name, self.commands.updatePlayerZone, new, existing)
         end
 
         if triggerChangeEvent and doEvent then
-            triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, existing)
+            triggerEvent(self.events.OnPhunZonesPlayerLocationChanged, obj, new, existing)
         end
     end
 

@@ -9,7 +9,9 @@ Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobj
 end);
 
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
+
     PZ:updatePlayerUI(playerObj, zone)
+
 end)
 
 Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)

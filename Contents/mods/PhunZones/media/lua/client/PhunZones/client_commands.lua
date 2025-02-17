@@ -3,7 +3,7 @@ if isServer() then
 end
 local tableTools = require("PhunZones/table")
 local PZ = PhunZones
-
+local PL = PhunLib
 local Commands = {}
 
 Commands[PZ.commands.playerSetup] = function(data)
@@ -11,6 +11,10 @@ Commands[PZ.commands.playerSetup] = function(data)
     ModData.add(PZ.const.modifiedModData, data)
     PZ:updateZoneData(true, data)
 
+end
+
+Commands[PZ.commands.playerTeleport] = function(data)
+    PZ:portPlayer(PL.getPlayerByUsername(data.username), data.x, data.y, data.z)
 end
 
 Commands[PZ.commands.updatePlayerZone] = function(args)
