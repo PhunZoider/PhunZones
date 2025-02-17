@@ -24,7 +24,6 @@ Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
             doRemove = true
         end
         if doRemove then
-            print("Removed zombie " .. tostring(object:getOnlineID()))
             sendClientCommand(PZ.name, PZ.commands.cleanPlayersZeds, {
                 id = object:getOnlineID()
             })
@@ -124,7 +123,7 @@ ISDestroyStuffAction["isValid"] = function(self)
         local md = p:getModData().PhunZones
 
         if md.destruction == false then
-            p:setHaloNote("You cannot use a sledgehammer in this area", 255, 255, 0, 300);
+            p:setHaloNote(getText("IGUI_PhunZones_NoDestruction"), 255, 255, 0, 300);
             return false
         end
 
