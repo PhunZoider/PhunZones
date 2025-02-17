@@ -12,6 +12,7 @@ description=[*]Toggle PvP
 description=[*]Toggle zed spawning
 description=[*]Prevent safehouse creation
 description=[*]Prevent fire spread (animation may briefly play).
+description=[*]Prevent players from entering zone
 description=[*]Toggle bandit spawning (for Bandits mod)
 description=[*]Set difficulty (for PhunRunners, PhunRewards and other Phun mods)
 description=[*]prevent construction
