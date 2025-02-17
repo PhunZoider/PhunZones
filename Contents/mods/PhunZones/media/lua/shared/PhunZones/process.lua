@@ -109,16 +109,24 @@ function PZ:getModifiedZones(omitMods, maxOrder)
 
     local data = {}
     if not isClient() then
-        local d = fileTools.loadTable(self.const.modifiedLuaFile) or {}
-        ModData.add(self.const.modifiedModData, d.data or {})
+        -- this is a server or local game
+        -- load the modified data from ./lua/PhunZones.lua
+        local d = fileTools.loadTable(self.const.modifiedLuaFile)
+        if d == nil then
+            print("PhunZones: missing ./lua/" .. self.const.modifiedLuaFile ..
+                      ", this is normal if you haven't modified any zones")
+        elseif d.data then
+            ModData.add(self.const.modifiedModData, d.data or {})
+            print("PhunZones: loaded customisations from ./lua/" .. self.const.modifiedLuaFile)
+        elseif d.data == nil then
+            print("PhunZones: Unexpected format of ./lua/" .. self.const.modifiedLuaFile .. ", cannot load data")
+        end
     end
     data = ModData.get(self.const.modifiedModData)
-    -- if not data.version then
-    --     -- this was an old file, so just ignore it
-    --     data = {}
-    -- else
-    --     data = data.data
-    -- end
+    if data == nil then
+        data = {}
+        ModData.add(self.const.modifiedModData, data)
+    end
 
     local results = {}
     local order = (maxOrder or 0) + 1

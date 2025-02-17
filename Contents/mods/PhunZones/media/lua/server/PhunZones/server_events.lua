@@ -17,10 +17,6 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
     end
 end)
 
-Events.OnServerStarted.Add(function()
-    PZ:updateZoneData(true)
-end)
-
 Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
     if not isClient() then
         local nextCheck = 0
