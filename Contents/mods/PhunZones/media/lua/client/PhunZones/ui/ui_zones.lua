@@ -186,7 +186,10 @@ function UI:saveData(data)
     end
 
     PZ:saveChanges(md)
-    self:refreshData()
+    self:refreshData({
+        region = data.region,
+        zone = data.zone
+    })
 end
 
 function UI:savePoint(xy, pointIndex)
