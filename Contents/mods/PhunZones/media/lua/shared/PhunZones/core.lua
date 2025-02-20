@@ -113,6 +113,18 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Placing_tooltip",
             trueIsNil = true
         },
+        pickup = {
+            label = "IGUI_PhunZones_Pickup",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Pickup_tooltip",
+            trueIsNil = true
+        },
+        scrap = {
+            label = "IGUI_PhunZones_Scrap",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Scrap_tooltip",
+            trueIsNil = true
+        },
         destruction = {
             label = "IGUI_PhunZones_Destruction",
             type = "boolean",

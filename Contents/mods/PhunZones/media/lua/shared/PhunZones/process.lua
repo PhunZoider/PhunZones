@@ -46,7 +46,8 @@ local function getEntry(entry, omitMods)
 
     if entry.subzones then
         for k, v in pairs(entry.subzones or {}) do
-            local process = v.points and #v.points > 0
+
+            local process = true -- v.points and #v.points > 0
 
             if omitMods then
                 if v.mods then

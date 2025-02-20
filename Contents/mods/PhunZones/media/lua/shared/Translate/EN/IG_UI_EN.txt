@@ -18,6 +18,11 @@ IGUI_EN = {
     IGUI_PhunZones_EditZone = "Edit Zone",
 
     IGUI_PhunZones_NoSafeHouse = "You cannot create a safehouse in this area"
+    IGUI_PhunZones_NoBuild = "You cannot build in this area"
+    IGUI_PhunZones_NoDestruction = "You cannot use sledgehammer here"
+    IGUI_PhunZones_NoPlacing = "You cannot place items here"
+    IGUI_PhunZones_NoPickup = "You cannot pickup here"
+    IGUI_PhunZones_NoScrap = "You cannot scrap here"
 
     IGUI_PhunZones_Coordinates = "Coordinates",
     IGUI_PhunZones_Region = "Region",
@@ -58,6 +63,13 @@ IGUI_EN = {
 
     IGUI_PhunZones_Placing = "Placing"
     IGUI_PhunZones_Placing_tooltip = "Untick to explicitly forbid placing items like TV's and suck in zone"
+
+    IGUI_PhunZones_Pickup = "Pickup"
+    IGUI_PhunZones_Pickup_tooltip = "Untick to explicitly forbid picking up objects like TV here"
+
+    IGUI_PhunZones_Scrap = "Scrapping"
+    IGUI_PhunZones_Scrap_tooltip = "Untick to explicitly forbid scrapping objects (eg furniture) here"
+
 
     IGUI_PhunZones_Destruction = "Destruction"
     IGUI_PhunZones_Destruction_tooltip = "Untick to explicitly forbid using a sledgehammer or dissasembly in zone"
