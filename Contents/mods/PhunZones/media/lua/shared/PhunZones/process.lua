@@ -162,7 +162,8 @@ end
 function PZ:updateZoneData(omitMods, modifiedDataSet)
 
     local core, maxOrder = self:getCoreZones(omitMods)
-    local modified = modifiedDataSet or self:getModifiedZones(omitMods, maxOrder)
+    local modified = self:getModifiedZones(omitMods, maxOrder) or {}
+    -- PhunLib:debug("======== modified zones =========", tostring(omitMods), modifiedDataSet, "====")
     local results = tableTools.merge(modified or {}, core or {})
     -- Flatten all entries down into a single array for sorting
     local flattened = {}
@@ -263,6 +264,7 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
     end
 
     if omitMods then
+        -- print("Storing zones globally")
         self.data = {
             cells = cells,
             zones = results,
