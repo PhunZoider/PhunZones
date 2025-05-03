@@ -16,9 +16,24 @@ PZ.ui.welcome = ISPanel:derive(profielName);
 PZ.ui.welcome.instances = {}
 local UI = PZ.ui.welcome
 
+local lastValuesByPlayer = {}
+
 function UI.OnOpenPanel(playerObj, zone)
 
-    local playerIndex = playerIndex or playerObj:getPlayerNum()
+    local playerIndex = playerObj:getPlayerNum()
+
+    if not PZ.settings.ShowZoneChange then
+        return
+    end
+    local existing = lastValuesByPlayer[playerIndex] or {}
+    if zone.title == existing.title and zone.subtitle == existing.subtitle then
+        return
+    end
+    lastValuesByPlayer[playerIndex] = zone
+    if zone.noAnnounce then
+        return
+    end
+
     local instance = UI.instances[playerIndex]
     if not instance then
         local core = getCore()
@@ -38,6 +53,7 @@ function UI.OnOpenPanel(playerObj, zone)
     instance:setVisible(true);
     instance.javaObject:setConsumeMouseEvents(false)
     instance.alphaBits = 0
+    instance.yBits = 0
     instance.autoCloseTimestamp = getTimestamp() + 5;
     instance.zone = zone;
 
@@ -102,6 +118,7 @@ function UI:new(x, y, width, height, player, playerIndex)
     o.data = {}
     o.coverMap = false
     o.alphaBits = 0
+    o.yBits = 0
     o.autoCloseTimestamp = getTimestamp() + 5;
     -- o.moveWithMouse = true;
     o.anchorRight = true
@@ -146,20 +163,22 @@ function UI:render()
         self:close()
     end
 
-    local y = 50
+    local y = 50 - self.yBits
     self:drawTextCentre(title or "", self.width / 2, y, 1, 1, 1, self.alphaBits, UIFont.Large);
-    y = y + FONT_HGT_LARGE + 10
+    y = y + FONT_HGT_LARGE + 1
     if subtitle then
         self:drawTextCentre(subtitle or "", self.width / 2, y, 1, 1, 1, self.alphaBits, UIFont.Medium);
         y = y + FONT_HGT_MEDIUM + 5
     end
     if getTimestamp() > self.autoCloseTimestamp then
         self.alphaBits = self.alphaBits - 0.05
+        self.yBits = self.yBits + 2
         if self.alphaBits <= 0 then
             self:close()
         end
     else
         self.alphaBits = self.alphaBits + 0.05
+        -- self.yBits = self.yBits - 2
         if self.alphaBits >= 1 then
             self.alphaBits = 1
         end

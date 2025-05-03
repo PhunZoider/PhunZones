@@ -26,7 +26,8 @@ PhunZones = {
         modifyZone = "PhunZonesModifyZone",
         cleanPlayersZeds = "PhunZonescleanPlayersZeds",
         updatePlayerZone = "PhunZonesUpdatePlayerZone",
-        playerTeleport = "PhunZonesPlayerTeleport"
+        playerTeleport = "PhunZonesPlayerTeleport",
+        teleportVehicle = "PhunZonesTeleportVehicle"
     },
     fields = {
         region = {
@@ -153,6 +154,7 @@ PhunZones = {
 }
 
 local Core = PhunZones
+Core.isLocal = not isClient() and not isServer() and not isCoopHost()
 Core.settings = SandboxVars[Core.name] or {}
 for _, event in pairs(Core.events or {}) do
     if not Events[event] then
@@ -280,19 +282,38 @@ function Core:updateModData(obj, triggerChangeEvent)
         return ldata
     else
         -- player
+        local vehicle = obj.getVehicle and obj:getVehicle() or nil
         if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
 
             if ldata.players == false and existing.last then
                 -- player is not allowed here!
                 if isServer() then
-                    sendServerCommand(obj, self.name, self.commands.playerTeleport, {
-                        username = obj:getUsername(),
-                        x = existing.last.x,
-                        y = existing.last.y,
-                        z = existing.last.z
-                    })
+                    if vehicle then
+                        self:portVehicle(obj, vehicle, existing.last.x, existing.last.y, existing.last.z)
+                        sendServerCommand(obj, self.name, self.commands.teleportVehicle, {
+                            id = vehicle:getId(),
+                            username = obj:getUsername(),
+                            x = existing.last.x,
+                            y = existing.last.y,
+                            z = existing.last.z
+                        })
+                    else
+                        sendServerCommand(obj, self.name, self.commands.playerTeleport, {
+                            username = obj:getUsername(),
+                            x = existing.last.x,
+                            y = existing.last.y,
+                            z = existing.last.z
+                        })
+                    end
+
                 else
-                    self:portPlayer(obj, existing.last.x, existing.last.y, existing.last.z)
+
+                    if vehicle then
+                        self:portVehicle(obj, vehicle, existing.last.x, existing.last.y, existing.last.z)
+                    else
+                        self:portPlayer(obj, existing.last.x, existing.last.y, existing.last.z)
+                    end
+
                 end
                 return
             end
@@ -342,12 +363,21 @@ function Core:updateModData(obj, triggerChangeEvent)
             obj:getModData().PhunZones = new
         end
 
-        -- store last known location
-        obj:getModData().PhunZones.last = {
-            x = obj:getX(),
-            y = obj:getY(),
-            z = obj:getZ()
-        }
+        if vehicle then
+            -- store last known vehicle location
+            obj:getModData().PhunZones.last = {
+                x = vehicle:getX(),
+                y = vehicle:getY(),
+                z = vehicle:getZ()
+            }
+        else
+            -- store last known location
+            obj:getModData().PhunZones.last = {
+                x = obj:getX(),
+                y = obj:getY(),
+                z = obj:getZ()
+            }
+        end
 
         if doEvent and isServer() then
             new.pid = obj:getOnlineID()
@@ -392,6 +422,39 @@ function Core:getLocation(x, y)
         difficulty = self.settings.DefaultNoneDifficulty or 2,
         title = self.settings.DefaultNoneTitle or "Kentucky"
     }
+end
+
+function Core:portVehicle(player, vehicle, x, y, z)
+
+    if not vehicle then
+        return
+    end
+    local fieldCount = getNumClassFields(vehicle)
+    local transField = nil
+    local fieldName = 'public final zombie.core.physics.Transform zombie.vehicles.BaseVehicle.jniTransform'
+    for i = 0, fieldCount - 1 do
+        local field = getClassField(vehicle, i)
+        if tostring(field) == fieldName then
+            transField = field
+        end
+    end
+
+    if transField then
+        local v_transform = getClassFieldVal(vehicle, transField)
+        local w_transform = vehicle:getWorldTransform(v_transform)
+        local origin_field = getClassField(w_transform, 1)
+        local origin = getClassFieldVal(w_transform, origin_field)
+        origin:set(origin:x() - x, origin:y(), origin:z() - y)
+        vehicle:setWorldTransform(w_transform)
+        if isClient() then
+            pcall(vehicle.update, vehicle)
+            pcall(vehicle.updateControls, vehicle)
+            pcall(vehicle.updateBulletStats, vehicle)
+            pcall(vehicle.updatePhysics, vehicle)
+            pcall(vehicle.updatePhysicsNetwork, vehicle)
+        end
+    end
+
 end
 
 function Core:onlinePlayers(all)

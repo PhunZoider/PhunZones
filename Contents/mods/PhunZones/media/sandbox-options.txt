@@ -1,5 +1,13 @@
 VERSION = 1,
 
+option PhunZones.LoadDefaults
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones,
+    translation = PhunZones_LoadDefaults,
+}
+
 option PhunZones.ShowZoneChange
 { 
     type = boolean,

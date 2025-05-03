@@ -4,17 +4,15 @@ end
 local PZ = PhunZones
 
 function PZ:updatePlayerUI(playerObj, info)
+
     local zone = info or playerObj:getModData().PhunZones or {}
     local existing = PZ:getPlayerData(playerObj)
 
-    if PZ.settings.ShowZoneChange then
-        if existing.title ~= zone.title or existing.subtitle ~= zone.subtitle and existing.noAnnounce ~= true then
-            PZ.ui.welcome.OnOpenPanel(playerObj, zone)
-        end
-    end
-    if existing.pvp and playerObj.getSafety and playerObj:getSafety():isEnabled() then
+    PZ.ui.welcome.OnOpenPanel(playerObj, zone)
+
+    if existing.pvp == true and playerObj.getSafety and playerObj:getSafety():isEnabled() then
         getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
-    elseif not playerObj.getSafety and playerObj:getSafety():isEnabled() then
+    elseif not existing.pvp and playerObj.getSafety and not playerObj:getSafety():isEnabled() then
         getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
     end
 

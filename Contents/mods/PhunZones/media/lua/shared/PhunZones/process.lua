@@ -76,7 +76,8 @@ function PZ:getCoreZones(omitMods)
 
     local results = {}
     local order = 0
-    local all = tableTools.merge(allLocations, self.extended or {})
+    local coreData = self.settings.LoadDefaults and allLocations or {}
+    local all = tableTools.merge(coreData, self.extended or {})
     for key, entry in pairs(all) do
         local status, err = pcall(function()
             local e = getEntry(entry, omitMods)
@@ -118,12 +119,13 @@ function PZ:getModifiedZones(omitMods, maxOrder)
                       ", this is normal if you haven't modified any zones")
         elseif d.data then
             ModData.add(self.const.modifiedModData, d.data or {})
+            data = ModData.get(self.const.modifiedModData)
             print("PhunZones: loaded customisations from ./lua/" .. self.const.modifiedLuaFile)
         elseif d.data == nil then
             print("PhunZones: Unexpected format of ./lua/" .. self.const.modifiedLuaFile .. ", cannot load data")
         end
     end
-    data = ModData.get(self.const.modifiedModData)
+
     if data == nil then
         data = {}
         ModData.add(self.const.modifiedModData, data)

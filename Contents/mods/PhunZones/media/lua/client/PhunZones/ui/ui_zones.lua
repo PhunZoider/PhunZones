@@ -53,7 +53,7 @@ function UI:refreshData(zone)
             return a.order < b.order
         end
         if a.title and b.title then
-            return a.title < b.title
+            return a.title:lower() < b.title:lower()
         end
         return a.k < b.k
     end)

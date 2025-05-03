@@ -17,6 +17,14 @@ Commands[PZ.commands.playerTeleport] = function(data)
     PZ:portPlayer(PL.getPlayerByUsername(data.username), data.x, data.y, data.z)
 end
 
+Commands[PZ.commands.teleportVehicle] = function(data)
+    local vehicle = getVehicleById(data.id)
+    local player = PL.getPlayerByUsername(data.username)
+    if player and vehicle then
+        PZ:portVehicle(player, vehicle, data.x, data.y, data.z)
+    end
+end
+
 Commands[PZ.commands.updatePlayerZone] = function(args)
     local p = nil
     for i = 0, getOnlinePlayers():size() - 1 do

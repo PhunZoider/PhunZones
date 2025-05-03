@@ -18,35 +18,22 @@ function PZ:showContext(playerObj, context, worldobjects)
 
         local sub = context:getNew(context)
         context:addSubMenu(mainMenu, sub)
-        sub:addOption(PZ.name .. " Admin", worldobjects, function()
+        sub:addOption(PZ.name .. " Editor", worldobjects, function()
             local player = playerObj and getSpecificPlayer(playerObj) or getPlayer()
             PZ.ui.zones.OnOpenPanel(player)
         end)
 
     end
 
-    local md = getSpecificPlayer(playerObj):getModData().PhunZones
+end
 
-    -- if md.sledgehammer == false then
-    --     for i, option in ipairs(context.options) do
-    --         if option.name == getText("ContextMenu_Destroy") and option.notAvailable == false then
-    --             option.notAvailable = true
-    --             option.toolTip = getText("Tooltip_NoSledgehammerHere")
-    --         elseif option.name == getText("ContextMenu_Dismantle") or option.name == getText("ContextMenu_Disassemble") and
-    --             option.notAvailable == false then
-    --             option.notAvailable = true
-    --             option.toolTip = getText("Tooltip_NoDissasembleHere")
-    --         end
-    --     end
-    -- end
+function PZ:appendContext(context, mainMenu, playerObj, worldobjects)
 
-    -- if md.safehouse == false then
-    --     for i, option in ipairs(context.options) do
-    --         if option.name == getText("ContextMenu_SafehouseClaim") and option.notAvailable == false then
-    --             option.noAvailable = true
-    --             option.toolTip = getText("Tooltip_NoClaimHere")
-    --         end
-    --     end
-    -- end
+    local sub = context:getNew(context)
+    context:addSubMenu(mainMenu, sub)
+    sub:addOption(PZ.name .. " Editor", worldobjects, function()
+        local player = playerObj and getSpecificPlayer(playerObj) or getPlayer()
+        PZ.ui.zones.OnOpenPanel(player)
+    end)
 
 end

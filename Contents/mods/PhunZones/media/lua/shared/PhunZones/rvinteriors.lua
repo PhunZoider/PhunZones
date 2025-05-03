@@ -42,7 +42,7 @@ function PZ:setTrackedVehicleData(vehicleId)
         if not self.trackedVehicles then
             self.trackedVehicles = {}
         end
-        print("getting vehicle by id " .. tostring(vehicleId))
+        -- print("getting vehicle by id " .. tostring(vehicleId))
         local vehicle = getVehicleById(vehicleId)
         if vehicle and vehicle.getX then
             if RVInterior.interior[vehicle:getScript():getFullName()] then

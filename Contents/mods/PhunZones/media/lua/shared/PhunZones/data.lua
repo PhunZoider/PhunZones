@@ -581,7 +581,7 @@ return {
     },
     ParkingLot = {
         difficulty = 2,
-        title = "Parking Lot",
+        title = "Old Park",
         mods = "ParkingLot",
         points = {{8700, 8700, 9299, 8999}}
     },
@@ -620,6 +620,12 @@ return {
         title = "Greenport",
         mods = "Greenport",
         points = {{8100, 7400, 8699, 7799}}
+    },
+    GreenValley = {
+        difficulty = 2,
+        title = "Green Valley",
+        mods = "GVLv2",
+        points = {{6301, 11101, 7193, 11994}}
     },
     Blackwood = { -- respawn checked
         difficulty = 2,

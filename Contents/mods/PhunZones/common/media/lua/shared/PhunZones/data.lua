@@ -127,6 +127,18 @@ return {
             }
         }
     },
+    Taylorsville = {
+        difficulty = 2,
+        title = "Bridge",
+        mods = "\\Taylorsville",
+        points = {{9302, 6603, 10194, 7130}}
+    },
+    tikitown = {
+        difficulty = 2,
+        title = "Tikitown",
+        mods = "\\tikitown",
+        points = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7469}}
+    },
     ValleyStation = {
         difficulty = 4,
         title = "Valley Station",

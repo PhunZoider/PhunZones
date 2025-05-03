@@ -8,11 +8,22 @@ Events.EveryTenMinutes.Add(function()
     sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
 end)
 
-Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
-    PZ:showContext(playerObj, context, worldobjects)
-end);
+-- Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
+--     PZ:showContext(playerObj, context, worldobjects)
+-- end);
 
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
+
+    if PZ.isLocal then
+        local name = playerObj:getID()
+        if not PZ.players then
+            PZ.players = ModData.getOrCreate(PZ.const.playerData)
+        end
+        local old = PZ:getPlayerData(playerObj)
+        local existing = old
+        PZ.players[name] = zone
+        playerObj:getModData().PhunZones = zone
+    end
 
     PZ:updatePlayerUI(playerObj, zone)
 
@@ -90,8 +101,6 @@ Events.OnServerCommand.Add(function(module, command, arguments)
         end
     end
 end)
-
-Events.EveryTenMinutes.Add(shit)
 
 local sh = nil
 local function setup()
