@@ -125,7 +125,7 @@ function PZ:getModifiedZones(omitMods, maxOrder)
             print("PhunZones: Unexpected format of ./lua/" .. self.const.modifiedLuaFile .. ", cannot load data")
         end
     end
-
+    data = ModData.get(self.const.modifiedModData)
     if data == nil then
         data = {}
         ModData.add(self.const.modifiedModData, data)
