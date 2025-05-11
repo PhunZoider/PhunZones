@@ -135,6 +135,7 @@ function PZ:getModifiedZones(omitMods, maxOrder)
     local order = (maxOrder or 0) + 1
     for key, entry in pairs(data) do
         local status, err = pcall(function()
+            PL.debug("Processing modified zone: " .. key)
             local e = getEntry(entry, omitMods)
             local sortzones = {}
             if e then

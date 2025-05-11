@@ -5,7 +5,7 @@ local PZ = PhunZones
 local Commands = require "PhunZones/client_commands"
 
 Events.EveryTenMinutes.Add(function()
-    sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
+    -- sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
 end)
 
 -- Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)

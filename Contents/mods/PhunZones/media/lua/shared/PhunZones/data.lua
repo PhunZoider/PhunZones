@@ -561,11 +561,11 @@ return {
         points = {{9000, 10500, 9300, 11700}, {9300, 11100, 10500, 11700}, {10500, 11400, 10800, 11700},
                   {13800, 1200, 14400, 1500}}
     },
-    BetsysFarm = { -- respawn checked - failed
+    BetsysFarm = {
         difficulty = 2,
         title = "Betsy's Farm",
         mods = "DJBetsysFarm",
-        points = {{9000, 9300, 9299, 9599}}
+        points = {{9060, 9300, 9144, 9360}}
     },
     RabbitHash = {
         difficulty = 2,
@@ -589,7 +589,7 @@ return {
         difficulty = 2,
         title = "Ed's Auto Salvage",
         mods = "EdsAutoSalvage",
-        points = {{8700, 8400, 8999, 8699}}
+        points = {{8700, 8512, 8748, 8551}}
     },
     Homepie = {
         difficulty = 2,
@@ -909,9 +909,9 @@ return {
     },
     WesternScrapCarYard = {
         difficulty = 2,
-        title = "Western Scrapyard",
+        title = "Scrapyard",
         mods = "WesternScrapCarYard",
-        points = {{8700, 9000, 9000, 9300}}
+        points = {{8777, 9100, 8876, 9200}}
     },
     MilitaryCheckpointWestPointAbisi = {
         difficulty = 3,
@@ -1042,5 +1042,23 @@ return {
         title = "Shortrest",
         mods = "jackson",
         points = {{10810, 10555, 11377, 10945}}
+    },
+    ["Muldraugh-Westoutskirts ShippingCo"] = {
+        difficulty = 2,
+        title = "Muldraugh West",
+        mods = "Muldraugh-Westoutskirts ShippingCo",
+        points = {{9600, 9600, 9900, 9900}},
+        subzones = {
+            shipping = {
+                points = {{9664, 9640, 9733, 9684}},
+                subtitle = "Shipping Depot"
+            },
+            military = {
+                points = {{9767, 9855, 9830, 9889}},
+                difficulty = 3,
+                subtitle = "Outpost 24"
+            }
+        }
+
     }
 }
