@@ -18,7 +18,7 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
 end)
 
 Events[PZ.events.OnPhunZoneReady].Add(function(playerObj, zone)
-    if not isClient() then
+    if not PZ.settings.ProcessOnClient and not isClient() then
         local nextCheck = 0
 
         Events.OnTick.Add(function()

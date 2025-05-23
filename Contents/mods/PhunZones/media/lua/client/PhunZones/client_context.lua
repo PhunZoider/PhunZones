@@ -29,9 +29,9 @@ end
 
 function PZ:appendContext(context, mainMenu, playerObj, worldobjects)
 
-    local sub = context:getNew(context)
+    local sub = ISContextMenu:getNew(context)
     context:addSubMenu(mainMenu, sub)
-    sub:addOption(PZ.name .. " Editor", worldobjects, function()
+    sub:addOption(PZ.name, nil, function()
         local player = playerObj and getSpecificPlayer(playerObj) or getPlayer()
         PZ.ui.zones.OnOpenPanel(player)
     end)

@@ -234,35 +234,45 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
     self.zedless = {}
 
     for regionKey, regionData in pairs(results or {}) do
-
-        for zoneKey, zoneData in pairs(regionData.zones or {}) do
-            -- for _, v in ipairs(zoneData.zones) do
-            --     -- local xIterations = (math.floor((v[3] - v[1]) / 300) + 1)
-            --     -- local yIterations = (math.floor((v[4] - v[2]) / 300) + 1)
-            --     -- for x = 0, xIterations do
-            --     --     for y = 0, yIterations do
-            --     --         local cx = math.floor(v[1] / 300) + x
-            --     --         local cy = math.floor(v[2] / 300) + y
-            --     --         local ckey = cx .. "_" .. cy
-            --     --         if not cells[ckey] then
-            --     --             cells[ckey] = {}
-            --     --         end
-            --     --         table.insert(cells[ckey], {regionKey, zoneKey, v[1], v[2], v[3], v[4]})
-            --     --     end
-            --     -- end
-            --     if zoneData.zeds == false then
-            --         table.insert(self.zedless, v)
-            --     end
-            -- end
-            local z = tableTools.shallowCopy(zoneData, excludedKeys) or {}
-
-            z.region = regionKey
-            z.zone = zoneKey
+        if regionKey == "_default" then
+            local z = tableTools.shallowCopy(regionData, excludedKeys) or {}
+            z.region = "_default"
+            z.zone = "main"
             local merged = tableTools.merge(regionData, z, excludedKeys)
             if not lookup[regionKey] then
                 lookup[regionKey] = {}
             end
-            lookup[regionKey][zoneKey] = merged
+            lookup[regionKey][z.zone] = merged
+        else
+            for zoneKey, zoneData in pairs(regionData.zones or {}) do
+                -- for _, v in ipairs(zoneData.zones) do
+                --     -- local xIterations = (math.floor((v[3] - v[1]) / 300) + 1)
+                --     -- local yIterations = (math.floor((v[4] - v[2]) / 300) + 1)
+                --     -- for x = 0, xIterations do
+                --     --     for y = 0, yIterations do
+                --     --         local cx = math.floor(v[1] / 300) + x
+                --     --         local cy = math.floor(v[2] / 300) + y
+                --     --         local ckey = cx .. "_" .. cy
+                --     --         if not cells[ckey] then
+                --     --             cells[ckey] = {}
+                --     --         end
+                --     --         table.insert(cells[ckey], {regionKey, zoneKey, v[1], v[2], v[3], v[4]})
+                --     --     end
+                --     -- end
+                --     if zoneData.zeds == false then
+                --         table.insert(self.zedless, v)
+                --     end
+                -- end
+                local z = tableTools.shallowCopy(zoneData, excludedKeys) or {}
+
+                z.region = regionKey
+                z.zone = zoneKey
+                local merged = tableTools.merge(regionData, z, excludedKeys)
+                if not lookup[regionKey] then
+                    lookup[regionKey] = {}
+                end
+                lookup[regionKey][zoneKey] = merged
+            end
         end
     end
 

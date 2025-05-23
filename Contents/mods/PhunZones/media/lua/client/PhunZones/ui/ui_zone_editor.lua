@@ -64,6 +64,17 @@ function UI.OnOpenPanel(playerObj, data, cb)
         elseif v.type == "boolean" then
             instance.data[k] = v.trueIsNil and data[k] == nil or data[k] == true
             instance.controls[k]:setSelected(1, instance.data[k] == true)
+        elseif v.type == "button" then
+            instance.data[k] = data[k] or ""
+            instance.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
+            if not instance.data.region or instance.data.region == "" then
+                instance.controls[k]:setEnable(false)
+                if v.disabledOnNewToolTip then
+                    instance.controls[k].tooltip = getTextOrNull(v.disabledOnNewToolTip)
+                end
+            else
+                instance.controls[k]:setEnable(true)
+            end
         end
     end
     instance.title = (instance.data.region or "New Zone") .. " - " .. (instance.data.zone or "")
@@ -192,6 +203,27 @@ function UI:createChildren()
             self.controls[k]:setY(y)
             self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
             self.controls._panel:addChild(self.controls[k])
+        elseif v.type == "button" then
+            local label = ISLabel:new(x, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1, UIFont.Small, true);
+            label:initialise();
+            label:instantiate();
+            self.controls["label_" .. k] = label
+            self.controls._panel:addChild(label);
+            self.controls[k] = ISButton:new(x + 75, y, 200, BUTTON_HGT, "...", self, function()
+                if v.onClick then
+                    v.onClick(self, self.data, self.player)
+                end
+            end);
+            self.controls[k].internal = k;
+            self.controls[k]:initialise();
+            self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
+            self.controls._panel:addChild(self.controls[k]);
+            if not self.data.region then
+                self.controls[k]:setEnable(false)
+                if v.disabledOnNewToolTip then
+                    self.controls[k].tooltip = getTextOrNull(v.disabledOnNewToolTip)
+                end
+            end
         end
 
         y = y + h + 10

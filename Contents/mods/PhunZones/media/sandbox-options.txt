@@ -8,6 +8,14 @@ option PhunZones.LoadDefaults
     translation = PhunZones_LoadDefaults,
 }
 
+option PhunZones.ProcessOnClient
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones,
+    translation = PhunZones_ProcessOnClient,
+}
+
 option PhunZones.ShowZoneChange
 { 
     type = boolean,
@@ -30,24 +38,6 @@ option PhunZones.VehicleTracking
     default = true,
     page = PhunZones, 
     translation = PhunZones_VehicleTracking,
-}
-
-option PhunZones.DefaultNoneTitle
-{ 
-    type = string,
-    default = Kentucky, 
-    page = PhunZones, 
-    translation = PhunZones_DefaultNoneTitle,
-}
-
-option PhunZones.DefaultNoneDifficulty
-{ 
-    type = integer, 
-    default = 2, 
-    min = 0,
-    max = 4,
-    page = PhunZones, 
-    translation = PhunZones_DefaultNoneDifficulty,
 }
 
 option PhunZones.UpdateInterval

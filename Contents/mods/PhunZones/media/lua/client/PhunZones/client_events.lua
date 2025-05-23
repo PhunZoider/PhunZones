@@ -63,6 +63,21 @@ Events[PZ.events.OnPhunZoneReady].Add(function()
             PZ:updateModData(zed, true)
         end
     end)
+
+    if PZ.settings.ProcessOnClient then
+        local nextCheck = 0
+
+        Events.OnTick.Add(function()
+            if getTimestamp() >= nextCheck then
+                nextCheck = getTimestamp() + (PZ.settings.updateInterval or 1)
+                local players = PZ:onlinePlayers()
+                for i = 0, players:size() - 1, 1 do
+                    local p = players:get(i)
+                    PZ:updateModData(p, true)
+                end
+            end
+        end)
+    end
 end)
 
 Events.OnCreatePlayer.Add(function(id)

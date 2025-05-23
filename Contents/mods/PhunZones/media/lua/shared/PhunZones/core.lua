@@ -379,7 +379,7 @@ function Core:updateModData(obj, triggerChangeEvent)
             }
         end
 
-        if doEvent and isServer() then
+        if doEvent and isServer() and not self.settings.ProcessOnClient then
             new.pid = obj:getOnlineID()
             sendServerCommand(obj, self.name, self.commands.updatePlayerZone, new, existing)
         end
@@ -415,13 +415,7 @@ function Core:getLocation(x, y)
             end
         end
     end
-    return {
-        region = "none",
-        zone = "main",
-        noAnnounce = true,
-        difficulty = self.settings.DefaultNoneDifficulty or 2,
-        title = self.settings.DefaultNoneTitle or "Kentucky"
-    }
+    return self.data.lookup._default.main
 end
 
 function Core:portVehicle(player, vehicle, x, y, z)

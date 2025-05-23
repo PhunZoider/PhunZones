@@ -1,4 +1,8 @@
 return {
+    ["_default"] = {
+        title = "Kentucky",
+        difficulty = 2
+    },
     void = {
         difficulty = 0,
         title = "Void",
