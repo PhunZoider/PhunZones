@@ -2,6 +2,7 @@ if isServer() then
     return
 end
 local PZ = PhunZones
+local PL = PhunLib
 local Commands = require "PhunZones/client_commands"
 
 Events.EveryTenMinutes.Add(function()
@@ -14,18 +15,21 @@ end)
 
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
 
-    if PZ.isLocal then
-        local name = playerObj:getID()
+    if PZ.isLocal or PZ.settings.ProcessOnClient then
+        local players = PL.onlinePlayers()
         if not PZ.players then
             PZ.players = ModData.getOrCreate(PZ.const.playerData)
         end
-        local old = PZ:getPlayerData(playerObj)
-        local existing = old
-        PZ.players[name] = zone
-        playerObj:getModData().PhunZones = zone
-    end
+        for i = 0, players:size() - 1 do
+            local p = players:get(i)
+            if p:getID() == playerObj:getID() then
+                PZ.players[p:getID()] = zone
+                p:getModData().PhunZones = zone
+                PZ:updatePlayerUI(p, zone)
+            end
 
-    PZ:updatePlayerUI(playerObj, zone)
+        end
+    end
 
 end)
 
