@@ -5,9 +5,9 @@ local PZ = PhunZones
 local PL = PhunLib
 local Commands = require "PhunZones/client_commands"
 
-Events.EveryTenMinutes.Add(function()
-    -- sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
-end)
+-- Events.EveryTenMinutes.Add(function()
+--     -- sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
+-- end)
 
 -- Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
 --     PZ:showContext(playerObj, context, worldobjects)
@@ -23,9 +23,11 @@ Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone,
         for i = 0, players:size() - 1 do
             local p = players:get(i)
             if p:getID() == playerObj:getID() then
+                local existing = PL.table.deepCopy(p:getModData().PhunZones)
                 PZ.players[p:getID()] = zone
                 p:getModData().PhunZones = zone
-                PZ:updatePlayerUI(p, zone)
+                PZ:updatePlayerUI(p, zone, existing)
+
             end
 
         end
@@ -96,6 +98,10 @@ Events.OnCreatePlayer.Add(function(id)
         end
     end
 end)
+
+Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
+    PZ:showContext(playerObj, context, worldobjects)
+end);
 
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == PZ.const.modifiedModData then

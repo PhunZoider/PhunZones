@@ -3,37 +3,24 @@ if isServer() then
 end
 local PZ = PhunZones
 local mainName = "PhunZones"
-function PZ:showContext(playerObj, context, worldobjects)
+function PZ:showContext(playerIndex, context, worldobjects)
 
     if isAdmin() or isDebugEnabled() then
-
-        local mainMenu = nil
-        local contextoptions = context:getMenuOptionNames()
-        local mainMenu = contextoptions[mainName]
-
-        if not mainMenu then
-            -- there isn't one so create it
-            mainMenu = context:addOption(mainName)
-        end
-
-        local sub = context:getNew(context)
-        context:addSubMenu(mainMenu, sub)
-        sub:addOption(PZ.name .. " Editor", worldobjects, function()
-            local player = playerObj and getSpecificPlayer(playerObj) or getPlayer()
+        local player = getSpecificPlayer(playerIndex) or getPlayer()
+        local option = context:addOptionOnTop(PZ.name, context, function()
             PZ.ui.zones.OnOpenPanel(player)
-        end)
-
+        end, playerIndex)
     end
 
 end
 
 function PZ:appendContext(context, mainMenu, playerObj, worldobjects)
 
-    local sub = ISContextMenu:getNew(context)
-    context:addSubMenu(mainMenu, sub)
-    sub:addOption(PZ.name, nil, function()
-        local player = playerObj and getSpecificPlayer(playerObj) or getPlayer()
-        PZ.ui.zones.OnOpenPanel(player)
-    end)
+    -- local sub = ISContextMenu:getNew(context)
+    -- context:addSubMenu(mainMenu, sub)
+    -- sub:addOption(PZ.name, nil, function()
+    --     local player = playerObj and getSpecificPlayer(playerObj) or getPlayer()
+    --     PZ.ui.zones.OnOpenPanel(player)
+    -- end)
 
 end

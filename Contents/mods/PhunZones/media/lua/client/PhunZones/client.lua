@@ -3,11 +3,11 @@ if not isClient() and isServer() then
 end
 local PZ = PhunZones
 
-function PZ:updatePlayerUI(playerObj, info)
+function PZ:updatePlayerUI(playerObj, info, existing)
 
     local zone = info or playerObj:getModData().PhunZones or {}
-    local existing = PZ:getPlayerData(playerObj)
-
+    -- local existing = PZ:getPlayerData(playerObj)
+    local existing = existing or {}
     PZ.ui.welcome.OnOpenPanel(playerObj, zone)
 
     if existing.pvp == true and playerObj.getSafety and playerObj:getSafety():isEnabled() then

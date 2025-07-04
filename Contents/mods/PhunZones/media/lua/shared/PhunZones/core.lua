@@ -394,6 +394,10 @@ end
 
 function Core:getLocation(x, y)
 
+    if not self.inied then
+        self:ini()
+    end
+
     local xx, yy = x, y
     if not y and x.getX then
         -- passed an object
