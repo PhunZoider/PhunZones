@@ -16,15 +16,17 @@ function PZ:updatePlayerUI(playerObj, info, existing)
         getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
     end
 
-    local panel = PZ.ui.widget.OnOpenPanel(playerObj)
-    if panel then
-        local data = {
-            zone = {
-                title = zone.title or nil,
-                subtitle = zone.subtitle or nil
+    if self.settings.Widget then
+        local panel = PZ.ui.widget.OnOpenPanel(playerObj)
+        if panel then
+            local data = {
+                zone = {
+                    title = zone.title or nil,
+                    subtitle = zone.subtitle or nil
+                }
             }
-        }
-        panel:setData(data)
+            panel:setData(data)
+        end
     end
 end
 

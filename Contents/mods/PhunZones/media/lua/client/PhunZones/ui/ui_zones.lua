@@ -111,8 +111,10 @@ function UI:setData(data)
 
     self.selectedData = data
     if self.controls.btnNewSubRegion and not data.isDefault then
-        self.controls.btnNewSubRegion.enable = data and data.zone == "main"
-
+        self.controls.btnNewSubRegion.enable = data and data.zone == "main" and data.region ~= "_default"
+        self.controls.btnNewRegion.enable = data and data.region ~= "_default"
+        self.controls.btnNewZone.enable = data and data.region ~= "_default"
+        self.controls.btnEditZone.enable = data and data.region ~= "_default"
     end
     self:refreshProperties(data)
 

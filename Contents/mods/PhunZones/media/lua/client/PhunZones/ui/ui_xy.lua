@@ -23,8 +23,8 @@ function UI.OnOpenPanel(playerObj, xy, cb)
     if not UI.instances[playerIndex] then
         local core = getCore()
         local FONT_SCALE = getTextManager():getFontHeight(UIFont.Small) / 14
-        local width = 220 * FONT_SCALE
-        local height = 200 * FONT_SCALE
+        local width = 250 * FONT_SCALE
+        local height = 220 * FONT_SCALE
 
         local x = (core:getScreenWidth() - width) / 2
         local y = (core:getScreenHeight() - height) / 2
