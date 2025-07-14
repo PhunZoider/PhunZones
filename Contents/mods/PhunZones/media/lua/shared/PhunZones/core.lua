@@ -419,7 +419,7 @@ function Core:getLocation(x, y)
             end
         end
     end
-    return self.data.lookup._default.main
+    return self.data.lookup._default
 end
 
 function Core:portVehicle(player, vehicle, x, y, z)

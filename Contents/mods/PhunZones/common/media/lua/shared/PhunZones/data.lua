@@ -14,7 +14,6 @@ return {
     },
     WestPoint = {
         difficulty = 2,
-        rads = 20,
         title = "West Point",
         points = {{11100, 6580, 13199, 7499}}
     },
@@ -53,13 +52,11 @@ return {
     },
     MarchRidge = {
         difficulty = 2,
-        rads = 35,
         title = "March Ridge",
         points = {{9600, 12600, 10499, 13199}}
     },
     Muldraugh = {
         difficulty = 1,
-        rads = 10,
         title = "Muldraugh",
         points = {{10558, 9175, 11023, 10692}}
     },
@@ -100,7 +97,6 @@ return {
     },
     Louisville = {
         difficulty = 3,
-        rads = 80,
         title = "Louisville",
         points = {{12400, 3904, 12545, 4483}, {11700, 300, 14699, 3899}},
         subzones = {

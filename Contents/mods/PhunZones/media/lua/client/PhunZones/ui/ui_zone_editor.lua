@@ -22,20 +22,18 @@ function UI.OnOpenPanel(playerObj, data, cb)
 
     local playerIndex = playerObj:getPlayerNum()
 
-    if not UI.instances[playerIndex] then
-        local core = getCore()
-        local width = 300 * FONT_SCALE
-        local height = 350 * FONT_SCALE
+    local core = getCore()
+    local width = 300 * FONT_SCALE
+    local height = 350 * FONT_SCALE
 
-        local x = (core:getScreenWidth() - width) / 2
-        local y = (core:getScreenHeight() - height) / 2
+    local x = (core:getScreenWidth() - width) / 2
+    local y = (core:getScreenHeight() - height) / 2
 
-        UI.instances[playerIndex] = UI:new(x, y, width, height, playerObj, playerIndex);
-        UI.instances[playerIndex]:initialise();
-        ISLayoutManager.RegisterWindow(profileName, UI, UI.instances[playerIndex])
-    end
-
-    local instance = UI.instances[playerIndex]
+    -- UI.instances[playerIndex] = UI:new(x, y, width, height, playerObj, playerIndex);
+    -- UI.instances[playerIndex]:initialise();
+    local instance = UI:new(x, y, width, height, playerObj, playerIndex);
+    instance:initialise();
+    ISLayoutManager.RegisterWindow(profileName, UI, instance)
 
     if not data then
         data = {}
@@ -77,7 +75,20 @@ function UI.OnOpenPanel(playerObj, data, cb)
             end
         end
     end
-    instance.title = (instance.data.region or "New Zone") .. " - " .. (instance.data.zone or "")
+
+    if data.isDefault then
+        instance.data.isDefault = true
+        instance.title = "Global Defaults"
+        instance.controls.region:setVisible(false)
+        instance.controls._region:setName("Global Defaults")
+        instance.controls._region:setVisible(true)
+        instance.controls.zone:setVisible(false)
+        instance.controls._zone:setName("    -    ")
+    else
+        instance.title = (instance.data.region or "New Zone") .. " - " .. (instance.data.zone or "")
+        -- self.controls.region:setVisible(true)
+        -- self.controls.zone:setVisible(true)
+    end
     instance.cb = cb
 
     return instance;
@@ -218,12 +229,7 @@ function UI:createChildren()
             self.controls[k]:initialise();
             self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
             self.controls._panel:addChild(self.controls[k]);
-            if not self.data.region then
-                self.controls[k]:setEnable(false)
-                if v.disabledOnNewToolTip then
-                    self.controls[k].tooltip = getTextOrNull(v.disabledOnNewToolTip)
-                end
-            end
+
         end
 
         y = y + h + 10
@@ -233,7 +239,7 @@ function UI:createChildren()
     self.controls._panel:setScrollChildren(true)
 
     self.controls._save = ISButton:new(x, self.height - BUTTON_HGT - offset, self.width - offset * 2, BUTTON_HGT,
-        getText("UI_btn_save"), self, function()
+        getText("UI_btn_save"), self, function(target)
 
             local data = {}
 
@@ -271,6 +277,18 @@ function UI:createChildren()
             end
 
             if self.cb then
+                local originalData = target.data
+                -- if originalData.region then
+                --     data.region = self.data.region
+                -- end
+                -- if self.data.zone then
+                --     data.zone = self.data.zone
+                -- end
+                if originalData.isDefault then
+                    data.isDefault = true
+                    data.region = "_default"
+                    data.zone = "main"
+                end
                 self.cb(data)
             end
             self:close()

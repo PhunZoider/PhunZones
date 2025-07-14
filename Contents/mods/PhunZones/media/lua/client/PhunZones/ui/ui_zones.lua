@@ -79,19 +79,19 @@ function UI:refreshData(zone)
         end
         index = index + 1
         if k == "_default" then
-            self.controls.regions:addOptionWithData(" -- Defaults --", v.main)
+            self.controls.regions:addOptionWithData(" -- Defaults --", v)
         else
             self.controls.regions:addOptionWithData(k, v.main)
-        end
-
-        for zkey, zval in pairs(v) do
-            if zkey ~= "main" then
-                index = index + 1
-                if zone and zone.region == k and zone.zone == zkey then
-                    selectedIndex = index
+            for zkey, zval in pairs(v) do
+                if zkey ~= "main" then
+                    index = index + 1
+                    if zone and zone.region == k and zone.zone == zkey then
+                        selectedIndex = index
+                    end
+                    self.controls.regions:addOptionWithData(("  |- " .. zkey), zval)
                 end
-                self.controls.regions:addOptionWithData(("  |- " .. zkey), zval)
             end
+
         end
 
     end
@@ -144,10 +144,22 @@ function UI:refreshProperties(data, selected)
         self.controls.list:ensureVisible(self.controls.list.selected)
         self.selectedProperty = self.controls.list.items[1].item
     end
-    self:refreshZonePoints(zone.points)
+    self:refreshZonePoints(zone.points or {})
 end
 
 function UI:saveData(data)
+
+    local inherited = {}
+
+    if data.region ~= "_default" then
+        local zones = PZ.data.zones
+        if data.zone ~= "main" then
+            inherited = zones[data.region]
+        else
+            inherited = zones._default
+        end
+    end
+
     local md = ModData.get(PZ.const.modifiedModData)
     if not md[data.region] then
         md[data.region] = {}
@@ -157,6 +169,7 @@ function UI:saveData(data)
     end
     local segment = nil
     if data.zone ~= "main" then
+
         if not md[data.region].subzones[data.zone] then
             md[data.region].subzones[data.zone] = {}
         end
@@ -171,27 +184,35 @@ function UI:saveData(data)
 
     for k, v in pairs(PZ.fields) do
         -- these should already be cast to the correct type
-        if data[k] ~= nil then
-            if v.type == "string" then
-                segment[k] = data[k]
-            elseif v.type == "int" then
-                segment[k] = tonumber(data[k])
-            elseif v.type == "boolean" then
-                if v.trueIsNil then
-                    if data[k] then
-                        segment[k] = nil
-                    else
-                        segment[k] = false
-                    end
+        -- if data[k] ~= nil then
+        local final
+        if v.type == "string" then
+            final = data[k]
+        elseif v.type == "int" then
+            final = tonumber(data[k])
+        elseif v.type == "boolean" then
+            if v.trueIsNil then
+                if data[k] then
+                    final = nil
                 else
-                    if data[k] then
-                        segment[k] = true
-                    else
-                        segment[k] = nil
-                    end
+                    final = false
+                end
+            else
+                if data[k] then
+                    final = true
+                else
+                    final = nil
                 end
             end
         end
+
+        local i = inherited[k]
+        local f = final
+
+        if k == "zone" or k == "region" or i ~= f then
+            segment[k] = final
+        end
+        -- end
     end
 
     PZ:saveChanges(md)
@@ -349,6 +370,7 @@ function UI:createChildren()
     local btnEditRegion = ISButton:new(x, y, 100, tools.BUTTON_HGT, getText("IGUI_PhunZones_EditRegion"), self,
         function()
             if self.selectedData then
+                local data = self.selectedData
                 PZ.ui.editor.OnOpenPanel(self.player, self.selectedData, function(newData)
                     self:saveData(newData)
                 end)
