@@ -192,13 +192,13 @@ function UI:createChildren()
             self.controls["label_" .. k] = label
             self.controls._panel:addChild(label);
 
-            self.controls[k] = ISTextEntryBox:new("", x + 75, y, 200, h);
+            self.controls[k] = ISTextEntryBox:new("", x + 150, y, 125, h);
             self.controls[k]:initialise();
             self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
             self.controls._panel:addChild(self.controls[k]);
 
             if v.disableOnEdit then
-                local label = ISLabel:new(x + 75, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1,
+                local label = ISLabel:new(x + 150, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1,
                     UIFont.Small, true);
                 label:initialise();
                 label:instantiate();
@@ -220,7 +220,7 @@ function UI:createChildren()
             label:instantiate();
             self.controls["label_" .. k] = label
             self.controls._panel:addChild(label);
-            self.controls[k] = ISButton:new(x + 75, y, 200, BUTTON_HGT, "...", self, function()
+            self.controls[k] = ISButton:new(x + 150, y, 125, BUTTON_HGT, "...", self, function()
                 if v.onClick then
                     v.onClick(self, self.data, self.player)
                 end

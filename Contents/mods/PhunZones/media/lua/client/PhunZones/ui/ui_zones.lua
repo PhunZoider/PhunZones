@@ -154,9 +154,9 @@ function UI:saveData(data)
     if data.region ~= "_default" then
         local zones = PZ.data.zones
         if data.zone ~= "main" then
-            inherited = zones[data.region]
+            inherited = zones[data.region] or {}
         else
-            inherited = zones._default
+            inherited = zones._default or {}
         end
     end
 
@@ -191,26 +191,37 @@ function UI:saveData(data)
         elseif v.type == "int" then
             final = tonumber(data[k])
         elseif v.type == "boolean" then
-            if v.trueIsNil then
-                if data[k] then
-                    final = nil
-                else
-                    final = false
-                end
-            else
-                if data[k] then
-                    final = true
-                else
-                    final = nil
-                end
-            end
+            final = data[k]
+            -- if v.trueIsNil then
+            --     if data[k] then
+            --         if inherited[k] == nil then
+            --             final = data[k]
+            --         else
+            --             final = nil
+            --         end
+            --     else
+            --         final = false
+            --     end
+            -- else
+            --     if data[k] then
+            --         final = data[k]
+            --     else
+            --         if inherited[k] == nil then
+            --             final = data[k]
+            --         else
+            --             final = nil
+            --         end
+            --     end
+            -- end
         end
 
         local i = inherited[k]
         local f = final
 
         if k == "zone" or k == "region" or i ~= f then
+
             segment[k] = final
+
         end
         -- end
     end

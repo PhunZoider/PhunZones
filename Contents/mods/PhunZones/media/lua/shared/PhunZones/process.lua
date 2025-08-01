@@ -83,7 +83,12 @@ function PZ:getCoreZones(omitMods)
 
     local results = {}
     local order = 0
-    local coreData = self.settings.LoadDefaults and allLocations or {}
+    local coreData = self.settings.LoadDefaults and allLocations or {
+        ["_default"] = {
+            title = "Kentucky",
+            difficulty = 2
+        }
+    }
     local all = tableTools.merge(coreData, self.extended or {})
     for key, entry in pairs(all) do
         local status, err = pcall(function()

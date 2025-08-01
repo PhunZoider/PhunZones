@@ -13,6 +13,7 @@ Commands[PZ.commands.playerSetup] = function(player)
         modData.PhunZones = {}
     end
     modData.PhunZones.modified = false
+    PZ:updateModData(player, true, true)
     sendServerCommand(player, PZ.name, PZ.commands.playerSetup, ModData.get(PZ.const.modifiedModData) or {})
 end
 

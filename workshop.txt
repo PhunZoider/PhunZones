@@ -23,7 +23,9 @@ description=[*]Friendly widget that helps players identify what area they are in
 description=[*]Comes pre-configured with loads of existng maps, along with tools to modify and/or create more
 description=[*]Designed for max performance
 description=[/list]
-description=
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233]
+description=[H1]Mods that love PhunZones[/h1]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.imgur.com/ekgfkIQ.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3516092704][img]https://i.imgur.com/oT8Ezec.png[/img][/url]
 description=See [url=https://github.com/PhunZoider/PhunZones]Github Repo[/url] for info on customising or extending
 
 description=[url=https://discord.gg/v2USyAtP6q][img]https://i.imgur.com/q2rnXYZ.png[/img][/url]

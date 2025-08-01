@@ -1,7 +1,7 @@
 if isServer() then
     return
 end
-local tableTools = require("PhunZones/table")
+
 local PZ = PhunZones
 local PL = PhunLib
 local Commands = {}

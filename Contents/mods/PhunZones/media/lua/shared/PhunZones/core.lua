@@ -232,7 +232,7 @@ local excludedProps = nil
 local excludedTrackingProps = nil
 local rvInterior = nil
 local playersInitialized = {}
-function Core:updateModData(obj, triggerChangeEvent)
+function Core:updateModData(obj, triggerChangeEvent, force)
     if not obj or not obj.getModData then
         return
     end
@@ -283,7 +283,7 @@ function Core:updateModData(obj, triggerChangeEvent)
     else
         -- player
         local vehicle = obj.getVehicle and obj:getVehicle() or nil
-        if ldata.region ~= existing.region or ldata.zone ~= existing.zone then
+        if force or (ldata.region ~= existing.region or ldata.zone ~= existing.zone) then
 
             if ldata.players == false and existing.last then
                 -- player is not allowed here!
