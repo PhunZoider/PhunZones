@@ -63,7 +63,7 @@ return {
     Rosewood = {
         difficulty = 0,
         title = "Rosewood",
-        zones = {{7800, 10800, 8699, 12299}},
+        points = {{7800, 10800, 8699, 12299}},
         subzones = {
             cabins = {
                 points = {{7503, 11402, 7788, 11689}},

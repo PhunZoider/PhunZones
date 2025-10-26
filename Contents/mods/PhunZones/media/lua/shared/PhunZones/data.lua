@@ -185,6 +185,12 @@ return {
             }
         }
     },
+    MountCrow = {
+        difficulty = 2,
+        title = "Mount Crow",
+        mods = "Mount Crow City (BETA 0.12)",
+        points = {{12900, 9600, 14700, 11400}}
+    },
     Taylorsville = {
         difficulty = 2,
         title = "Bridge",
@@ -673,7 +679,7 @@ return {
         difficulty = 2,
         title = "Nettle Township",
         mods = "Nettle Township",
-        oints = {{6600, 9000, 7199, 9599}}
+        points = {{6600, 9000, 7199, 9599}}
     },
     FortRockRidge = {
         difficulty = 2,
@@ -927,7 +933,7 @@ return {
         difficulty = 2,
         title = "Ztardew Valley",
         mods = "Ztardew",
-        points = {{12000, 9300, 12900, 1020}}
+        points = {{12000, 9300, 12900, 10200}}
     },
     ZonaSegura0123 = {
         cells = {{39, 30}},

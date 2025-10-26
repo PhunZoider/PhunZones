@@ -3,6 +3,30 @@ if not isClient() and isServer() then
 end
 local PZ = PhunZones
 
+if ISSafetyUI and ISSafetyUI.prerender then
+
+    local old_pvp_prerender = ISSafetyUI.prerender
+    function ISSafetyUI:prerender()
+        old_pvp_prerender(self)
+
+        local data = self.character:getModData().PhunZones or {}
+        if data.pvp == true then
+            if self.character.getSafety and self.character:getSafety():isEnabled() then
+                getPlayerSafetyUI(self.character:getPlayerNum()):toggleSafety()
+                self.character:getSafety():setEnabled(false)
+            end
+        elseif data.pvp == false then
+            if self.character.getSafety and not self.character:getSafety():isEnabled() then
+                getPlayerSafetyUI(self.character:getPlayerNum()):toggleSafety()
+                self.character:getSafety():setEnabled(true)
+            end
+        else
+            self.character:getSafety():setEnabled(true)
+        end
+    end
+
+end
+
 function PZ:updatePlayerUI(playerObj, info, existing)
 
     local zone = info or playerObj:getModData().PhunZones or {}

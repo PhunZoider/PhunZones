@@ -58,7 +58,18 @@ function UI.OnOpenPanel(playerObj, data, cb)
                     instance.controls["_" .. k]:setVisible(false)
                 end
             end
-
+        elseif v.type == "combo" then
+            instance.data[k] = data[k] or ""
+            if instance.data[k] ~= "" then
+                for i = 1, #instance.controls[k].options do
+                    if instance.controls[k].options[i] == instance.data[k] then
+                        instance.controls[k].selected = i
+                        break
+                    end
+                end
+            else
+                -- instance.controls[k]:setSelected(-1)
+            end
         elseif v.type == "boolean" then
             instance.data[k] = v.trueIsNil and data[k] == nil or data[k] == true
             instance.controls[k]:setSelected(1, instance.data[k] == true)
@@ -185,6 +196,10 @@ function UI:createChildren()
 
     for k, v in pairs(PZ.fields) do
 
+        if v.initialize then
+            v.initialize(self, self.data, self.player)
+        end
+
         if v.type == "string" or v.type == "int" then
             local label = ISLabel:new(x, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1, UIFont.Small, true);
             label:initialise();
@@ -205,7 +220,22 @@ function UI:createChildren()
                 self.controls["_" .. k] = label
                 self.controls._panel:addChild(label);
             end
-
+        elseif v.type == "combo" then
+            local label = ISLabel:new(x, y, h, getTextOrNull(v.label) or v.label or k, 1, 1, 1, 1, UIFont.Small, true);
+            label:initialise();
+            label:instantiate();
+            self.controls["label_" .. k] = label
+            self.controls._panel:addChild(label);
+            self.controls[k] = ISComboBox:new(x + 150, y, 125, h, self, nil);
+            self.controls[k]:initialise();
+            if v.getOptions then
+                local options = v.getOptions()
+                for _, opt in ipairs(options or {}) do
+                    self.controls[k]:addOption(opt)
+                end
+            end
+            self.controls[k].tooltip = getTextOrNull(v.tooltip) or v.tooltip or ""
+            self.controls._panel:addChild(self.controls[k]);
         elseif v.type == "boolean" then
             self.controls[k] = ISTickBox:new(x, y, BUTTON_HGT, BUTTON_HGT, getTextOrNull(v.label) or v.label or k, self)
             self.controls[k]:addOption(getTextOrNull(v.label) or v.label or k, nil)
@@ -258,6 +288,9 @@ function UI:createChildren()
                     else
                         data[k] = nil
                     end
+                elseif v.type == "combo" then
+                    data[k] = self.controls[k].selected > 0 and self.controls[k].options[self.controls[k].selected] or
+                                  nil
                 elseif v.type == "boolean" then
                     data[k] = self.controls[k]:isSelected(1)
                     -- if self.controls[k]:isSelected(1) then

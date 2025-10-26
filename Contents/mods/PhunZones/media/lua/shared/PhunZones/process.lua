@@ -249,6 +249,8 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
     for regionKey, regionData in pairs(results or {}) do
         if regionKey == "_default" then
             regionData.isDefault = true
+            regionData.zone = "main"
+            regionData.region = "_default"
             regionData.zones = nil
             lookup._default = regionData
             _default = regionData

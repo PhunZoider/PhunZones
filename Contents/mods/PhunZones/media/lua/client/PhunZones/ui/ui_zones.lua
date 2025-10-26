@@ -25,6 +25,12 @@ function UI.OnOpenPanel(playerObj, key)
         instance:setVisible(true);
         instance:refreshData(PZ:getLocation(playerObj))
 
+        for k, v in pairs(PZ.fields) do
+            if v.initialize then
+                v.initialize(instance, instance.data, playerObj)
+            end
+        end
+
         return instance
     end
 end
@@ -110,7 +116,7 @@ end
 function UI:setData(data)
 
     self.selectedData = data
-    if self.controls.btnNewSubRegion and not data.isDefault then
+    if self.controls.btnNewSubRegion then
         self.controls.btnNewSubRegion.enable = data and data.zone == "main" and data.region ~= "_default"
         self.controls.btnNewRegion.enable = data and data.region ~= "_default"
         self.controls.btnNewZone.enable = data and data.region ~= "_default"
@@ -178,7 +184,9 @@ function UI:saveData(data)
         end
         segment = md[data.region].subzones[data.zone]
     else
-        md[data.region].points = {}
+        if not md[data.region].points then
+            md[data.region].points = {}
+        end
         segment = md[data.region]
     end
 
@@ -188,6 +196,8 @@ function UI:saveData(data)
         local final
         if v.type == "string" then
             final = data[k]
+        elseif v.type == "combo" then
+            final = data[k] ~= "" and data[k] or nil
         elseif v.type == "int" then
             final = tonumber(data[k])
         elseif v.type == "boolean" then
