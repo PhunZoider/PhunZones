@@ -1,19 +1,20 @@
 version=1
 id=3388867450
 title=PhunZones
-description=B41/B42 mod for customising game behaviours based on location
-description=
+
+B41/B42 mod for customising game behaviours based on location
+
 description=[H1]Features[/H1]
 description=[list]
 description=[*]Create and manage zones with unique properties
 description=[list][*]Title of area can be displayed to players when entering
-description=[*]Toggle PvP (unless PvP is disabled in your server ini)
+description=[*]Toggle PvP (unless PvP is disabled in your server ini). NOTE this is currently not working with the latest B42's PvP zones. Am investigating
 description=[*]Toggle zed spawning
 description=[*]Toggle safehouse creation
 description=[*]Toggle pickup and placement of objects in area
 description=[*]Toggle scrapping/dissassembling objects in area
 description=[*]Toggle fire spread (animation may briefly play).
-description=[*]Prevent players from entering zone 
+description=[*]Prevent players from entering zone
 description=[*]Toggle bandit spawning (for Bandits mod)
 description=[*]Toggle construction
 description=[*]Default zone can now be edited to set the global values (ideal for mods extending PhunZones functionality like PhunLewts)
@@ -23,13 +24,16 @@ description=[*]Friendly widget that helps players identify what area they are in
 description=[*]Comes pre-configured with loads of existng maps, along with tools to modify and/or create more
 description=[*]Designed for max performance
 description=[/list]
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233]
-description=[H1]Mods that love PhunZones[/h1]
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.imgur.com/ekgfkIQ.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3516092704][img]https://i.imgur.com/oT8Ezec.png[/img][/url]
-description=See [url=https://github.com/PhunZoider/PhunZones]Github Repo[/url] for info on customising or extending
+description=
+description=[H2]More Phun Stuff[/h2]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3606988132][img]https://i.ibb.co/ZtQtmJd/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.ibb.co/k6cQ4h7d/preview.png[/img][/url]
+description=
+description=
+description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community. 
+description=[url=https://github.com/PhunZoider/PhunZones]Repo and more info[/url]
 
-description=[url=https://discord.gg/v2USyAtP6q][img]https://i.imgur.com/q2rnXYZ.png[/img][/url]
-description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community. [url=https://github.com/PhunZoider/PhunTime]Repo and more info[/url]
 require=phunlib
 tags=Build 41;Build 42;Multiplayer
 visibility=public
+
+

@@ -22,4 +22,11 @@ Sandbox_EN = {
     Sandbox_PhunZones_VehicleTracking = "Vehicle Tracking",
     Sandbox_PhunZones_VehicleTracking_tooltip = "Use the location of the last vehicle entered as the players current location. Ideal for RV Interiors",    
 
+    Sandbox_PhunZones_PvPMode = "PvP Mode",
+    Sandbox_PhunZones_PvPMode_tooltip = "Enabled = PvP mode if forced on if player enters a zone with PvP option ticked, Otherwise it gets forced off (default behaviour). Toggle = same as default, but allows player to toggle PvP on/off within PvP areas. Disabled = prevents PhunZones from doing anything with PvP (eg you are managing via another mod)",
+
+    Sandbox_PhunZones_PvPMode_Option_option1 = "Enabled",
+    Sandbox_PhunZones_PvPMode_Option_option2 = "Toggle",
+    Sandbox_PhunZones_PvPMode_Option_option3 = "Disabled",
+
 }

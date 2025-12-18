@@ -2,41 +2,48 @@
     "emeraldwalk.runonsave": {
         "autoClearConsole": true,
         "commands": [
+            // Delete old folder
             {
                 "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\media 2>nul"
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones 2>nul"
             },
-            {
-                "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42 2>nul"
-            },
+            // Copy mod files
             {
                 "match": ".*",
                 "cmd": "xcopy ${workspaceFolder}\\Contents\\mods ${env.USERPROFILE}\\Zomboid\\mods /Y /I /E /F /EXCLUDE:xclude"
             },
+            // Copy media to 42.0.0 folder
             {
                 "match": ".*",
-                "cmd": "xcopy ${workspaceFolder}\\Contents\\mods\\PhunZones\\media ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\media /Y /I /E /F"
+                "cmd": "xcopy ${workspaceFolder}\\Contents\\mods\\PhunZones\\media ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\media /Y /I /E /F"
             },
+            // {
+            //     "match": ".*",
+            //     "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\mod.info /Y"
+            // },
+            // {
+            //     "match": ".*",
+            //     "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\common\\media\\lua\\client\\PhunZones\\ui\\admin.lua ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\poster.png /Y"
+            // },  
             {
                 "match": ".*",
-                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\mod.info /Y"
-            },
+                "cmd": "del ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\media\\lua\\client\\PhunZones\\ui\\admin.lua"
+            },                       
             {
                 "match": ".*",
-                "cmd": "del ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\media\\lua\\shared\\PhunZones\\data.lua"
-            },
+                "cmd": "del ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\media\\lua\\shared\\PhunZones\\data.lua"
+            },            
+            // {
+            //     "match": ".*",
+            //     "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\42.0.0\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\mod.info /Y"
+            // },
             {
                 "match": ".*",
-                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\42\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\mod.info /Y"
-            },
-            {
-                "match": ".*",
-                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\poster.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\poster.png /Y"
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\poster.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\poster.png /Y"
             },            
             {
                 "match": ".*",
-                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\icon.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42\\icon.png /Y"
+                "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\icon.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\icon.png /Y"
             },
             {
                 "match": ".*",

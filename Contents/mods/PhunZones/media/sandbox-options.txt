@@ -59,3 +59,13 @@ option PhunZones.ZedUpdateFrequency
     page = PhunZones, 
     translation = PhunZones_ZedUpdateFrequency,
 }
+
+option PhunZones.PvPMode
+{ 
+    type = enum,
+    numValues = 3,
+    default = 1, 
+    valueTranslation = PhunZones_PvPMode_Option,
+    page = PhunZones, 
+    translation = PhunZones_PvPMode,
+}

@@ -98,7 +98,7 @@ return {
     Louisville = {
         difficulty = 3,
         title = "Louisville",
-        points = {{12400, 3904, 12545, 4483}, {11700, 300, 14699, 3899}},
+        points = {{12400, 3904, 12545, 4483}, {11700, 950, 15954, 4215}},
         subzones = {
             airport = {
                 points = {{15251, 2418, 15684, 3346}},
@@ -120,7 +120,7 @@ return {
                 mods = "\\Louisville_Quarantine_Zone"
             },
             riverboat = {
-                points = {{15000, 900, 15600, 1500}},
+                points = {{13084, 1165, 13146, 1199}},
                 difficulty = 2,
                 subtitle = "Riverboat",
                 mods = "\\Louisville_Riverboat"
@@ -129,7 +129,7 @@ return {
     },
     Taylorsville = {
         difficulty = 2,
-        title = "Bridge",
+        title = "Taylorsville",
         mods = "\\Taylorsville",
         points = {{9302, 6603, 10194, 7130}}
     },
@@ -137,16 +137,27 @@ return {
         difficulty = 2,
         title = "Tikitown",
         mods = "\\tikitown",
-        points = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7469}}
+        points = {{6889, 7188, 7386, 7741}, {7199, 6900, 7796, 7799}}
     },
     ValleyStation = {
         difficulty = 4,
         title = "Valley Station",
-        points = {{12472, 5099, 13209, 6477}}
+        points = {{12397, 4331, 14737, 6477}}
     },
     Brandenburg = {
         difficulty = 4,
         title = "Brandenburg",
         points = {{814, 5384, 3100, 7066}}
+    },
+    FallasLake = {
+        difficulty = 2,
+        title = "Fallas Lake",
+        points = {{7010, 8090, 7448, 8550}}
+    },
+    Frogtown = {
+        difficulty = 2,
+        title = "Frogtown",
+        mods = "\\Frogtown",
+        points = {{3300, 7800, 3800, 7500}}
     }
 }

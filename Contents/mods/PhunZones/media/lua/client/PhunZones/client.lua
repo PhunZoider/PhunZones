@@ -2,29 +2,46 @@ if not isClient() and isServer() then
     return
 end
 local PZ = PhunZones
+local getSandboxOptions = getSandboxOptions
 
 if ISSafetyUI and ISSafetyUI.prerender then
 
     local old_pvp_prerender = ISSafetyUI.prerender
     function ISSafetyUI:prerender()
         old_pvp_prerender(self)
+        PZ:ISSafetyPrerender(self.character)
+    end
+end
 
-        local data = self.character:getModData().PhunZones or {}
-        if data.pvp == true then
-            if self.character.getSafety and self.character:getSafety():isEnabled() then
-                getPlayerSafetyUI(self.character:getPlayerNum()):toggleSafety()
-                self.character:getSafety():setEnabled(false)
-            end
-        elseif data.pvp == false then
-            if self.character.getSafety and not self.character:getSafety():isEnabled() then
-                getPlayerSafetyUI(self.character:getPlayerNum()):toggleSafety()
-                self.character:getSafety():setEnabled(true)
-            end
-        else
-            self.character:getSafety():setEnabled(true)
-        end
+function PZ:ISSafetyPrerender(player)
+
+    if not getPlayerSafetyUI then
+        -- newer versions have a different system for pvp. Disable for now
+        return
     end
 
+    local option = getSandboxOptions():getOptionByName("PhunZones.PvPMode"):getValue()
+
+    if option == 3 then
+        return
+    end
+
+    local data = player:getModData().PhunZones or {}
+    if data.pvp == true then
+        if option == 1 then
+            if player.getSafety and player:getSafety():isEnabled() then
+                getPlayerSafetyUI(player:getPlayerNum()):toggleSafety()
+                player:getSafety():setEnabled(false)
+            end
+        end
+    elseif data.pvp == false then
+        if player.getSafety and not player:getSafety():isEnabled() then
+            getPlayerSafetyUI(player:getPlayerNum()):toggleSafety()
+            player:getSafety():setEnabled(true)
+        end
+    else
+        player:getSafety():setEnabled(true)
+    end
 end
 
 function PZ:updatePlayerUI(playerObj, info, existing)
@@ -34,9 +51,13 @@ function PZ:updatePlayerUI(playerObj, info, existing)
     local existing = existing or {}
     PZ.ui.welcome.OnOpenPanel(playerObj, zone)
 
-    if existing.pvp == true and playerObj.getSafety and playerObj:getSafety():isEnabled() then
-        getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
-    elseif not existing.pvp and playerObj.getSafety and not playerObj:getSafety():isEnabled() then
+    if getPlayerSafetyUI and existing.pvp == true and playerObj.getSafety and playerObj:getSafety():isEnabled() then
+        local a = self.safety
+        local b = self.safetyBtn
+        local ps = getPlayerSafetyUI
+        local obj = ps(playerObj:getPlayerNum())
+        obj:toggleSafety()
+    elseif getPlayerSafetyUI and not existing.pvp and playerObj.getSafety and not playerObj:getSafety():isEnabled() then
         getPlayerSafetyUI(playerObj:getPlayerNum()):toggleSafety()
     end
 
