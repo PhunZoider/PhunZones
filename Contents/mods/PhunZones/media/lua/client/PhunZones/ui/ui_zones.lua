@@ -3,6 +3,7 @@ if isServer() then
 end
 
 local PZ = PhunZones
+local PL = PhunLib
 local mapui = require("PhunZones/ui/ui_map")
 local tools = require("PhunZones/ui/tools")
 local profileName = "PhunZonesUIList"
@@ -12,7 +13,7 @@ local UI = PZ.ui.zones
 
 function UI.OnOpenPanel(playerObj, key)
 
-    if isAdmin() or isDebugEnabled() then
+    if PL.isAdmin(getPlayer()) then
 
         local playerIndex = playerObj:getPlayerNum()
 
