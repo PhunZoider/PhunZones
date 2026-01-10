@@ -203,27 +203,6 @@ function UI:saveData(data)
             final = tonumber(data[k])
         elseif v.type == "boolean" then
             final = data[k]
-            -- if v.trueIsNil then
-            --     if data[k] then
-            --         if inherited[k] == nil then
-            --             final = data[k]
-            --         else
-            --             final = nil
-            --         end
-            --     else
-            --         final = false
-            --     end
-            -- else
-            --     if data[k] then
-            --         final = data[k]
-            --     else
-            --         if inherited[k] == nil then
-            --             final = data[k]
-            --         else
-            --             final = nil
-            --         end
-            --     end
-            -- end
         end
 
         local i = inherited[k]
@@ -232,7 +211,8 @@ function UI:saveData(data)
         if k == "zone" or k == "region" or i ~= f then
 
             segment[k] = final
-
+        else
+            segment[k] = nil
         end
         -- end
     end

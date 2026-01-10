@@ -1,0 +1,32 @@
+Sandbox_PTBR = {
+    Sandbox_PhunZones = "PhunZones"
+
+    Sandbox_PhunZones_LoadDefaults = "Carregar Padrões",
+    Sandbox_PhunZones_LoadDefaults_tooltip = "Carrega as zonas básicas do jogo vanilla. Desmarque se você não quiser usar as zonas padrão que o Project Zomboid inclui (por exemplo, se estiver usando um mapa totalmente customizado)",
+
+    Sandbox_PhunZones_ProcessOnClient = "Processar no Cliente",
+    Sandbox_PhunZones_ProcessOnClient_tooltip = "Desmarque para processar as mudanças de localização das zonas no lado do servidor (requer reinício do servidor)",
+
+    Sandbox_PhunZones_Widget = "Mostrar Widget",
+    Sandbox_PhunZones_Widget_tooltip = "Exibe o widget do PhunZones. Pode ser necessário reiniciar o cliente para que isso tenha efeito",
+
+    Sandbox_PhunZones_ShowZoneChange = "Mostrar Mudança de Zona",
+    Sandbox_PhunZones_ShowZoneChange_tooltip = "Exibe o aviso de boas-vindas ao entrar em uma nova zona",
+
+    Sandbox_PhunZones_UpdateInterval = "Frequência de verificação de zonas",
+    Sandbox_PhunZones_UpdateInterval_tooltip = "Número de segundos entre as verificações de mudança de zona. Valores mais altos reduzem o impacto no servidor",
+
+    Sandbox_PhunZones_ZedUpdateFrequency = "Frequência de verificação de zumbis",
+    Sandbox_PhunZones_ZedUpdateFrequency_tooltip = "Número de segundos entre as atualizações dos zumbis com informações de zona usadas para remoção e por outros mods. Quanto maior o valor, menor o consumo de recursos",
+
+    Sandbox_PhunZones_VehicleTracking = "Rastreamento de Veículos",
+    Sandbox_PhunZones_VehicleTracking_tooltip = "Usa a localização do último veículo acessado como a posição atual do jogador. Ideal para RV Interiors",    
+
+    Sandbox_PhunZones_PvPMode = "Modo PvP",
+    Sandbox_PhunZones_PvPMode_tooltip = "Ativado = o PvP é forçado se o jogador entrar em uma zona com a opção PvP marcada; caso contrário, ele é forçado a ficar desligado (comportamento padrão). Alternável = igual ao padrão, mas permite que o jogador ligue/desligue o PvP dentro de áreas PvP. Desativado = impede o PhunZones de interferir no PvP (por exemplo, se você gerencia isso com outro mod)",
+
+    Sandbox_PhunZones_PvPMode_Option_option1 = "Ativado",
+    Sandbox_PhunZones_PvPMode_Option_option2 = "Alternável",
+    Sandbox_PhunZones_PvPMode_Option_option3 = "Desativado",
+
+}

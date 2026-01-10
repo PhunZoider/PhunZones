@@ -1,0 +1,5 @@
+Tooltip_PTBR = {
+    Tooltip_NoSledgehammerHere = "Você não pode usar marreta aqui"
+    Tooltip_NoDissasembleHere = "Você não pode usar marreta aqui"
+    Tooltip_NoClaimHere = "Você não pode reivindicar safehouses aqui"
+}
