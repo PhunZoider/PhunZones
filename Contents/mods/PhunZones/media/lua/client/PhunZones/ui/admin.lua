@@ -6,9 +6,9 @@ require "DebugUIs/DebugMenu/ISDebugMenu"
 local Core = PhunZones
 local PL = PhunLib
 local function showPhunZonesConfigs()
-    if PL.isAdmin(getPlayer()) then
-        Core.ui.zones.OnOpenPanel(getPlayer());
-    end
+    -- if PL.isAdmin(getPlayer()) then
+    Core.ui.zones.OnOpenPanel(getPlayer());
+    -- end
 end
 
 local ISDebugMenu_setupButtons = ISDebugMenu.setupButtons;

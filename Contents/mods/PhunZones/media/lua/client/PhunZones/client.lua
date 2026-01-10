@@ -97,13 +97,40 @@ function PZ:checkFire(fire)
     if isoBurning == nil then
         isoBurning = IsoFlagType.burning
     end
+
     local square = fire:getSquare()
-    if square and square:Is(isoBurning) then
-        if self:getLocation(square).fire == false then
+    local extinguish = self:getLocation(square).fire == false
+
+    if extinguish then
+
+        for i = 1, square:getMovingObjects():size() do
+            local chr = square:getMovingObjects():get(i - 1)
+            if instanceof(chr, "IsoGameCharacter") and chr:isOnFire() then
+                if not isServer() then
+                    if chr.sendStopBurning then
+                        chr:sendStopBurning()
+                    end
+                    chr:StopBurning()
+                else
+                    stopFire(chr)
+                end
+            end
+        end
+
+        if square and square.Is and square:Is(isoBurning) then
             square:transmitStopFire()
             square:stopFire()
+        elseif square and square.has and square:has(isoBurning) then
+            if not isServer() then
+                square:transmitStopFire()
+                square:stopFire()
+            else
+                stopFire(square)
+            end
         end
+
     end
+
 end
 
 function PZ:portPlayer(player, x, y, z)
