@@ -2,35 +2,80 @@ version=1
 id=3388867450
 title=PhunZones
 
-B41/B42 mod for customising game behaviours based on location
+description=B41 / B42 server-side mod for customising game behaviour based on location.
 
-description=[H1]Features[/H1]
+description=Define rules, restrictions, and behaviours by zone — from entire cities down to a single building.
+
+description=[H1]TL;DR[/H1]
+description=PhunZones lets you control how the game behaves based on where players are.
+description=
+description=Create zones with custom rules for PvP, zombies, building, looting, fire spread, safehouses, and more.
+description=
+description=Designed for multiplayer servers, performance-focused, and built to be extended by other mods.
+
+description=
+description=[H1]Key Features[/H1]
 description=[list]
-description=[*]Create and manage zones with unique properties
-description=[list][*]Title of area can be displayed to players when entering
-description=[*]Toggle PvP (unless PvP is disabled in your server ini). NOTE this is currently not working with the latest B42's PvP zones. Am investigating
-description=[*]Toggle zed spawning
+description=[*]Create and manage zones with unique, configurable properties
+description=[list]
+description=[*]Optional area title displayed when players enter a zone
+description=[*]Toggle zombie spawning
 description=[*]Toggle safehouse creation
-description=[*]Toggle pickup and placement of objects in area
-description=[*]Toggle scrapping/dissassembling objects in area
-description=[*]Toggle fire spread (animation may briefly play).
-description=[*]Prevent players from entering zone
-description=[*]Toggle bandit spawning (for Bandits mod)
+description=[*]Toggle pickup and placement of objects
+description=[*]Toggle scrapping / disassembling
 description=[*]Toggle construction
-description=[*]Default zone can now be edited to set the global values (ideal for mods extending PhunZones functionality like PhunLewts)
-description=[*]and more![/list]
-description=[*]Designed to be an extensive tool that can be used stand alone and/or by other mods (see Readme in repo for extending with other mods)
-description=[*]Friendly widget that helps players identify what area they are in (eg Louisville - Mall)
-description=[*]Comes pre-configured with loads of existng maps, along with tools to modify and/or create more
-description=[*]Designed for max performance
+description=[*]Toggle fire spread (brief animation may still play)
+description=[*]Prevent players from entering specific zones
+description=[*]Toggle bandit spawning (Bandits mod support)
+description=[*]Editable default zone to define global behaviour
+description=[*]…and more
 description=[/list]
-description=[H1]Mods that love PhunZones[/h1]
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.ibb.co/VY4rbLX7/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3606988132][img]https://i.ibb.co/1GNTJkks/preview.png[/img][/url]
+description=[/list]
+
 description=
-description=[url=https://discord.gg/v2USyAtP6q][img]https://i.ibb.co/p6bcnj2m/zcat.png[/img][/url]
+description=[H2]PvP Behaviour (B41 vs B42)[/H2]
+description=[list]
+description=[*][b]Build 41:[/b] PvP can be enabled or disabled per zone (unless disabled globally in server INI)
+description=[*][b]Build 42:[/b] Native PvP zones are handled by the base game and cannot be overridden
+description=[/list]
 description=
-description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community. 
-description=[url=https://github.com/PhunZoider/PhunZones]Repo and more info[/url]
+description=As a result, PvP toggling inside PhunZones is deprecated in B42 but retained for B41 compatibility.
+
+description=
+description=[H2]Built to Be Extended[/H2]
+description=PhunZones is designed as both a standalone system and a foundation for other mods.
+description=
+description=Other mods can query zone data or hook into PhunZones behaviour to drive their own logic.
+description=
+description=This makes it ideal for:
+description=[list]
+description=[*]Custom loot systems
+description=[*]Faction or territory mechanics
+description=[*]Event-driven gameplay
+description=[*]Server-specific rulesets
+description=[/list]
+
+description=
+description=The default zone can be edited to define global behaviour — ideal for mods extending PhunZones functionality
+description=(e.g. PhunLewts).
+
+description=
+description=[H2]Player-Friendly Feedback[/H2]
+description=[list]
+description=[*]Clean UI widget showing the current area name (e.g. Louisville – Mall)
+description=[*]Helps players understand why behaviour changes between locations
+description=[*]Reduces confusion without immersion-breaking messages
+description=[/list]
+description=
+description=PTBR Transalations by [url=https://steamcommunity.com/id/SIMBAproduz]SIMBAproduz[/url]
+description=
+description=[H2]More Phun Stuff[/H2]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3606988132][img]https://i.ibb.co/ZtQtmJd/preview.png[/img][/url][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.ibb.co/k6cQ4h7d/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3628843367][img]https://i.ibb.co/wrZbknjt/preview.png[/img][/url]
+
+description=
+description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
+description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]
+
 
 require=phunlib
 tags=Build 41;Build 42;Multiplayer

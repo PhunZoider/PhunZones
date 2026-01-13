@@ -1,6 +1,6 @@
-local PZ = PhunZones
 require "PhunZones/core"
 require "PhunLib/core"
+local PZ = PhunZones
 local PL = PhunLib
 local fileTools = PL.file
 local tableTools = PL.table
