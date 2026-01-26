@@ -1,0 +1,6 @@
+version=1
+id=3477049576
+title=PhunZones TEST
+description=development and testing version of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450]PhunZones[/url]
+description=If you use this, be sure to remove phunzones from your modlist before adding phunzonestest
+visibility=unlisted

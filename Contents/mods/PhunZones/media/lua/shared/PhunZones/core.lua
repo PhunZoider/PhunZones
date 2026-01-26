@@ -9,11 +9,14 @@ PhunZones = {
         OnPhunZoneReady = "PhunZonesOnPhunZoneReady",
         OnPhunZonesPlayerLocationChanged = "PhunZonesOnPhunZonesPlayerLocationChanged",
         OnPhunZonesObjectLocationChanged = "PhunZonesOnPhunZonesObjectLocationChanged",
-        OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked"
+        OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked",
+        OnZonesUpdated = "PhunZonesOnZonesUpdated",
+        OnZombieRemoved = "PhunZonesOnZombieRemoved"
     },
     const = {
         modifiedLuaFile = "PhunZones.lua",
         modifiedModData = "PhunZones",
+        modifiedDeletions = "PhunZonesDeletions",
         playerData = "PhunZonesPlayers",
         trackedVehicles = "PhunZonesTrackedVehicles"
     },
@@ -22,12 +25,12 @@ PhunZones = {
     data = {},
     commands = {
         playerSetup = "PhunZonesPlayerSetup",
-        transmitChanges = "PhunZonesTransmitChanges",
         modifyZone = "PhunZonesModifyZone",
         cleanPlayersZeds = "PhunZonescleanPlayersZeds",
         updatePlayerZone = "PhunZonesUpdatePlayerZone",
         playerTeleport = "PhunZonesPlayerTeleport",
-        teleportVehicle = "PhunZonesTeleportVehicle"
+        teleportVehicle = "PhunZonesTeleportVehicle",
+        deleteZone = "PhunZonesDeleteZone"
     },
     fields = {
         region = {
@@ -162,16 +165,15 @@ for _, event in pairs(Core.events or {}) do
     end
 end
 
+Core.isB42 = _G.IsoLightSource ~= nil
+
+if Core.isB42 then
+    Core.fields.pvp = nil
+end
+
 function Core:debug(...)
 
-    local args = {...}
-    for i, v in ipairs(args) do
-        if type(v) == "table" then
-            self:printTable(v)
-        else
-            print(tostring(v))
-        end
-    end
+    PL.debug(self.name, ...)
 
 end
 
@@ -224,8 +226,34 @@ function Core:getPlayerData(player)
     end
 end
 
+function Core.getOption(name, default)
+    local n = Core.name .. "." .. name
+    local val = getSandboxOptions():getOptionByName(n) and getSandboxOptions():getOptionByName(n):getValue()
+    if val == nil then
+        return default
+    end
+    return val
+end
+
 function Core:addExtendedData(data)
     self.extended = tableTools.merge(self.extended or {}, data)
+end
+
+function Core:updatePlayers()
+
+    if isServer() and self.settings.ProcessOnClient then
+        return
+    end
+
+    local players = PL.onlinePlayers(not self.settings.ProcessOnClient)
+    for i = 0, players:size() - 1, 1 do
+        local p = players:get(i)
+        self:updatePlayer(p)
+    end
+end
+
+function Core:updatePlayer(playerObj)
+    self:updateModData(playerObj, true)
 end
 
 local excludedProps = nil
@@ -274,8 +302,8 @@ function Core:updateModData(obj, triggerChangeEvent, force)
     if not instanceof(obj, "IsoPlayer") then
         -- most likely a zed or bandit
         modData.PhunZones = tableTools.shallowCopy(ldata)
-        modData.PhunZones.id = obj:getOnlineID()
-        local id = obj:getOnlineID()
+        modData.PhunZones.id = Core.getZId(obj)
+        local id = Core.getZId(obj)
         if triggerChangeEvent and (id ~= existing.id or ldata.region ~= existing.region or ldata.zone ~= existing.zone) then
             triggerEvent(self.events.OnPhunZonesObjectLocationChanged, obj, modData.PhunZones)
         end
@@ -455,42 +483,18 @@ function Core:portVehicle(player, vehicle, x, y, z)
 
 end
 
-function Core:onlinePlayers(all)
-
-    local onlinePlayers;
-
-    if not isClient() and not isServer() and not isCoopHost() then
-        onlinePlayers = ArrayList.new();
-        local p = getPlayer()
-        onlinePlayers:add(p);
-    elseif all then
-        onlinePlayers = getOnlinePlayers();
-
-    else
-        onlinePlayers = ArrayList.new();
-        for i = 0, getOnlinePlayers():size() - 1 do
-            local player = getOnlinePlayers():get(i);
-            if player:isLocalPlayer() then
-                onlinePlayers:add(player);
+function Core.getZId(zedObj)
+    if zedObj then
+        if instanceof(zedObj, "IsoZombie") then
+            if zedObj:isZombie() then
+                if isClient() or isServer() then
+                    return tostring(zedObj:getOnlineID())
+                else
+                    return tostring(zedObj:getID())
+                end
             end
         end
     end
-
-    return onlinePlayers;
-end
-
-function Core:saveChanges(data)
-    ModData.add(self.const.modifiedModData, data)
-    if isClient() then
-        sendClientCommand(getPlayer(), self.name, self.commands.modifyZone, data)
-    else
-        fileTools.saveTable(self.const.modifiedLuaFile, {
-            version = 1,
-            data = data
-        })
-    end
-
-    self:updateZoneData(true, data)
 end
 
 if isServer() then

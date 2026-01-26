@@ -5,14 +5,6 @@ local PZ = PhunZones
 local PL = PhunLib
 local Commands = require "PhunZones/client_commands"
 
--- Events.EveryTenMinutes.Add(function()
---     -- sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
--- end)
-
--- Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
---     PZ:showContext(playerObj, context, worldobjects)
--- end);
-
 Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
 
     if PZ.isLocal or PZ.settings.ProcessOnClient then
@@ -47,11 +39,15 @@ Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
             doRemove = true
         end
         if doRemove then
-            sendClientCommand(PZ.name, PZ.commands.cleanPlayersZeds, {
-                id = object:getOnlineID()
-            })
+            if isClient() then
+                sendClientCommand(PZ.name, PZ.commands.cleanPlayersZeds, {
+                    id = PZ.getZId(object)
+                })
+            end
+            triggerEvent(PZ.events.OnZombieRemoved, PZ.getZId(object))
             object:removeFromWorld()
             object:removeFromSquare()
+
         end
     end
 end)
@@ -63,7 +59,7 @@ Events[PZ.events.OnPhunZoneReady].Add(function()
         end
         local md = zed:getModData()
         local checked = zed:getModData().PZChecked or 0
-        if not md.PhunZones or md.PhunZones.id ~= zed:getOnlineID() or not md.PhunZones.checked or md.PhunZones.checked <
+        if not md.PhunZones or md.PhunZones.id ~= PZ.getZId(zed) or not md.PhunZones.checked or md.PhunZones.checked <
             getTimestamp() then
             md.PhunZones = getTimestamp() + (PZ.settings.ZedUpdateFrequency or 10)
             PZ:updateModData(zed, true)
@@ -76,7 +72,7 @@ Events[PZ.events.OnPhunZoneReady].Add(function()
         Events.OnTick.Add(function()
             if getTimestamp() >= nextCheck then
                 nextCheck = getTimestamp() + (PZ.settings.updateInterval or 1)
-                local players = PZ:onlinePlayers()
+                local players = PL.onlinePlayers()
                 for i = 0, players:size() - 1, 1 do
                     local p = players:get(i)
                     PZ:updateModData(p, true)
@@ -84,6 +80,10 @@ Events[PZ.events.OnPhunZoneReady].Add(function()
             end
         end)
     end
+end)
+
+Events[PZ.events.OnZonesUpdated].Add(function(playerObj, buttonId)
+    PZ:updatePlayers()
 end)
 
 Events.OnCreatePlayer.Add(function(id)
@@ -106,6 +106,9 @@ end);
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == PZ.const.modifiedModData then
         ModData.add(PZ.const.modifiedModData, tableData)
+        PZ:updateZoneData(true, tableData)
+    elseif tableName == PZ.const.modifiedDeletions then
+        ModData.add(PZ.const.modifiedDeletions, tableData)
         PZ:updateZoneData(true, tableData)
     end
 end)

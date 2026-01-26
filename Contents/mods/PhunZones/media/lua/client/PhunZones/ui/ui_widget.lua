@@ -31,7 +31,7 @@ function UI.OnOpenPanel(playerObj, playerIndex)
 
         UI.instances[playerIndex] = UI:new(x, y, width, height, playerObj, playerIndex);
         UI.instances[playerIndex]:initialise();
-        -- ISLayoutManager.RegisterWindow(profielName, PZ.ui.widget, PZ.ui.widget.instances[playerIndex])
+        ISLayoutManager.RegisterWindow(profielName, PZ.ui.widget, PZ.ui.widget.instances[playerIndex])
     end
 
     UI.instances[playerIndex]:addToUIManager();
@@ -97,7 +97,7 @@ function UI:new(x, y, width, height, player, playerIndex)
     o.data = {}
     o.coverMap = false
 
-    -- o.moveWithMouse = true;
+    o.moveWithMouse = true;
     o.anchorRight = true
     o.anchorBottom = true
     o.player = player
@@ -114,6 +114,30 @@ function UI:onClick()
     triggerEvent(PZ.events.OnPhunZoneWidgetClicked, self.player)
 end
 
+function UI:onMouseMove(dx, dy)
+
+    if self.downY and self.downX and not self.dragging then
+        if math.abs(self.downX - dx) > 4 or math.abs(self.downY - dy) > 4 then
+            self.dragging = true
+            self:setCapture(true)
+        end
+    end
+
+    if self.dragging then
+        local dx = self:getMouseX() - self.downX
+        local dy = self:getMouseY() - self.downY
+        self.userPosition = true
+        self:setX(self.x + dx)
+        self:setY(self.y + dy)
+    end
+end
+
+function UI:onMouseDown(x, y)
+    self.downX = self:getMouseX()
+    self.downY = self:getMouseY()
+    return true
+end
+
 function UI:onMouseUp(x, y)
     self.downY = nil
     self.downX = nil
@@ -126,24 +150,24 @@ function UI:onMouseUp(x, y)
     return true
 end
 
--- function UI:RestoreLayout(name, layout)
+function UI:RestoreLayout(name, layout)
 
---     ISLayoutManager.DefaultRestoreWindow(self, layout)
---     if name == profielName then
---         ISLayoutManager.DefaultRestoreWindow(self, layout)
---         self.userPosition = layout.userPosition == 'true'
---     end
---     self:recalcSize();
--- end
+    ISLayoutManager.DefaultRestoreWindow(self, layout)
+    if name == profielName then
+        ISLayoutManager.DefaultRestoreWindow(self, layout)
+        self.userPosition = layout.userPosition == 'true'
+    end
+    self:recalcSize();
+end
 
--- function UI:SaveLayout(name, layout)
---     ISLayoutManager.DefaultSaveWindow(self, layout)
---     if self.userPosition then
---         layout.userPosition = 'true'
---     else
---         layout.userPosition = 'false'
---     end
--- end
+function UI:SaveLayout(name, layout)
+    ISLayoutManager.DefaultSaveWindow(self, layout)
+    if self.userPosition then
+        layout.userPosition = 'true'
+    else
+        layout.userPosition = 'false'
+    end
+end
 
 function UI:close()
     if not self.locked then
@@ -205,6 +229,16 @@ function UI:setData(data)
         else
             self.pvpTexture = nil
         end
+
+        self.data.difficulty = nil
+
+        if data.zone.difficulty then
+            local maxDifficulty = PZ.getOption("MaxDifficulty", 0)
+            if maxDifficulty > 0 then
+                self.data.difficulty = data.zone.difficulty
+                self.data.maxDifficulty = maxDifficulty
+            end
+        end
     end
 
 end
@@ -221,58 +255,64 @@ function UI:prerender()
     local y = 5
     local txtColor = self.normalTextColor
 
-    local minimap = getPlayerMiniMap(self.playerIndex)
+    if self.downX == nil and self.userPosition ~= true then
+        local minimap = getPlayerMiniMap(self.playerIndex)
 
-    if not minimap then
-        -- player does not minimap
-        local width = getTextManager():MeasureStringX(UIFont.small, self.data.title or "") + x
-        self.borderColor = self.hoverBorderColor
-        self.backgroundColor = self.hoverBackgroundColor
-        self:setWidth(self.data.titleWidth + 40)
-        self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
+        if not minimap then
+            -- player does not minimap
+            local width = getTextManager():MeasureStringX(UIFont.small, self.data.title or "") + x
+            self.borderColor = self.hoverBorderColor
+            self.backgroundColor = self.hoverBackgroundColor
+            self:setWidth(self.data.titleWidth + 40)
+            self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
 
-        self:setX(getCore():getScreenWidth() - self.width - 2)
-        self:setY(getCore():getScreenHeight() - self.height - 40)
-        self:bringToTop()
+            self:setX(getCore():getScreenWidth() - self.width - 2)
+            self:setY(getCore():getScreenHeight() - self.height - 40)
+            self:bringToTop()
 
-        txtColor = self.hoverTextColor
+            txtColor = self.hoverTextColor
 
-    elseif self.coverMap then
-        -- draw over the map
-        self:setX(minimap.x)
-        self:setY(minimap.y)
-        self:bringToTop()
+        elseif self.coverMap then
+            -- draw over the map
+            self:setX(minimap.x)
+            self:setY(minimap.y)
+            self:bringToTop()
 
-        self:setWidth(0)
-        self:setHeight(0)
+            self:setWidth(0)
+            self:setHeight(0)
 
-        local title = minimap.titleBar
+            local title = minimap.titleBar
 
-        if title:isVisible() then
-            return
+            if title:isVisible() then
+                return
+            end
+        else
+
+            -- Draw behind/over the map?
+            if minimap.titleBar:isVisible() then
+                self.y = minimap.y - 50
+            else
+                self.y = minimap.y - 50 - minimap.titleBar.height
+            end
+
+            self.borderColor = self.hoverBorderColor
+            self.backgroundColor = self.hoverBackgroundColor
+            self:setWidth(minimap.width)
+            self:setHeight(50 + minimap.titleBar.height)
+            -- self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
+            self.x = minimap.x
+
+            -- self:setX(minimap.x)
+            -- self:setY(minimap.y - self.height - 2)
+            -- self:bringToTop()
+
+            txtColor = self.hoverTextColor
+
         end
     else
-
-        -- Draw behind/over the map?
-        if minimap.titleBar:isVisible() then
-            self.y = minimap.y - 50
-        else
-            self.y = minimap.y - 50 - minimap.titleBar.height
-        end
-
+        txtColor = self.hoverTextColor
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
-        self:setWidth(minimap.width)
-        self:setHeight(50 + minimap.titleBar.height)
-        -- self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
-        self.x = minimap.x
-
-        -- self:setX(minimap.x)
-        -- self:setY(minimap.y - self.height - 2)
-        -- self:bringToTop()
-
-        txtColor = self.hoverTextColor
-
     end
     if self.data.pvpTexture then
         self:drawTextureScaledAspect(self.data.pvpTexture, x, y, 30, 30, 1);
@@ -286,49 +326,52 @@ function UI:prerender()
         self:drawText(self.data.subtitle or "", x, y, txtColor.r, txtColor.g, txtColor.b, txtColor.a, UIFont.Small);
         y = y + FONT_HGT_SMALL + 1
     end
-    -- if sandbox.PhunZones_Widget and PhunRunners then
-    --     local riskData = nil -- PhunZones:getRiskInfo(self.player, zone)
 
-    --     if riskData then
-    --         local colors = {
-    --             r = 0.4,
-    --             g = 0.4,
-    --             b = 0.4,
-    --             a = 1.0
-    --         }
-    --         if riskData then
-    --             if riskData.modifier == nil then
-    --                 -- assert old version
-    --                 if riskData.restless == false or riskData.risk == 0 then
-    --                     colors.g = 0.9
-    --                 elseif riskData.risk <= 10 then
-    --                     colors.g = 0.9
-    --                     colors.r = 0.9
-    --                 else
-    --                     colors.r = 0.9
-    --                 end
-    --             else
-    --                 -- new version which includes modifier
-    --                 if riskData.modifier == 0 or riskData.risk == 0 then
-    --                     colors.g = 0.9
-    --                 elseif riskData.modifier and riskData.modifier < 90 then
-    --                     colors.g = 0.9
-    --                     colors.r = 0.9
-    --                 else
-    --                     colors.r = 0.9
-    --                 end
-    --             end
+    local difficulty = tonumber(self.data.difficulty)
+    local maxDifficulty = tonumber(self.data.maxDifficulty)
 
-    --             for i = 1, riskData.pips do
-    --                 self:drawRect(x + ((i - 1) * 7), y, 5, 5, colors.a, colors.r, colors.g, colors.b);
-    --             end
+    if difficulty and maxDifficulty and maxDifficulty > 0 then
+        local pad = 5
+        local pipHeight = 5
+        local gap = 2
 
-    --             if self:isMouseOver() then
-    --                 for i = riskData.pips + 1, 10 do
-    --                     self:drawRectBorder(x + ((i - 1) * 7), y, 5, 5, 0.7, 0.4, 0.4, 0.4);
-    --                 end
-    --             end
-    --         end
-    --     end
-    -- end
+        local x0 = pad
+        local innerW = self.width - pad * 2
+        local y = self.height - pad - pipHeight
+
+        -- width of each pip so everything fits perfectly
+        local totalGaps = gap * (maxDifficulty - 1)
+        local pipWidth = (innerW - totalGaps) / maxDifficulty
+        if pipWidth < 1 then
+            pipWidth = 1
+        end
+
+        local fill = {
+            r = 0.4,
+            g = 0.4,
+            b = 0.4,
+            a = 1.0
+        }
+        local borderA, borderRGB = 0.7, 0.4
+
+        -- If you only ever have whole-number difficulty, this still works.
+        local full = math.floor(difficulty)
+        local frac = difficulty - full -- 0..1
+
+        for i = 1, maxDifficulty do
+            local px = x0 + (i - 1) * (pipWidth + gap)
+
+            -- empty pip outline
+            self:drawRectBorder(px, y, pipWidth, pipHeight, borderA, borderRGB, borderRGB, borderRGB)
+
+            -- filled portion
+            if i <= full then
+                self:drawRect(px, y, pipWidth, pipHeight, fill.a, fill.r, fill.g, fill.b)
+            elseif i == full + 1 and frac > 0 then
+                -- optional partial fill for fractional difficulty (e.g. 2.5)
+                self:drawRect(px, y, pipWidth * frac, pipHeight, fill.a, fill.r, fill.g, fill.b)
+            end
+        end
+    end
+
 end

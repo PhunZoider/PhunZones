@@ -9,7 +9,7 @@ description=Define rules, restrictions, and behaviours by zone — from entire c
 description=[H1]TL;DR[/H1]
 description=PhunZones lets you control how the game behaves based on where players are.
 description=
-description=Create zones with custom rules for PvP, zombies, building, looting, fire spread, safehouses, and more.
+description=Create zones with custom rules for PvP*, zombies, building, looting, fire spread, safehouses, and more.
 description=
 description=Designed for multiplayer servers, performance-focused, and built to be extended by other mods.
 
@@ -33,10 +33,10 @@ description=[/list]
 description=[/list]
 
 description=
-description=[H2]PvP Behaviour (B41 vs B42)[/H2]
+description=[H2]* PvP Behaviour (B41 vs B42)[/H2]
 description=[list]
 description=[*][b]Build 41:[/b] PvP can be enabled or disabled per zone (unless disabled globally in server INI)
-description=[*][b]Build 42:[/b] Native PvP zones are handled by the base game and cannot be overridden
+description=[*][b]Build 42:[/b] Native PvP zones are handled by the base game so no longer present
 description=[/list]
 description=
 description=As a result, PvP toggling inside PhunZones is deprecated in B42 but retained for B41 compatibility.

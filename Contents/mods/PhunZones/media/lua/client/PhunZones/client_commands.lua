@@ -8,9 +8,17 @@ local Commands = {}
 
 Commands[PZ.commands.playerSetup] = function(data)
     -- send any exemption/changes to the client
-    ModData.add(PZ.const.modifiedModData, data)
+    print("PhunZones: Received player setup data")
+    PL.debug(data)
+    ModData.add(PZ.const.modifiedModData, data.data or {})
+    ModData.add(PZ.const.modifiedDeletions, data.deletes or {})
     PZ:updateZoneData(true, data)
 
+    local players = PL.onlinePlayers()
+    for i = 0, players:size() - 1 do
+        local p = players:get(i)
+        PZ:updateModData(p, true, true)
+    end
 end
 
 Commands[PZ.commands.playerTeleport] = function(data)
@@ -27,8 +35,9 @@ end
 
 Commands[PZ.commands.updatePlayerZone] = function(args)
     local p = nil
-    for i = 0, getOnlinePlayers():size() - 1 do
-        local player = getOnlinePlayers():get(i)
+    local players = PL.onlinePlayers()
+    for i = 0, players:size() - 1 do
+        local player = players:get(i)
         if player:getOnlineID() == args.pid then
             p = player
             break

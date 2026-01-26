@@ -10,7 +10,7 @@ return {
         zeds = false,
         bandits = false,
         rv = true,
-        points = {{21000, 6000, 24899, 13499}}
+        points = {{21000, 6000, 100000, 100000}}
     },
     WestPoint = {
         difficulty = 2,

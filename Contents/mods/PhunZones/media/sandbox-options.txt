@@ -32,6 +32,24 @@ option PhunZones.Widget
     translation = PhunZones_Widget,
 }
 
+option PhunZones.ShowDifficulty
+{ 
+    type = boolean,
+    default = true,
+    page = PhunZones,
+    translation = PhunZones_Difficulty,
+}
+
+option PhunZones.MaxDifficulty
+{ 
+    type = integer,
+    default = 4,
+    min=0,
+    max=10,
+    page = PhunZones,
+    translation = PhunZones_MaxDifficulty,
+}
+
 option PhunZones.VehicleTracking
 { 
     type = boolean,

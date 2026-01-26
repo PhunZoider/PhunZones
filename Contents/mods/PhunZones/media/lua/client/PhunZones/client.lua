@@ -2,6 +2,7 @@ if not isClient() and isServer() then
     return
 end
 local PZ = PhunZones
+local PL = PhunLib
 local getSandboxOptions = getSandboxOptions
 
 if ISSafetyUI and ISSafetyUI.prerender then
@@ -65,10 +66,7 @@ function PZ:updatePlayerUI(playerObj, info, existing)
         local panel = PZ.ui.widget.OnOpenPanel(playerObj)
         if panel then
             local data = {
-                zone = {
-                    title = zone.title or nil,
-                    subtitle = zone.subtitle or nil
-                }
+                zone = zone
             }
             panel:setData(data)
         end
@@ -77,7 +75,7 @@ end
 
 function PZ:showWidgets()
 
-    local players = self:onlinePlayers()
+    local players = PL.onlinePlayers()
     for i = 0, players:size() - 1, 1 do
         local p = players:get(i)
         self:showWidget(p)
@@ -150,8 +148,9 @@ function PZ:rvInteriorFlags(entering, args)
         return
     end
     local player = nil
-    for i = 0, getOnlinePlayers():size() - 1 do
-        local p = getOnlinePlayers():get(i)
+    local players = PL.onlinePlayers()
+    for i = 0, players:size() - 1 do
+        local p = players:get(i)
         if p:getOnlineID() == args.playerId then
             player = p
             break

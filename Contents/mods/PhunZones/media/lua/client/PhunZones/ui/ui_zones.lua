@@ -1,6 +1,13 @@
 if isServer() then
     return
 end
+local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
+local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
+local FONT_HGT_LARGE = getTextManager():getFontHeight(UIFont.Large)
+local FONT_SCALE = FONT_HGT_SMALL / 14
+local HEADER_HGT = FONT_HGT_MEDIUM + 2 * 2
+local BUTTON_HGT = FONT_HGT_SMALL + 6
+local LABEL_HGT = FONT_HGT_MEDIUM + 6
 
 local PZ = PhunZones
 local PL = PhunLib
@@ -31,6 +38,8 @@ function UI.OnOpenPanel(playerObj, key)
                 v.initialize(instance, instance.data, playerObj)
             end
         end
+
+        PZ.ui.zones.instances[playerIndex] = instance
 
         return instance
     end
@@ -122,6 +131,7 @@ function UI:setData(data)
         self.controls.btnNewRegion.enable = data and data.region ~= "_default"
         self.controls.btnNewZone.enable = data and data.region ~= "_default"
         self.controls.btnEditZone.enable = data and data.region ~= "_default"
+        self.controls.deleteButton.enable = data and data.region ~= "_default"
     end
     self:refreshProperties(data)
 
@@ -298,7 +308,7 @@ function UI:createChildren()
     local y = th
 
     local h = self.height - rh - th
-    local w = 340;
+    local w = 440;
 
     local mapx = w + padding
     self.controls = {}
@@ -381,9 +391,49 @@ function UI:createChildren()
     btnEditRegion:initialise();
     self:addChild(btnEditRegion);
     self.controls.btnEditRegion = btnEditRegion
-    x = 10
 
-    y = btnEditRegion.y + btnEditRegion.height + tools.HEADER_HGT
+    x = x + btnEditRegion.width + padding
+
+    local deleteButton = ISButton:new(x, y, 100, tools.BUTTON_HGT, "Delete Zone", self, function()
+        local selected = self.selectedData
+        local regionField = selected.region
+        local subzone = selected.zone
+        local message =
+            "Are you sure you want to delete " .. tostring(regionField) .. " (" .. tostring(subzone) .. ")" ..
+                " and any associated subzones? This action cannot be undone."
+        local w = 300 * FONT_SCALE
+        local h = 200 * FONT_SCALE
+
+        local textWidth = getTextManager():MeasureStringX(UIFont.Small, message)
+        if textWidth + 40 * FONT_SCALE > w then
+            w = textWidth + 40 * FONT_SCALE
+        end
+
+        local modal = ISModalDialog:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
+            w, h, message, true, self, function(s, button)
+                if button.internal == "YES" then
+                    sendClientCommand(PZ.name, PZ.commands.deleteZone, {
+                        key = selected.region,
+                        subzone = selected.zone
+                    })
+                    PZ.ui.zones.instances[getPlayer():getPlayerNum()]:close()
+                end
+            end, nil);
+        modal:initialise()
+        modal:addToUIManager()
+    end);
+    deleteButton.enable = false
+    deleteButton:initialise();
+
+    if deleteButton.enableCancelColor then
+        deleteButton:enableCancelColor()
+    end
+
+    self:addChild(deleteButton);
+    self.controls.deleteButton = deleteButton
+
+    x = 10
+    y = deleteButton.y + deleteButton.height + tools.HEADER_HGT
 
     local title2 = ISLabel:new(x, y, 0, "Zones", 1, 1, 1, 1, UIFont.Small, true);
     title2:initialise();
@@ -521,8 +571,7 @@ function UI:createChildren()
     x = x + btnEditZone.width + padding
 
     local closeButton = ISButton:new(x, y, 100, tools.BUTTON_HGT, "Close", self, function()
-        self:setVisible(false);
-        self:removeFromUIManager();
+        UI:close()
     end);
     closeButton:initialise();
     self:addChild(closeButton);
@@ -628,8 +677,10 @@ function UI:save()
 end
 
 function UI:close()
+    ISCollapsableWindowJoypad.close(self);
     self:setVisible(false);
     self:removeFromUIManager();
+    self.instances[self.playerIndex] = nil
 end
 
 function UI:new(x, y, width, height, player, key)

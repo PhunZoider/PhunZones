@@ -89,6 +89,21 @@ function PZ:getCoreZones(omitMods)
             difficulty = 2
         }
     }
+
+    for k, v in pairs(ModData.get(self.const.modifiedDeletions) or {}) do
+        if coreData[k] then
+            for subzone, _ in pairs(v) do
+                if subzone == "main" then
+                    print(" - removing entire core zone " .. tostring(k))
+                    coreData[k] = nil
+                elseif coreData[k].subzones and coreData[k].subzones[subzone] then
+                    print(" - removing core zone " .. tostring(k) .. " subzone: " .. tostring(subzone))
+                    coreData[k].subzones[subzone] = nil
+                end
+            end
+        end
+    end
+
     local all = tableTools.merge(coreData, self.extended or {})
     for key, entry in pairs(all) do
         local status, err = pcall(function()
@@ -122,6 +137,7 @@ end
 function PZ:getModifiedZones(omitMods, maxOrder)
 
     local data = {}
+    local deletionKeys = {}
     if not isClient() then
         -- this is a server or local game
         -- load the modified data from ./lua/PhunZones.lua
@@ -130,6 +146,8 @@ function PZ:getModifiedZones(omitMods, maxOrder)
             print("PhunZones: missing ./lua/" .. self.const.modifiedLuaFile ..
                       ", this is normal if you haven't modified any zones")
         elseif d.data then
+            deletionKeys = d.deletions or {}
+            ModData.add(self.const.modifiedDeletions, d.deletions or {})
             ModData.add(self.const.modifiedModData, d.data or {})
             data = ModData.get(self.const.modifiedModData)
             print("PhunZones: loaded customisations from ./lua/" .. self.const.modifiedLuaFile)
@@ -145,9 +163,24 @@ function PZ:getModifiedZones(omitMods, maxOrder)
 
     local results = {}
     local order = (maxOrder or 0) + 1
+
+    for k, v in pairs(deletionKeys or {}) do
+        if data[k] then
+            for subzone, _ in pairs(v) do
+                if subzone == "main" then
+                    print(" - removing entire modified zone " .. tostring(k))
+                    data[k] = nil
+                elseif data[k].subzones and data[k].subzones[subzone] then
+                    print(" - removing modified zone " .. tostring(k) .. " subzone: " .. tostring(subzone))
+                    data[k].subzones[subzone] = nil
+                end
+            end
+        end
+    end
+
     for key, entry in pairs(data) do
         local status, err = pcall(function()
-            PL.debug("Processing modified zone: " .. key)
+            -- PL.debug("Processing modified zone: " .. key)
             local e = getEntry(entry, omitMods)
             local sortzones = {}
             if e then
@@ -174,10 +207,103 @@ function PZ:getModifiedZones(omitMods, maxOrder)
     return results
 end
 
+function PZ:addDeletion(key, subzone)
+
+    local modified = ModData.get(self.const.modifiedModData) or {}
+    local dks = {}
+    if not isClient() then
+        -- this is a server or local game
+        -- load the modified data from ./lua/PhunZones.lua
+        local d = fileTools.loadTable(self.const.modifiedLuaFile)
+        if d.data then
+            dks = d.deletions or {}
+            modified = d.data
+        end
+    else
+        dks = ModData.get(self.const.modifiedDeletions) or {}
+    end
+
+    print("======================")
+    print("Adding deletion for " .. tostring(key) .. " subzone: " .. tostring(subzone))
+    print("======================")
+
+    -- PL.debug(dks or {})
+
+    if modified[key] then
+        print("Removing modified zone " .. tostring(key) .. " subzone: " .. tostring(subzone))
+        if subzone and subzone ~= "main" then
+            modified[key].subzones[subzone] = nil
+        else
+            modified[key] = nil
+        end
+    end
+
+    if allLocations[key] then
+        print("Marking deletion for core zone " .. tostring(key) .. " subzone: " .. tostring(subzone))
+        -- forms part of the core data so flag it for deletion
+        if not dks[key] then
+            dks[key] = {}
+        end
+        dks[key][subzone or "main"] = true
+    end
+
+    fileTools.saveTable(self.const.modifiedLuaFile, {
+        version = 1,
+        deletions = dks,
+        data = modified
+    })
+    PZ:updateZoneData(true)
+end
+
+function PZ:saveChanges(data)
+    ModData.add(self.const.modifiedModData, data)
+    if isClient() then
+        sendClientCommand(getPlayer(), self.name, self.commands.modifyZone, data)
+    else
+        fileTools.saveTable(self.const.modifiedLuaFile, {
+            version = 1,
+            deletions = ModData.get(self.const.modifiedDeletions) or {},
+            data = data
+        })
+    end
+
+    self:updateZoneData(true)
+end
+
 function PZ:updateZoneData(omitMods, modifiedDataSet)
 
     local core, maxOrder = self:getCoreZones(omitMods)
     local modified = self:getModifiedZones(omitMods, maxOrder) or {}
+
+    -- remove any deleted zones
+    -- PL.debug("DELETE KEYS", ModData.get(self.const.modifiedDeletions) or {})
+    for k, v in pairs(ModData.get(self.const.modifiedDeletions) or {}) do
+        if modified[k] then
+            print("Removing modified zone " .. tostring(k) .. " due to deletion")
+            for subzone, _ in pairs(v) do
+                if subzone == "main" then
+                    print(" - removing entire modified zone " .. tostring(k))
+                    modified[k] = nil
+                elseif modified[k].subzones and modified[k].subzones[subzone] then
+                    print(" - removing modified zone " .. tostring(k) .. " subzone: " .. tostring(subzone))
+                    modified[k].subzones[subzone] = nil
+                end
+            end
+        end
+        if core[k] then
+            print("Removing core zone " .. tostring(k) .. " due to deletion")
+            for subzone, _ in pairs(v) do
+                if subzone == "main" then
+                    print(" - removing entire core zone " .. tostring(k))
+                    core[k] = nil
+                elseif core[k].subzones and core[k].subzones[subzone] then
+                    print(" - removing core zone " .. tostring(k) .. " subzone: " .. tostring(subzone))
+                    core[k].subzones[subzone] = nil
+                end
+            end
+        end
+    end
+
     -- PhunLib:debug("======== modified zones =========", tostring(omitMods), modifiedDataSet, "====")
     local results = tableTools.merge(modified or {}, core or {})
     -- Flatten all entries down into a single array for sorting
@@ -284,6 +410,10 @@ function PZ:updateZoneData(omitMods, modifiedDataSet)
             lookup = lookup
         }
     end
+
+    -- PL.debug("======== final zones =========", results, "====")
+
+    triggerEvent(PZ.events.OnZonesUpdated)
 
     return {
         cells = cells,

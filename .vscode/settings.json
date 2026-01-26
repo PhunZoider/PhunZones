@@ -12,19 +12,16 @@
                 "match": ".*",
                 "cmd": "xcopy ${workspaceFolder}\\Contents\\mods ${env.USERPROFILE}\\Zomboid\\mods /Y /I /E /F /EXCLUDE:xclude"
             },
+            // del Tests folder from deployment
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\Tests 2>nul"
+            },              
             // Copy media to 42.0.0 folder
             {
                 "match": ".*",
                 "cmd": "xcopy ${workspaceFolder}\\Contents\\mods\\PhunZones\\media ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\media /Y /I /E /F"
             },
-            // {
-            //     "match": ".*",
-            //     "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\mod.info /Y"
-            // },
-            // {
-            //     "match": ".*",
-            //     "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\common\\media\\lua\\client\\PhunZones\\ui\\admin.lua ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\poster.png /Y"
-            // },  
             {
                 "match": ".*",
                 "cmd": "del ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\media\\lua\\client\\PhunZones\\ui\\admin.lua"
@@ -33,10 +30,6 @@
                 "match": ".*",
                 "cmd": "del ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\media\\lua\\shared\\PhunZones\\data.lua"
             },            
-            // {
-            //     "match": ".*",
-            //     "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\42.0.0\\mod.info ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\mod.info /Y"
-            // },
             {
                 "match": ".*",
                 "cmd": "copy ${workspaceFolder}\\Contents\\mods\\PhunZones\\poster.png ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones\\42.0.0\\poster.png /Y"
@@ -53,6 +46,11 @@
                 "match": ".*",
                 "cmd": "xcopy ${workspaceFolder} ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones /Y /I /E /F /EXCLUDE:xclude"
             },
+            // del Tests folder from deployment
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones\\Tests 2>nul"
+            },              
             {
                 "match": ".*",
                 "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones\\Contents\\mods\\PhunZones /Y /I /E /F"
@@ -65,6 +63,58 @@
                 "match": ".*",
                 "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\pz41\\mods\\PhunZones /Y /I /E /F /EXCLUDE:xclude"
             },
+
+            // TESTING STUFF
+
+            // del TEST mod
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZonesTest 2>nul"
+            },
+
+            // copy TEST from live
+            {
+                "match": ".*",
+                "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones ${env.USERPROFILE}\\Zomboid\\mods\\PhunZonesTest /Y /I /E /F /EXCLUDE:xclude"
+            },            
+
+            // copy TEST overrides
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder}\\Tests\\root ${env.USERPROFILE}\\Zomboid\\mods\\PhunZonesTest /Y /I /E /F /EXCLUDE:xclude"
+            }, 
+
+            // remove TEST workshop
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZonesTest 2>nul"
+            },            
+            // copy src to TEST workshop
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder} ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZonesTest /Y /I /E /F /EXCLUDE:xclude"
+            },
+            // del Tests folder from deployment
+            {
+                "match": ".*",
+                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZonesTest\\Tests 2>nul"
+            },            
+            // copy TEST mods to workshop version
+            {
+                "match": ".*",
+                "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZonesTest ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZonesTest\\Contents\\mods\\PhunZones /Y /I /E /F"
+            },
+
+            // copy TEST preview file to workshop version
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder}\\Tests\\preview.png ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZonesTest\\preview.png /Y /I /E /F"
+            }, 
+            // Copy TEST workshop file to workshop version
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder}\\Tests\\workshop.txt ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZonesTest\\workshop.txt /Y /I /E /F"
+            },            
                                               
         ]
     },
