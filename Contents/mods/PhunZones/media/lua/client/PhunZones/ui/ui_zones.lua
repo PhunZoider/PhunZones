@@ -571,7 +571,7 @@ function UI:createChildren()
     x = x + btnEditZone.width + padding
 
     local closeButton = ISButton:new(x, y, 100, tools.BUTTON_HGT, "Close", self, function()
-        UI:close()
+        self:close()
     end);
     closeButton:initialise();
     self:addChild(closeButton);
