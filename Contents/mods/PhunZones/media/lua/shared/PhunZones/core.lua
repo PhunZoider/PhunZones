@@ -165,10 +165,13 @@ for _, event in pairs(Core.events or {}) do
     end
 end
 
-Core.isB42 = _G.IsoLightSource ~= nil
+Core.isB42 = getCore():getGameVersion():getMajor() >= 42
 
 if Core.isB42 then
     Core.fields.pvp = nil
+    print("PhunZones: PvP option removed for B42+ as it's now handled by the game itself")
+else
+    print("PhunZones: PvP option enabled for pre-B42 as it's not handled by the game")
 end
 
 function Core:debug(...)
