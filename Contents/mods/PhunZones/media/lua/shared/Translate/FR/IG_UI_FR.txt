@@ -1,0 +1,81 @@
+IGUI_FR = {
+    IGUI_PhunZones_PvPOn = "PvP activé",
+    IGUI_PhunZones_PvPOff = "PvP désactivé",
+    IGUI_PhunZones_Mild = "Faible",
+    IGUI_PhunZones_Medium = "Moyen",
+    IGUI_PhunZones_Spicy = "Élevé",
+    IGUI_PhunZones_SuperSpicy = "Très élevé",
+
+    IGUI_PhunZones_Property = "Propriété",
+    IGUI_PhunZones_Value = "Valeur",
+
+    IGUI_PhunZones_AddRegion = "Ajouter une région",
+    IGUI_PhunZones_AddSub = "Ajouter une sous-zone",
+    IGUI_PhunZones_EditRegion = "Modifier la région",
+
+    IGUI_PhunZones_AddZone = "Ajouter une zone",
+    IGUI_PhunZones_EditZone = "Modifier la zone",
+
+    IGUI_PhunZones_NoSafeHouse = "Vous ne pouvez pas créer de refuge dans cette zone",
+    IGUI_PhunZones_NoBuild = "Vous ne pouvez pas construire dans cette zone",
+    IGUI_PhunZones_NoDestruction = "Vous ne pouvez pas utiliser de masse ici",
+    IGUI_PhunZones_NoPlacing = "Vous ne pouvez pas placer d’objets ici",
+    IGUI_PhunZones_NoPickup = "Vous ne pouvez rien ramasser ici",
+    IGUI_PhunZones_NoScrap = "Vous ne pouvez rien démonter ici",
+
+    IGUI_PhunZones_Coordinates = "Coordonnées",
+    IGUI_PhunZones_Region = "Région",
+    IGUI_PhunZones_Regions = "Régions",
+    IGUI_PhunZones_Region_tooltip = "Clé unique pour cette région.",
+    IGUI_PhunZones_Zone = "Zone",
+    IGUI_PhunZones_Zone_tooltip = "Clé unique pour cette zone.",
+    IGUI_PhunZones_Title = "Titre",
+    IGUI_PhunZones_Title_Tooltip = "Titre de cette zone affiché au joueur",
+    IGUI_PhunZones_Subtitle = "Sous-titre",
+    IGUI_PhunZones_Subtitle_tooltip = "Sous-titre optionnel affiché au joueur",
+    IGUI_PhunZones_Difficulty = "Difficulté",
+    IGUI_PhunZones_Difficulty_tooltip = "Niveau de difficulté de la zone (0-4). Principalement utilisé avec le mod PhunRunners, mais peut être exploité par d’autres mods",
+    IGUI_PhunZones_Mods = "Mods",
+    IGUI_PhunZones_Mods_tooltip = "Mods requis pour que cette zone soit active. Vous pouvez en ajouter plusieurs en les séparant par un point-virgule",
+    IGUI_PhunZones_PvP = "PvP activé",
+    IGUI_PhunZones_PvP_tooltip = "Remplace les paramètres PvP du serveur pour cette zone. N’a aucun effet si le PvP est désactivé dans les paramètres serveur",
+    IGUI_PhunZones_Zeds = "Zombies autorisés",
+    IGUI_PhunZones_Zeds_tooltip = "Si décoché, les zombies n’apparaîtront pas dans cette zone",
+    IGUI_PhunZones_Bandits = "Bandits autorisés",
+    IGUI_PhunZones_Bandits_tooltip = "Décochez pour empêcher l’apparition de bandits dans cette zone. Nécessite le mod Bandits installé et que les zombies puissent apparaître",
+    IGUI_PhunZones_RVInteriors = "Zone d’intérieur de véhicule",
+    IGUI_PhunZones_RVInteriors_tooltip = "Cochez pour indiquer que cette zone hérite des valeurs de l’emplacement actuel du véhicule (nécessite le mod RVInteriors)",
+    IGUI_PhunZones_NoWelcome = "Annonce",
+    IGUI_PhunZones_NoWelcome_tooltip = "Cochez pour afficher le nom de la zone à l’écran lorsque le joueur y entre",
+    IGUI_PhunZones_Enabled = "Activé",
+    IGUI_PhunZones_Enabled_tooltip = "Décochez pour désactiver cette zone (ainsi que ses sous-zones)",
+    IGUI_PhunZones_Order = "Ordre",
+    IGUI_PhunZones_Order_tooltip = "Permet de remplacer une entrée existante dans la liste. Donnez simplement un nombre supérieur à celui que vous voulez remplacer",
+    IGUI_PhunZones_AllZones = "Tout afficher",
+    IGUI_PhunZones_AllZones_tooltip = "Cochez pour tout afficher dans le système — ou décochez pour afficher uniquement ce qui est chargé",
+
+    IGUI_PhunZones_SafeHouse = "Autoriser les refuges",
+    IGUI_PhunZones_Safehouse_tooltip = "Décochez pour interdire explicitement la création de refuges dans la zone",
+
+    IGUI_PhunZones_Building = "Construction",
+    IGUI_PhunZones_Building_tooltip = "Décochez pour interdire explicitement la construction d’objets comme des murs dans la zone",
+
+    IGUI_PhunZones_Placing = "Placement",
+    IGUI_PhunZones_Placing_tooltip = "Décochez pour interdire explicitement de placer des objets comme des télévisions dans la zone",
+
+    IGUI_PhunZones_Pickup = "Ramassage",
+    IGUI_PhunZones_Pickup_tooltip = "Décochez pour interdire explicitement de ramasser des objets comme des télévisions ici",
+
+    IGUI_PhunZones_Scrap = "Démontage",
+    IGUI_PhunZones_Scrap_tooltip = "Décochez pour interdire explicitement le démontage d’objets (ex : meubles) ici",
+
+    IGUI_PhunZones_Destruction = "Destruction",
+    IGUI_PhunZones_Destruction_tooltip = "Décochez pour interdire explicitement l’utilisation d’une masse ou le démontage dans la zone",
+    IGUI_PhunZones_NoDestruction = "Vous ne pouvez pas utiliser de masse dans cette zone",
+
+    IGUI_PhunZones_Fire = "Feu",
+    IGUI_PhunZones_Fire_tooltip = "Décochez pour interdire explicitement la propagation du feu dans la zone. Les animations peuvent apparaître brièvement, mais s’éteindront rapidement sans causer de dégâts",
+
+    IGUI_PhunZones_Players = "Joueurs",
+    IGUI_PhunZones_Players_tooltip = "Décochez pour empêcher explicitement les joueurs d’entrer dans cette zone"
+}

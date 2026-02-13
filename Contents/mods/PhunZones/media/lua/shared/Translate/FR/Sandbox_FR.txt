@@ -1,0 +1,32 @@
+Sandbox_FR = {
+    Sandbox_PhunZones = "PhunZones"
+
+    Sandbox_PhunZones_LoadDefaults = "Charger les paramètres par défaut",
+    Sandbox_PhunZones_LoadDefaults_tooltip = "Charge les zones vanilla de base. Décochez si vous ne voulez pas utiliser les zones vanilla fournies avec PZ (par exemple si vous utilisez une carte totalement personnalisée)",
+
+    Sandbox_PhunZones_ProcessOnClient = "Traiter côté client",
+    Sandbox_PhunZones_ProcessOnClient_tooltip = "Décochez pour traiter les changements de localisation de zone côté serveur (nécessite un redémarrage du serveur)",
+
+    Sandbox_PhunZones_Widget = "Afficher le widget",
+    Sandbox_PhunZones_Widget_tooltip = "Affiche le widget PhunZones. Peut nécessiter un redémarrage du client pour prendre effet",
+
+    Sandbox_PhunZones_ShowZoneChange = "Afficher le changement de zone",
+    Sandbox_PhunZones_ShowZoneChange_tooltip = "Affiche le message de bienvenue lors de l’entrée dans une nouvelle zone",
+
+    Sandbox_PhunZones_UpdateInterval = "Fréquence de vérification des zones",
+    Sandbox_PhunZones_UpdateInterval_tooltip = "Nombre de secondes entre chaque analyse des changements de zone. Une valeur plus élevée soulage le serveur",
+
+    Sandbox_PhunZones_ZedUpdateFrequency = "Fréquence de vérification des zombies",
+    Sandbox_PhunZones_ZedUpdateFrequency_tooltip = "Nombre de secondes entre chaque mise à jour des zombies avec les informations de zone utilisées pour les supprimer et pour d’autres mods. Plus le nombre est élevé, moins cela consomme de ressources",
+
+    Sandbox_PhunZones_VehicleTracking = "Suivi du véhicule",
+    Sandbox_PhunZones_VehicleTracking_tooltip = "Utilise l’emplacement du dernier véhicule utilisé comme position actuelle du joueur. Idéal pour les intérieurs de camping-cars",
+
+    Sandbox_PhunZones_PvPMode = "Mode PvP",
+    Sandbox_PhunZones_PvPMode_tooltip = "Activé = le mode PvP est forcé si le joueur entre dans une zone avec l’option PvP cochée, sinon il est forcé désactivé (comportement par défaut). Basculer = identique au comportement par défaut, mais permet au joueur d’activer/désactiver le PvP dans les zones PvP. Désactivé = empêche PhunZones d’interagir avec le PvP (par exemple si vous le gérez via un autre mod)",
+
+    Sandbox_PhunZones_PvPMode_Option_option1 = "Activé",
+    Sandbox_PhunZones_PvPMode_Option_option2 = "Basculer",
+    Sandbox_PhunZones_PvPMode_Option_option3 = "Désactivé",
+
+}
