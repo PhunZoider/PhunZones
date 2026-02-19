@@ -87,11 +87,10 @@ PhunZones = {
             type = "boolean",
             tooltip = "IGUI_PhunZones_RVInteriors_tooltip"
         },
-        noAnnounce = {
+        Announce = {
             label = "IGUI_PhunZones_NoWelcome",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_NoWelcome_tooltip",
-            trueIsNil = true
+            tooltip = "IGUI_PhunZones_NoWelcome_tooltip"
         },
         enabled = {
             label = "IGUI_PhunZones_Enabled",

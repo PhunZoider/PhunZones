@@ -30,7 +30,7 @@ function UI.OnOpenPanel(playerObj, zone)
         return
     end
     lastValuesByPlayer[playerIndex] = zone
-    if zone.noAnnounce then
+    if not zone.Announce then
         return
     end
 
@@ -156,8 +156,8 @@ end
 
 function UI:render()
     ISPanel.render(self);
-    local title = self.zone.noAnnounce ~= true and self.zone.title or nil
-    local subtitle = self.zone.noAnnounce ~= true and self.zone.title and self.zone.subtitle or nil
+    local title = self.zone.Announce and self.zone.title or nil
+    local subtitle = self.zone.Announce and self.zone.title and self.zone.subtitle or nil
 
     if not title then
         self:close()
