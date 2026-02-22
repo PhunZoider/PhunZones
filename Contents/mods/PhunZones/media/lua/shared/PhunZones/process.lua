@@ -1,5 +1,5 @@
 require "PhunZones/core"
-require "PhunLib/core"
+
 local Core = PhunZones
 local allLocations = require("PhunZones/data")
 
@@ -72,24 +72,22 @@ function Core.normaliseFormat(zones)
         if key == "_default" then
             flat["_default"] = Core.tools.shallowCopy(zone)
         else
-            -- Copy all non-subzone fields
             local entry = {}
             for k, v in pairs(zone) do
                 if k ~= "subzones" and not LEGACY_FIELDS[k] then
                     entry[k] = v
                 end
             end
-            -- Implicit inheritance from _default unless explicitly isolated
+
             if not entry.inherits and not entry.isolated then
                 entry.inherits = "_default"
             end
+
             flat[key] = entry
 
-            -- Promote old-format subzones to top-level entries
             if zone.subzones then
                 for subKey, sub in pairs(zone.subzones) do
                     local subEntry = Core.tools.shallowCopy(sub)
-                    -- Inherit from parent zone unless overridden
                     if not subEntry.inherits then
                         subEntry.inherits = key
                     end
@@ -110,28 +108,20 @@ end
 function Core.mergeLayers(base, custom)
     local result = {}
 
-    -- Start with a shallow copy of base
     for k, v in pairs(base) do
         result[k] = Core.tools.shallowCopy(v)
     end
 
-    -- Apply admin customisations
     for k, v in pairs(custom or {}) do
-        if v.disabled then
-            -- Tombstone: suppress this zone entirely
-            result[k] = nil
-        elseif result[k] then
-            -- Zone exists in base: merge admin fields over it
+        if result[k] then
             for field, val in pairs(v) do
                 if field == "points" and type(val) == "table" and #val == 0 then
-                    -- empty points means "no geometry change", preserve base value
-                    -- backward compat: old save format wrote empty points when only properties changed
+                    -- preserve base points
                 else
                     result[k][field] = val
                 end
             end
         else
-            -- New zone from admin, not in base
             result[k] = Core.tools.shallowCopy(v)
         end
     end
@@ -147,7 +137,11 @@ end
 function Core.applyModFilter(zones)
     local filtered = {}
     for key, zone in pairs(zones) do
-        if key == "_default" or passesModFilter(zone) then
+        if key == "_default" then
+            filtered[key] = zone
+        elseif zone.disabled then
+            print("PhunZones: dropping zone '" .. key .. "' (disabled)")
+        elseif passesModFilter(zone) then
             filtered[key] = zone
         else
             print("PhunZones: dropping zone '" .. key .. "' (mod filter)")
@@ -514,14 +508,15 @@ function Core.buildZoneData(omitMods)
         }
     }
     local custom = Core.loadAdminConfig()
-    local merged = Core.mergeLayers(base, custom)
-    local flat = Core.normaliseFormat(merged)
+    local flatBase = Core.normaliseFormat(base)
+    local flatCustom = Core.normaliseFormat(custom)
+    local merged = Core.mergeLayers(flatBase, flatCustom)
 
     if omitMods then
-        flat = Core.applyModFilter(flat)
+        merged = Core.applyModFilter(merged)
     end
 
-    local ordered = Core.assignOrders(flat)
+    local ordered = Core.assignOrders(merged)
     local lookup = Core.resolveInheritance(ordered)
     local cells = Core.buildChunkMap(ordered)
 

@@ -1,11 +1,16 @@
+-- ui_zones.lua
+-- Zone editor panel — tree, properties, map overlay.
+-- Renamed from ui_list.lua; map zone rendering/interaction is now delegated
+-- to ui_map_overlay.lua so this file stays focused on tree + property UI.
 if isServer() then
     return
 end
 
 local Core = PhunZones
-local PL = PhunLib
+
 local mapui = require("PhunZones/ui/ui_map")
 local tools = require("PhunZones/ui/tools")
+local MapOverlay = require("PhunZones/ui/ui_map_overlay")
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
@@ -15,7 +20,7 @@ local ROW_HGT = FONT_HGT_SMALL + 8
 local PAD = 8
 local LEFT_W = 260 * FONT_SCALE
 local BOTTOM_BAR_H = BUTTON_HGT + PAD * 2
-local TREE_RATIO = 0.42 -- tree takes 42% of left column height
+local TREE_RATIO = 0.42
 local SCROLLBAR_W = 5
 
 -- ---------------------------------------------------------------------------
@@ -45,7 +50,7 @@ local C = {
         g = 0.55,
         b = 0.10,
         a = 1.0
-    }, -- orange
+    },
     accentDim = {
         r = 0.55,
         g = 0.33,
@@ -75,7 +80,7 @@ local C = {
         g = 0.55,
         b = 0.65,
         a = 1.0
-    }, -- muted blue for inherited props
+    },
     rowSel = {
         r = 0.90,
         g = 0.55,
@@ -99,13 +104,13 @@ local C = {
         g = 0.50,
         b = 0.80,
         a = 1.0
-    }, -- blue for mod-origin props
+    },
     warnBadge = {
         r = 0.80,
         g = 0.60,
         b = 0.10,
         a = 1.0
-    }, -- amber for orphan zones
+    },
     disabled = {
         r = 0.80,
         g = 0.15,
@@ -120,25 +125,33 @@ local C = {
     }
 }
 
-local profileName = "PhunZonesUIList"
+local profileName = "PhunZonesUIZones"
 Core.ui.zones = ISCollapsableWindowJoypad:derive(profileName)
 Core.ui.zones.instances = {}
 local UI = Core.ui.zones
+
+-- ---------------------------------------------------------------------------
+-- Helper: returns the active zone/lookup tables, preferring self.data so that
+-- filtering works in isolation without touching global Core.data.
+-- ---------------------------------------------------------------------------
+local function zones(self)
+    return (self.data and self.data.zones) or (Core.data and Core.data.zones) or {}
+end
+
+local function lookup(self)
+    return (self.data and self.data.lookup) or (Core.data and Core.data.lookup) or {}
+end
 
 -- ===========================================================================
 -- PUBLIC: open the panel
 -- ===========================================================================
 function UI.OnOpenPanel(playerObj, key)
-    if not PL.isAdmin(getPlayer()) then
-        return
-    end
 
     local playerIndex = playerObj:getPlayerNum()
     local sw = getCore():getScreenWidth()
     local sh = getCore():getScreenHeight()
     local w = math.min(math.floor(1100 * FONT_SCALE), sw - 20)
     local h = math.min(math.floor(680 * FONT_SCALE), sh - 20)
-    -- Clamp to screen bounds
     local x = math.max(0, math.floor((sw - w) / 2))
     local y = math.max(0, math.floor((sh - h) / 2))
 
@@ -178,17 +191,20 @@ function UI:new(x, y, width, height, player, key)
     o.anchorBottom = true
     o.zOffsetSmallFont = 25
     o.data = {}
+    o._filterActive = false
     o.selectedData = nil
     o.selectedPoint = nil
-    o.treeNodes = {} -- flat ordered list of rendered tree rows
+    o.treeNodes = {}
     o.treeScroll = 0
     o.treeHover = -1
     o.propScroll = 0
     o.propHover = -1
-    o.propRows = {} -- built in refreshProperties
+    o.propRows = {}
     o.propFilter = ""
-    o.treeFilter = "" -- zone filter text
-    o._pendingChanges = {} -- fieldKey→value per zone, flushed on Save
+    o.treeFilter = ""
+    o._pendingChanges = {}
+    o.overlay = nil -- created in createChildren after mapui is ready
+
     o:setWantKeyEvents(true)
     o:setTitle("PhunZones — Zone Editor")
     o.backgroundColor = {
@@ -210,13 +226,13 @@ function UI:createChildren()
     self._treeCollapsed = {}
 
     -- -----------------------------------------------------------------------
-    -- Map (right side, full height minus bottom bar)
+    -- Map (right side)
     -- -----------------------------------------------------------------------
-    -- Positions computed in prerender; use placeholder values here
     local map = mapui:new(0, 0, 100, 100, self.player, "map")
     map:initialise()
     map:instantiate()
-    -- Clip map rendering to its own bounds so it doesn't bleed over left column
+
+    -- Clip map to its own bounds
     local origMapPrerender = map.prerender
     map.prerender = function(s)
         if origMapPrerender then
@@ -231,67 +247,152 @@ function UI:createChildren()
         end
         s:clearStencilRect()
     end
+
     self:addChild(map)
     self.controls.mapui = map
 
-    -- Wire map click -> zone select
-    local outerSelf = self
-    if map.map then
-        map.map.onMouseDown = function(s, x, y)
-            outerSelf._mapMouseDownX = x
-            outerSelf._mapMouseDownY = y
+    -- -----------------------------------------------------------------------
+    -- MapOverlay — created after mapui is initialised so the hook can attach
+    -- to map.map immediately.  If map.map isn't ready yet, hookNow() is safe
+    -- to call again from doLayout once the widget exists.
+    -- -----------------------------------------------------------------------
+    local overlay = MapOverlay:new(map)
+    self.overlay = overlay
+
+    -- Wire overlay callbacks → zone list logic
+    overlay.onZoneClicked = function(key)
+        self:selectZone(key)
+    end
+
+    overlay.onPointClicked = function(key, idx)
+        self.selectedPtIdx = idx
+        local z = zones(self)[key]
+        if z and z.points and z.points[idx] then
+            local pt = z.points[idx]
+            self.selectedPoint = {
+                x = pt[1],
+                y = pt[2],
+                x2 = pt[3],
+                y2 = pt[4]
+            }
+            self.controls.mapui.selectedPointIndex = idx
+            self:updateCoordBar(pt)
         end
-        map.map.onMouseUp = function(s, x, y)
-            -- Only fire if mousedown also started on the map
-            if outerSelf._mapMouseDownX == nil then
-                return
-            end
-            local dx = math.abs(x - outerSelf._mapMouseDownX)
-            local dy = math.abs(y - outerSelf._mapMouseDownY)
-            outerSelf._mapMouseDownX = nil
-            outerSelf._mapMouseDownY = nil
-            if dx <= 4 and dy <= 4 then
-                outerSelf:onMapClick(x, y, s)
-            end
+        self.controls.btnDeleteRect.enable = (self.selectedPoint ~= nil)
+    end
+
+    overlay.onRectDrawn = function(x1, y1, x2, y2)
+        -- Open the XY fine-tune popup pre-filled with the drawn coords
+        if not self.selectedData then
+            return
         end
+        Core.ui.xy.OnOpenPanel(self.player, {
+            region = self.selectedData.region,
+            zone = self.selectedData.zone,
+            x = x1,
+            y = y1,
+            x2 = x2,
+            y2 = y2
+        }, function(nxy)
+            self:savePoint(nxy)
+        end)
+    end
+
+    overlay.onRectResized = function(key, ptIdx, x1, y1, x2, y2)
+        self:queuePointChange(key, ptIdx, x1, y1, x2, y2)
+    end
+
+    overlay.onRectDragging = function(key, ptIdx, x1, y1, x2, y2)
+        -- Update coord bar live every frame during drag without queuing a pending change
+        self:updateCoordBar({x1, y1, x2, y2})
     end
 
     -- -----------------------------------------------------------------------
-    -- LEFT COLUMN HEADER: label + "show all" tick
+    -- Coord bar — sits in the header strip above the map.
+    -- Shows X1/Y1/X2/Y2 of the active rect; W/H are read-only derived labels.
+    -- Typing a value and pressing Enter/Tab commits it to the pending queue.
     -- -----------------------------------------------------------------------
-    local lblZones = ISLabel:new(0, 0, ROW_HGT, getText("IGUI_PhunZones_Regions"), 1, 1, 1, 1, UIFont.Small, true)
+    local coordFields = {} -- ordered: x1, y1, x2, y2
+    local coordNames = {"X1", "Y1", "X2", "Y2"}
+
+    local function makeCoordField(name)
+        local lbl = ISLabel:new(0, 0, ROW_HGT, name .. ":", 1, 1, 1, 1, UIFont.Small, true)
+        lbl:initialise();
+        lbl:instantiate()
+        self:addChild(lbl)
+
+        local field = ISTextEntryBox:new("", 0, 0, 60, FONT_HGT_SMALL + 4)
+        field:initialise()
+        field._coordName = name
+        field.onOtherKey = function(s, key)
+            if key == Keyboard.KEY_RETURN or key == Keyboard.KEY_NUMPADENTER then
+                self:commitCoordField()
+            elseif key == Keyboard.KEY_TAB then
+                -- Advance focus to the next coord field
+                local cf2 = self.controls.coordFields
+                if cf2 then
+                    for i, c in ipairs(cf2) do
+                        if c.field == s then
+                            local next = cf2[(i % #cf2) + 1]
+                            if next then
+                                next.field:focus()
+                            end
+                            break
+                        end
+                    end
+                end
+                self:commitCoordField()
+            end
+        end
+        self:addChild(field)
+        return {
+            lbl = lbl,
+            field = field,
+            name = name
+        }
+    end
+
+    for _, name in ipairs(coordNames) do
+        table.insert(coordFields, makeCoordField(name))
+    end
+    self.controls.coordFields = coordFields
+
+    -- W and H are plain read-only labels
+    local lblWH = ISLabel:new(0, 0, ROW_HGT, "W: –   H: –", 1, 1, 1, 0.6, UIFont.Small, true)
+    lblWH:initialise();
+    lblWH:instantiate()
+    self:addChild(lblWH)
+    self.controls.lblWH = lblWH
+    local lblZones = ISLabel:new(0, 0, ROW_HGT, getText("IGUI_PhunZones_Zones"), 1, 1, 1, 1, UIFont.Small, true)
     lblZones:initialise();
     lblZones:instantiate()
     self:addChild(lblZones)
     self.controls.lblZones = lblZones
 
-    -- Tree filter box
     local treeFilter = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + 4)
     treeFilter:initialise();
     treeFilter:instantiate()
     treeFilter.onTextChange = function()
-        -- Don't build here — off-by-one means getText() lags one char behind.
-        -- prerender polls and rebuilds when the text actually changes.
-    end
+    end -- polled in prerender to avoid off-by-one
     self:addChild(treeFilter)
     self.controls.treeFilter = treeFilter
 
     local chkAll = ISTickBox:new(0, 0, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_AllZones"), self)
     chkAll:addOption(getText("IGUI_PhunZones_AllZones"), nil)
-    chkAll:setSelected(1, true) -- default: show all zones
+    chkAll:setSelected(1, true)
     chkAll:setWidthToFit()
     chkAll.tooltip = getText("IGUI_PhunZones_AllZones_tooltip")
     chkAll.onMouseUp = function(s, x, y)
         ISTickBox.onMouseUp(s, x, y)
-        local filterActive = not s:isSelected(1)
-        self.data = Core.buildZoneData(filterActive)
+        self._filterActive = not s:isSelected(1)
+        self.data = Core.buildZoneData(self._filterActive)
         self:rebuildUI()
     end
     self:addChild(chkAll)
     self.controls.chkAll = chkAll
 
     -- -----------------------------------------------------------------------
-    -- TREE panel — mouse target only, drawn in window render
+    -- Tree panel (transparent mouse target; drawn in prerender)
     -- -----------------------------------------------------------------------
     local treePanel = ISPanel:new(0, 0, 100, 100)
     treePanel:initialise();
@@ -301,10 +402,10 @@ function UI:createChildren()
         g = 0,
         b = 0,
         a = 0
-    } -- fully transparent
+    }
     treePanel.drawBorder = false
+
     treePanel.onMouseUp = function(s, x, y)
-        -- Only select if mouseup is on the same node as mousedown
         local i = math.floor((y + self.treeScroll) / ROW_HGT) + 1
         local upNode = self.treeNodes[i] and self.treeNodes[i].key
         if upNode and upNode == self._treeMouseDownNode then
@@ -322,7 +423,6 @@ function UI:createChildren()
     end
     treePanel.onMouseDown = function(s, x, y)
         self:commitInlineEdit()
-        -- Record which node was under the cursor on mousedown
         local i = math.floor((y + self.treeScroll) / ROW_HGT) + 1
         self._treeMouseDownNode = (self.treeNodes[i] and self.treeNodes[i].key) or nil
         local totalH = #self.treeNodes * ROW_HGT
@@ -344,11 +444,12 @@ function UI:createChildren()
         self._treeScrDrag = false;
         s:setCapture(false)
     end
+
     self:addChild(treePanel)
     self.controls.treePanel = treePanel
 
     -- -----------------------------------------------------------------------
-    -- PROPERTY panel header + filter
+    -- Property panel header + filter
     -- -----------------------------------------------------------------------
     local lblProps = ISLabel:new(0, 0, ROW_HGT, "Properties", 1, 1, 1, 1, UIFont.Small, true)
     lblProps:initialise();
@@ -367,7 +468,7 @@ function UI:createChildren()
     self.controls.propFilter = filterBox
 
     -- -----------------------------------------------------------------------
-    -- PROPERTY panel — mouse target only, drawn in window render
+    -- Property panel (transparent mouse target; drawn in prerender)
     -- -----------------------------------------------------------------------
     local propPanel = ISPanel:new(0, 0, 100, 100)
     propPanel:initialise();
@@ -377,10 +478,10 @@ function UI:createChildren()
         g = 0,
         b = 0,
         a = 0
-    } -- fully transparent
+    }
     propPanel.drawBorder = false
+
     propPanel.onMouseUp = function(s, x, y)
-        -- Only fire click if mouseup is on the same row as mousedown
         local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
         if i == self._propMouseDownRow then
             self:onPropClick(s, x, y)
@@ -397,7 +498,6 @@ function UI:createChildren()
     end
     propPanel.onMouseDown = function(s, x, y)
         self:commitInlineEdit()
-        -- Record which row was under cursor on mousedown
         local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
         self._propMouseDownRow = (self.propRows[i] and not self.propRows[i].isGroupHeader) and i or nil
         local totalH = #self.propRows * ROW_HGT
@@ -419,11 +519,12 @@ function UI:createChildren()
         self._propScrDrag = false;
         s:setCapture(false)
     end
+
     self:addChild(propPanel)
     self.controls.propPanel = propPanel
 
     -- -----------------------------------------------------------------------
-    -- INLINE PROPERTY EDITOR — hidden text entry floated over value column
+    -- Inline property editor
     -- -----------------------------------------------------------------------
     local inlineEdit = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + 4)
     inlineEdit:initialise()
@@ -432,7 +533,7 @@ function UI:createChildren()
     self.controls.inlineEdit = inlineEdit
 
     -- -----------------------------------------------------------------------
-    -- INHERITS PICKER — hidden combo box floated over inherits row value
+    -- Inherits picker
     -- -----------------------------------------------------------------------
     local inheritsPicker
     inheritsPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + 4, self, function(owner)
@@ -446,27 +547,30 @@ function UI:createChildren()
     inheritsPicker:setVisible(false)
     self:addChild(inheritsPicker)
     self.controls.inheritsPicker = inheritsPicker
+
+    -- -----------------------------------------------------------------------
+    -- Buttons
     -- -----------------------------------------------------------------------
     local function mkBtn(label, tooltip, cb)
         local btn = ISButton:new(0, 0, 0, BUTTON_HGT, label, self, cb)
         btn:initialise()
         btn.tooltip = tooltip or ""
-        local tw = getTextManager():MeasureStringX(UIFont.Small, label)
-        btn:setWidth(tw + 20)
+        btn:setWidth(getTextManager():MeasureStringX(UIFont.Small, label) + 20)
         self:addChild(btn)
         return btn
     end
 
-    self.controls.btnNewRegion = mkBtn("Add Region", "", function()
-        self:promptNewZone()
-    end)
+    self.controls.btnNewRegion = mkBtn(getText("IGUI_PhunZones_AddZone"), getText("IGUI_PhunZones_AddZoneTooltip"),
+        function()
+            self:promptNewZone()
+        end)
 
-    self.controls.btnSave = mkBtn("Save", "Save pending property changes", function()
+    self.controls.btnSave = mkBtn(getText("Save"), getText("IGUI_PhunZones_SavePending"), function()
         self:flushPendingChanges()
     end)
     self.controls.btnSave.enable = false
 
-    self.controls.btnDeleteZone = mkBtn("Delete", "", function()
+    self.controls.btnDeleteZone = mkBtn(getText("Delete"), getText("IGUI_PhunZones_DelZoneTooltip"), function()
         self:confirmDelete()
     end)
     self.controls.btnDeleteZone.enable = false
@@ -474,52 +578,143 @@ function UI:createChildren()
         self.controls.btnDeleteZone:enableCancelColor()
     end
 
-    self.controls.btnAddRect = mkBtn(getText("IGUI_PhunZones_AddZone"), "Draw a new bounding rect on the map",
+    self.controls.btnAddRect = mkBtn(getText("IGUI_PhunZones_AddRect"), getText("IGUI_PhunZones_AddRectTooltip"),
         function()
             if self.selectedData then
-                self:enterDrawMode()
+                self:dropRectAtViewportCentre()
             end
         end)
     self.controls.btnAddRect.enable = false
+    self.controls.btnAddRect:enableAcceptColor()
 
-    self.controls.btnEditRect = mkBtn(getText("IGUI_PhunZones_EditZone"), "", function()
-        if self.selectedPoint and self.selectedData then
-            Core.ui.xy.OnOpenPanel(self.player, {
-                region = self.selectedData.region,
-                zone = self.selectedData.zone,
-                point = self.controls.mapui.selectedPointIndex,
-                x = self.selectedPoint.x,
-                y = self.selectedPoint.y,
-                x2 = self.selectedPoint.x2,
-                y2 = self.selectedPoint.y2
-            }, function(nxy)
-                self:savePoint(nxy, self.controls.mapui.selectedPointIndex)
-            end)
-        end
-    end)
-    self.controls.btnEditRect.enable = false
-
-    self.controls.btnDeleteRect = mkBtn("Del Rect", "", function()
-        self:confirmDeleteRect()
-    end)
+    self.controls.btnDeleteRect = mkBtn(getText("IGUI_PhunZones_DelRect"), getText("IGUI_PhunZones_DelRectTooltip"),
+        function()
+            self:confirmDeleteRect()
+        end)
     self.controls.btnDeleteRect.enable = false
+    if self.controls.btnDeleteRect.enableCancelColor then
+        self.controls.btnDeleteRect:enableCancelColor()
+    end
 
-    self.controls.btnClose = mkBtn("Close", "", function()
+    self.controls.btnFileEditor = mkBtn(getText("IGUI_PhunZones_File"), getText("IGUI_PhunZones_FileTooltip"),
+        function()
+            self:openImportModal()
+        end)
+
+    self.controls.btnClose = mkBtn(getText("Close"), "", function()
         self:close()
     end)
 
-    -- Run initial layout so panels have correct sizes before first render
     self:doLayout()
 end
 
 -- ===========================================================================
--- doLayout — shared layout logic called from both createChildren and prerender
+-- Add Rect — drop a default-sized rect at the current map viewport centre
+-- ===========================================================================
+local DEFAULT_RECT_HALF = 25 -- half-size in world units → 50×50 total
+
+function UI:dropRectAtViewportCentre()
+    if not self.selectedData then
+        return
+    end
+
+    local mapPanel = self.controls.mapui
+    local map = mapPanel and mapPanel.map
+    local api = map and map.mapAPI
+    if not api then
+        return
+    end
+
+    -- Both worldToUIX/Y and uiToWorldX/Y work in widget-relative coords
+    local cx = math.floor(map.width / 2)
+    local cy = math.floor(map.height / 2)
+    local wx = math.floor(api:uiToWorldX(cx, cy))
+    local wy = math.floor(api:uiToWorldY(cx, cy))
+
+    local x1 = wx - DEFAULT_RECT_HALF
+    local y1 = wy - DEFAULT_RECT_HALF
+    local x2 = wx + DEFAULT_RECT_HALF
+    local y2 = wy + DEFAULT_RECT_HALF
+
+    self:savePoint({
+        region = self.selectedData.region,
+        zone = self.selectedData.zone,
+        x = x1,
+        y = y1,
+        x2 = x2,
+        y2 = y2
+    })
+end
+
+-- ===========================================================================
+-- Queue a rect geometry change into pending (used by handle drag resize).
+-- Updates local data optimistically; committed to server on Save.
+-- ===========================================================================
+function UI:queuePointChange(key, ptIdx, x1, y1, x2, y2)
+    local zone = zones(self)[key]
+    if not zone then
+        return
+    end
+
+    -- Update local zone data so the overlay reflects the new position immediately
+    if not zone.points then
+        zone.points = {}
+    end
+    zone.points[ptIdx] = {x1, y1, x2, y2}
+
+    -- Also update selectedPoint so Edit Rect popup gets the current coords
+    if self.selectedData and self.selectedData.key == key then
+        self.selectedPoint = {
+            x = x1,
+            y = y1,
+            x2 = x2,
+            y2 = y2
+        }
+        self:updateCoordBar({x1, y1, x2, y2})
+    end
+
+    -- Queue into _pendingChanges using a "points" sub-table per zone.
+    -- flushPendingChanges will serialise this alongside any property changes.
+    if not self._pendingChanges[key] then
+        self._pendingChanges[key] = {}
+    end
+    if not self._pendingChanges[key]._points then
+        -- Snapshot the full points array so we send the complete list on save
+        self._pendingChanges[key]._points = {}
+        for i, p in ipairs(zone.points) do
+            self._pendingChanges[key]._points[i] = {p[1], p[2], p[3], p[4]}
+        end
+    else
+        -- Update just this point in the already-pending snapshot
+        self._pendingChanges[key]._points[ptIdx] = {x1, y1, x2, y2}
+    end
+
+    self:updateSaveDiscardButtons()
+end
+
+-- ===========================================================================
+-- Draw mode — kept for potential future use (e.g. a "draw" toolbar option)
+-- ===========================================================================
+function UI:enterDrawMode()
+    if not self.overlay then
+        return
+    end
+    self.overlay:enterDrawMode()
+end
+
+function UI:exitDrawMode()
+    if self.overlay then
+        self.overlay:exitDrawMode()
+    end
+end
+
+-- ===========================================================================
+-- doLayout
 -- ===========================================================================
 function UI:doLayout()
     local th = self:titleBarHeight()
     local rh = self:resizeWidgetHeight()
     local lw = LEFT_W
-
     local usableH = self.height - th - rh
     local barH = BOTTOM_BAR_H
     local contentH = usableH - barH
@@ -527,11 +722,9 @@ function UI:doLayout()
     local treeH = math.floor((contentH - headerH) * TREE_RATIO)
     local propLblH = ROW_HGT + 4
     local propH = contentH - headerH - treeH - PAD - propLblH
-
     local barY = usableH - barH
     local btnY = barY + math.floor((barH - BUTTON_HGT) / 2)
 
-    -- Store for render
     self._layout = {
         th = th,
         lw = lw,
@@ -540,57 +733,126 @@ function UI:doLayout()
         usableH = usableH
     }
 
-    -- Map (right side, below header, above bottom bar)
+    -- Map
     local mx = lw + PAD
     local mw = self.width - mx - PAD
     local m = self.controls.mapui
     m:setX(mx);
-    m:setY(th + headerH);
+    m:setY(th + headerH)
     m:setWidth(mw);
     m:setHeight(contentH - headerH)
     if m.map then
         m.map:setWidth(mw)
         m.map:setHeight(contentH - headerH)
+        -- If overlay didn't hook earlier (map.map wasn't ready), hook now
+        if self.overlay and not self.overlay._hooked then
+            self.overlay:hookNow()
+            self.overlay._hooked = true
+        end
     end
 
-    -- Header: label left, filter centre, chkAll right
+    -- Header
     self.controls.lblZones:setX(PAD);
     self.controls.lblZones:setY(th + 2)
     self.controls.chkAll:setX(lw - self.controls.chkAll.width - PAD)
     self.controls.chkAll:setY(th + 2)
     local chkX = lw - self.controls.chkAll.width - PAD
-    local lblW = getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_PhunZones_Regions")) + PAD
+    local lblW = getTextManager():MeasureStringX(UIFont.Small, getText("IGUI_PhunZones_Zones")) + PAD
     self.controls.treeFilter:setX(lblW)
     self.controls.treeFilter:setY(th + 2)
     self.controls.treeFilter:setWidth(chkX - lblW - PAD)
 
-    -- Tree panel (mouse target)
-    local treeY = headerH
+    -- Tree panel
     local tp = self.controls.treePanel
     tp:setX(PAD);
-    tp:setY(th + treeY)
+    tp:setY(th + headerH)
     tp:setWidth(lw - PAD * 2);
     tp:setHeight(math.max(20, treeH))
 
-    -- Properties header
-    local propLblY = treeY + treeH + PAD
+    -- Props header
+    local propLblY = headerH + treeH + PAD
     self.controls.lblProps:setX(PAD);
     self.controls.lblProps:setY(th + propLblY)
     self.controls.propFilter:setX(PAD + 72);
     self.controls.propFilter:setY(th + propLblY - 1)
     self.controls.propFilter:setWidth(lw - PAD * 2 - 72)
 
-    -- Property panel (mouse target)
+    -- Property panel
     local pp = self.controls.propPanel
     pp:setX(PAD);
     pp:setY(th + propLblY + propLblH)
     pp:setWidth(lw - PAD * 2);
     pp:setHeight(math.max(20, propH))
 
-    -- Buttons
+    -- Coord bar — in the headerH strip above the map (right side only)
+    -- Layout: [ Add Rect ]  X1:[__] Y1:[__] X2:[__] Y2:[__]  W:## H:##  [ Del Rect ]
+    local cf = self.controls.coordFields
+    if cf then
+        local fieldH = FONT_HGT_SMALL + 4
+        local btnH = BUTTON_HGT
+        local cy = th + math.floor((headerH - fieldH) / 2)
+        local btnCy = th + math.floor((headerH - btnH) / 2)
+        local mx2 = lw + PAD
+        local mw2 = self.width - mx2 - PAD
+        local fieldW = 62
+        local lblPad = 3
+        local gap = PAD
+
+        local cx2 = mx2
+
+        -- Four labelled coord fields
+        local items = {}
+        for _, c in ipairs(cf) do
+            local lw2 = getTextManager():MeasureStringX(UIFont.Small, c.name .. ":") + lblPad
+            table.insert(items, {
+                lbl = c.lbl,
+                field = c.field,
+                lblW = lw2
+            })
+        end
+
+        -- W/H label width
+        local whText = "W: 99999  H: 99999"
+        local whW = getTextManager():MeasureStringX(UIFont.Small, whText) + gap
+
+        -- Del Rect on the right
+        local delBtn = self.controls.btnDeleteRect
+        local delX = mx2 + mw2 - delBtn.width
+        delBtn:setX(delX);
+        delBtn:setY(btnCy)
+
+        -- Add Rect on the left of the bar
+        local addBtn = self.controls.btnAddRect
+        addBtn:setX(delBtn.x - gap - addBtn.width);
+        addBtn:setY(delBtn.y)
+
+        -- Centre the fields + WH between addBtn right edge and delBtn left edge
+        local available = delX - cx2 - gap
+        local fieldsW = whW
+        for _, it in ipairs(items) do
+            fieldsW = fieldsW + it.lblW + fieldW + gap
+        end
+        local fx = cx2 + math.max(0, math.floor((available - fieldsW) / 2))
+
+        for _, it in ipairs(items) do
+            it.lbl:setX(fx);
+            it.lbl:setY(cy + 1)
+            fx = fx + it.lblW
+            it.field:setX(fx);
+            it.field:setY(cy)
+            it.field:setWidth(fieldW);
+            it.field:setHeight(fieldH)
+            fx = fx + fieldW + gap
+        end
+        if self.controls.lblWH then
+            self.controls.lblWH:setX(fx);
+            self.controls.lblWH:setY(cy + 1)
+        end
+    end
+
+    -- Buttons (bottom bar) — Edit Rect removed; Add/Del Rect moved to coord bar
     local leftBtns = {self.controls.btnNewRegion, self.controls.btnSave, self.controls.btnDeleteZone}
-    local rightBtns = {self.controls.btnClose, self.controls.btnDeleteRect, self.controls.btnEditRect,
-                       self.controls.btnAddRect}
+    local rightBtns = {self.controls.btnClose, self.controls.btnFileEditor}
 
     local lx = PAD
     for _, btn in ipairs(leftBtns) do
@@ -608,13 +870,12 @@ function UI:doLayout()
 end
 
 -- ===========================================================================
--- prerender — single source of truth for all positions
+-- prerender
 -- ===========================================================================
 function UI:prerender()
     ISCollapsableWindowJoypad.prerender(self)
     if self.width ~= self._lastW or self.height ~= self._lastH then
-        self._lastW = self.width
-        self._lastH = self.height
+        self._lastW, self._lastH = self.width, self.height
         self:doLayout()
     end
 
@@ -624,7 +885,7 @@ function UI:prerender()
     end
     local th = L.th
 
-    -- Poll tree filter for changes (onTextChange lags one char, so we poll here)
+    -- Poll tree filter
     local tf = self.controls.treeFilter
     if tf then
         local current = tf:getText():lower()
@@ -635,24 +896,36 @@ function UI:prerender()
         end
     end
 
-    -- All background/content drawing here — prerender runs BEFORE children,
-    -- so child controls (buttons, filter box, labels) paint on top correctly
+    -- Background fills
     self:drawRect(0, th, L.lw, L.usableH, 1, C.bg.r, C.bg.g, C.bg.b)
     self:drawRect(0, th + L.barY, self.width, L.barH, 1, C.bg.r, C.bg.g, C.bg.b)
     self:drawRect(L.lw, th, 1, L.barY, C.border.a, C.border.r, C.border.g, C.border.b)
     self:drawRect(0, th + L.barY, self.width, 1, C.border.a, C.border.r, C.border.g, C.border.b)
 
+    -- Draw-mode banner above the map
+    if self.overlay and self.overlay:isDrawMode() then
+        local mx = L.lw + PAD
+        local mw = self.width - mx - PAD
+        local bannerH = FONT_HGT_SMALL + 6
+        self:drawRect(mx, th, mw, bannerH, 0.85, 0.20, 0.55, 0.10)
+        local msg = "DRAW MODE — drag to define rect, Esc to cancel"
+        local tw = getTextManager():MeasureStringX(UIFont.Small, msg)
+        self:drawText(msg, mx + (mw - tw) / 2, th + 3, 0.20, 0.90, 0.40, 1.0, UIFont.Small)
+    end
+
+    -- Tree
     local tp = self.controls.treePanel
     if tp then
-        local ox, oy = tp.x, tp.y -- tp.y already includes th
+        local ox, oy = tp.x, tp.y
         self:drawRect(ox, oy, tp.width, tp.height, 1, C.panel.r, C.panel.g, C.panel.b)
         self:drawRectBorder(ox, oy, tp.width, tp.height, C.border.a, C.border.r, C.border.g, C.border.b)
         self:renderTree(ox, oy, tp.width, tp.height)
     end
 
+    -- Props
     local pp = self.controls.propPanel
     if pp then
-        local ox, oy = pp.x, pp.y -- pp.y already includes th
+        local ox, oy = pp.x, pp.y
         self:drawRect(ox, oy, pp.width, pp.height, 1, C.panel.r, C.panel.g, C.panel.b)
         self:drawRectBorder(ox, oy, pp.width, pp.height, C.border.a, C.border.r, C.border.g, C.border.b)
         self:renderProps(ox, oy, pp.width, pp.height)
@@ -663,18 +936,46 @@ function UI:render()
     ISCollapsableWindowJoypad.render(self)
 end
 
+-- Keep Esc cancelling draw mode before closing
+function UI:onKeyPressed(key)
+    -- Cancel draw mode first
+    if self.overlay and self.overlay:isDrawMode() and key == Keyboard.KEY_ESCAPE then
+        self:exitDrawMode()
+        return
+    end
+
+    local ie = self.controls.inlineEdit
+    if ie and ie:isVisible() then
+        if key == Keyboard.KEY_RETURN or key == Keyboard.KEY_NUMPADENTER then
+            self:commitInlineEdit();
+            return
+        elseif key == Keyboard.KEY_ESCAPE then
+            self:cancelInlineEdit();
+            return
+        end
+    end
+end
+
+function UI:onKeyRelease(key)
+    if key == Keyboard.KEY_ESCAPE then
+        if self.overlay and self.overlay:isDrawMode() then
+            self:exitDrawMode()
+        else
+            self:close()
+        end
+    end
+end
+
 -- ===========================================================================
--- TREE: build from Core.data.zones
+-- TREE: build
 -- ===========================================================================
 function UI:buildTree()
-    -- Build parent→children map from raw zones
-    local zones = Core.data and Core.data.zones or {}
+    local zoneData = zones(self)
     local byKey = {}
     local children = {}
 
-    for k, v in pairs(zones) do
+    for k, v in pairs(zoneData) do
         byKey[k] = v
-        -- do NOT mutate v with _key — store separately in node
         local parent = v.inherits
         if parent then
             if not children[parent] then
@@ -684,7 +985,6 @@ function UI:buildTree()
         end
     end
 
-    -- Sort children alphabetically at each level for determinism
     for _, list in pairs(children) do
         table.sort(list, function(a, b)
             local ta = (byKey[a] and byKey[a].title) or a
@@ -693,7 +993,6 @@ function UI:buildTree()
         end)
     end
 
-    -- Find roots (no inherits, or inherits points to missing key)
     local roots = {}
     local hasParent = {}
     for k, v in pairs(byKey) do
@@ -718,15 +1017,12 @@ function UI:buildTree()
         return ta:lower() < tb:lower()
     end)
 
-    -- DFS to build flat ordered node list with depth
     self.treeNodes = {}
     local collapsed = self._treeCollapsed or {}
     self._treeCollapsed = collapsed
-    -- Read filter directly from control to avoid onTextChange off-by-one
     local filter = self.controls.treeFilter and self.controls.treeFilter:getText():lower() or ""
     self.treeFilter = filter
 
-    -- Pre-compute which keys directly match or have a matching descendant
     local hasMatch = {}
     local directMatch = {}
     if filter ~= "" then
@@ -755,9 +1051,8 @@ function UI:buildTree()
         local v = byKey[key] or {}
         local isOrphan = v.inherits and not byKey[v.inherits]
         local hasKids = children[key] and #children[key] > 0
-        local isDisabled = v.disabled == true
+        local isDis = v.disabled == true
 
-        -- Skip if filtered and neither this node nor any descendant matches
         if filter ~= "" and not hasMatch[key] then
             return
         end
@@ -769,14 +1064,12 @@ function UI:buildTree()
             hasKids = hasKids,
             collapsed = collapsed[key] == true,
             orphan = isOrphan,
-            disabled = isDisabled,
+            disabled = isDis,
             zone = v
         })
 
         if hasKids and not collapsed[key] then
             for _, ck in ipairs(children[key]) do
-                -- When filtering: only walk children that match or have matching descendants
-                -- (prevents unmatched siblings from showing under a matched parent)
                 if filter == "" or hasMatch[ck] then
                     walk(ck, depth + 1)
                 end
@@ -787,10 +1080,15 @@ function UI:buildTree()
     for _, rk in ipairs(roots) do
         walk(rk, 0)
     end
+
+    -- Keep overlay zone data in sync with the active (possibly filtered) dataset
+    if self.overlay then
+        self.overlay:setZones(zoneData)
+    end
 end
 
 -- ===========================================================================
--- TREE: render at absolute window coords ox,oy,w,h
+-- TREE: render
 -- ===========================================================================
 function UI:renderTree(ox, oy, w, h)
     local nodes = self.treeNodes
@@ -809,18 +1107,17 @@ function UI:renderTree(ox, oy, w, h)
         if ry + ROW_HGT > 0 then
             local ay = oy + ry
             if ay + ROW_HGT > oy and ay < oy + h then
-                local isSelected = self.selectedData and self.selectedData.key == node.key
-                local isHover = self.treeHover == i
+                local isSel = self.selectedData and self.selectedData.key == node.key
+                local isHov = self.treeHover == i
 
-                if isSelected then
+                if isSel then
                     self:drawRect(ox, ay, contentW, ROW_HGT, C.rowSel.a, C.rowSel.r, C.rowSel.g, C.rowSel.b)
-                elseif isHover then
+                elseif isHov then
                     self:drawRect(ox, ay, contentW, ROW_HGT, C.rowHover.a, C.rowHover.r, C.rowHover.g, C.rowHover.b)
                 elseif i % 2 == 0 then
                     self:drawRect(ox, ay, contentW, ROW_HGT, C.rowAlt.a, C.rowAlt.r, C.rowAlt.g, C.rowAlt.b)
                 end
 
-                -- Tree connector lines for child nodes
                 if node.depth > 0 then
                     local cx = ox + node.depth * indent - indent + 6
                     self:drawRect(cx, ay, 1, ROW_HGT / 2, C.treeConn.a, C.treeConn.r, C.treeConn.g, C.treeConn.b)
@@ -828,7 +1125,6 @@ function UI:renderTree(ox, oy, w, h)
                         C.treeConn.b)
                 end
 
-                -- Toggle arrow drawn in fixed slot; label always starts at consistent column
                 local toggleX = ox + node.depth * indent + 4
                 local labelX = toggleX + toggleW
 
@@ -852,7 +1148,6 @@ function UI:renderTree(ox, oy, w, h)
                     label = "-- Default --"
                 end
 
-                -- Pending changes: shift name to accent colour instead of adding a character
                 if self._pendingChanges[node.key] then
                     tr, tg, tb, ta = C.accent.r, C.accent.g, C.accent.b, 1.0
                 end
@@ -900,8 +1195,6 @@ function UI:onTreeClick(panel, x, y)
         return
     end
 
-    -- Suppress map click for next 200ms to prevent map repositioning from re-selecting
-    self._suppressMapSelectUntil = getTimestampMs() + 200
     self:selectZone(node.key)
 end
 
@@ -913,12 +1206,12 @@ end
 function UI:selectZone(key)
     self:cancelInlineEdit()
     self.propHover = -1
-    self.propScroll = 0 -- reset scroll when switching zones
+    self.propScroll = 0
 
-    local zones = Core.data and Core.data.zones or {}
-    local lookup = Core.data and Core.data.lookup or {}
-    local raw = zones[key] or {}
-    local merged = lookup[key] or {}
+    local zoneData = zones(self)
+    local lookupData = lookup(self)
+    local raw = zoneData[key] or {}
+    local merged = lookupData[key] or {}
 
     self.selectedData = {
         key = key,
@@ -929,42 +1222,45 @@ function UI:selectZone(key)
         merged = merged
     }
 
-    -- Update button states
     local notDefault = key ~= "_default"
-    self.controls.btnDeleteZone.enable = notDefault
+
+    self.controls.btnDeleteRect.enable = notDefault
     self.controls.btnAddRect.enable = notDefault
 
-    -- Deselect rect
     self.selectedPoint = nil
-    self.controls.btnEditRect.enable = false
     self.controls.btnDeleteRect.enable = false
 
     self:refreshProperties()
-    self:refreshZonePoints((raw.points or {}))
+    self:refreshZonePoints(raw.points or {})
+
+    -- Sync overlay
+    if self.overlay then
+        self.overlay:setSelectedZone(key)
+        self.overlay:setZones(zoneData)
+    end
 
     -- Scroll tree to show selection
     for i, node in ipairs(self.treeNodes) do
         if node.key == key then
-            local panel = self.controls.treePanel
+            local tp = self.controls.treePanel
             local rowY = (i - 1) * ROW_HGT
             if rowY < self.treeScroll then
                 self.treeScroll = rowY
-            elseif rowY + ROW_HGT > self.treeScroll + panel.height then
-                self.treeScroll = rowY + ROW_HGT - panel.height
+            elseif rowY + ROW_HGT > self.treeScroll + tp.height then
+                self.treeScroll = rowY + ROW_HGT - tp.height
             end
             break
         end
     end
+
     self:updateSaveDiscardButtons()
 end
 
 -- ===========================================================================
--- PROPERTIES: build row list
+-- PROPERTIES
 -- ===========================================================================
 function UI:refreshProperties()
     self.propRows = {}
-    -- Note: propScroll intentionally NOT reset here — preserved across refreshes
-    -- so inline edits don't jump the view. Reset happens in selectZone instead.
     if not self.selectedData then
         return
     end
@@ -973,22 +1269,19 @@ function UI:refreshProperties()
     local raw = self.selectedData.raw or {}
     local merged = self.selectedData.merged or {}
 
-    -- For _default, merged may be keyed differently — try fallbacks
     local mergedIsEmpty = true
     for _ in pairs(merged) do
         mergedIsEmpty = false;
         break
     end
     if key == "_default" and mergedIsEmpty then
-        local lookup = Core.data and Core.data.lookup or {}
-        merged = lookup["_default"] or lookup["default"] or raw
+        local lookupData = lookup(self)
+        merged = lookupData["_default"] or lookupData["default"] or raw
     end
 
     local filter = self.propFilter
     local pending = self._pendingChanges[key] or {}
     local seen = {}
-
-    -- Collect fields into groups
     local groups = {}
     local groupFields = {}
     local UNGROUPED = "other"
@@ -999,7 +1292,7 @@ function UI:refreshProperties()
                 (fdef.label and getText(fdef.label):lower():find(filter, 1, true)) then
                 local g = fdef.group or UNGROUPED
                 if not groupFields[g] then
-                    groupFields[g] = {}
+                    groupFields[g] = {};
                     table.insert(groups, g)
                 end
                 table.insert(groupFields[g], {
@@ -1011,7 +1304,6 @@ function UI:refreshProperties()
         end
     end
 
-    -- Sort groups by Core.groups order, ungrouped "other" always last
     table.sort(groups, function(a, b)
         if a == UNGROUPED then
             return false
@@ -1019,9 +1311,9 @@ function UI:refreshProperties()
         if b == UNGROUPED then
             return true
         end
-        local ga = Core.groups[a]
+        local ga = Core.groups[a];
         local gb = Core.groups[b]
-        local oa = ga and ga.order or 999
+        local oa = ga and ga.order or 999;
         local ob = gb and gb.order or 999
         if oa ~= ob then
             return oa < ob
@@ -1029,7 +1321,6 @@ function UI:refreshProperties()
         return a < b
     end)
 
-    -- Build propRows: header then fields per group
     for _, g in ipairs(groups) do
         local fields = groupFields[g]
         if #groups > 1 then
@@ -1040,9 +1331,8 @@ function UI:refreshProperties()
                 label = glabel
             })
         end
-        -- Sort fields by fdef.order then label
         table.sort(fields, function(a, b)
-            local oa = a.fdef.order or 999
+            local oa = a.fdef.order or 999;
             local ob = b.fdef.order or 999
             if oa ~= ob then
                 return oa < ob
@@ -1064,7 +1354,6 @@ function UI:refreshProperties()
         end
     end
 
-    -- Extra keys not in Core.fields (mod data, unknown fields)
     local extraRows = {}
     for k, v in pairs(raw) do
         if not seen[k] and k ~= "inherits" and k ~= "disabled" and k ~= "isolated" and k ~= "_key" and k ~= "points" and
@@ -1099,7 +1388,6 @@ function UI:refreshProperties()
         end
     end
 
-    -- Special rows at top: inherits, disabled
     table.insert(self.propRows, 1, {
         key = "disabled",
         label = "Disabled (tombstone)",
@@ -1117,12 +1405,8 @@ function UI:refreshProperties()
     })
 end
 
-function UI:renderPropRows()
-    self:refreshProperties()
-end
-
 -- ===========================================================================
--- PROPERTIES: render into propPanel
+-- PROPERTIES: render
 -- ===========================================================================
 function UI:renderProps(ox, oy, w, h)
     if not self.selectedData then
@@ -1146,8 +1430,6 @@ function UI:renderProps(ox, oy, w, h)
         if ry + ROW_HGT > 0 then
             local ay = oy + ry
             if ay + ROW_HGT > oy and ay < oy + h then
-
-                -- Group header row: divider line + label, no value column
                 if row.isGroupHeader then
                     local lineY = ay + math.floor(ROW_HGT / 2)
                     self:drawRect(ox + 4, lineY, contentW - 8, 1, C.border.a, C.border.r, C.border.g, C.border.b)
@@ -1206,11 +1488,10 @@ function UI:renderProps(ox, oy, w, h)
                     end
 
                     self:drawText(valStr, ox + valX + 4, ay + 2, vr, vg, vb, va, UIFont.Small)
-
                     self:drawRect(ox, ay + ROW_HGT - 1, contentW, 1, C.border.a * 0.4, C.border.r, C.border.g,
                         C.border.b)
-                end -- end if/else isGroupHeader
-            end -- bounds check
+                end
+            end
         end
     end
 
@@ -1223,10 +1504,11 @@ function UI:renderProps(ox, oy, w, h)
     end
 end
 
+-- ===========================================================================
+-- PROPERTY: click handler
+-- ===========================================================================
 function UI:onPropClick(panel, x, y)
-    -- Always suppress map click when interacting with prop panel
     self._suppressMapSelectUntil = getTimestampMs() + 300
-
     if not self.selectedData then
         return
     end
@@ -1240,7 +1522,6 @@ function UI:onPropClick(panel, x, y)
         return
     end
 
-    -- Cancel any existing edit first
     self:cancelInlineEdit()
 
     local sd = self.selectedData
@@ -1248,43 +1529,30 @@ function UI:onPropClick(panel, x, y)
         return
     end
 
-    -- Special: disabled tombstone toggle
     if row.key == "disabled" then
-        self:saveProp("disabled", not (sd.raw.disabled == true))
+        self:saveProp("disabled", not (sd.raw.disabled == true));
         return
     end
-
-    -- Special: inherits — show zone picker combo
     if row.key == "inherits" then
-        self:showInheritsPicker(row, i)
+        self:showInheritsPicker(row, i);
         return
     end
-
-    -- Other special rows (disabled handled above) — not editable
-    if row.special then
-        return
-    end
-
-    -- Extra unknown fields — not editable
-    if row.extra or not row.fdef then
+    if row.special or row.extra or not row.fdef then
         return
     end
 
     local fdef = row.fdef
-
-    -- Boolean: toggle immediately
     if fdef.type == "boolean" then
         local cur = sd.raw[row.key]
         if cur == nil then
             cur = sd.merged[row.key]
         end
-        self:saveProp(row.key, not cur)
+        self:saveProp(row.key, not cur);
         return
     end
 
-    -- String/int/combo: show inline text entry over the value column
+    -- Inline text editor
     local pp = self.controls.propPanel
-    local th = self._layout and self._layout.th or 0
     local hasScroll = (#self.propRows * ROW_HGT) > pp.height
     local contentW = hasScroll and (pp.width - SCROLLBAR_W - 2) or pp.width
     local valX = math.floor(contentW * 0.52)
@@ -1305,7 +1573,6 @@ function UI:onPropClick(panel, x, y)
     ie:setVisible(true)
     ie:focus()
     ie:selectAll()
-
     self._editingRow = row
 end
 
@@ -1316,7 +1583,6 @@ function UI:showInheritsPicker(row, rowIndex)
     end
 
     local pp = self.controls.propPanel
-    local th = self._layout and self._layout.th or 0
     local hasScroll = (#self.propRows * ROW_HGT) > pp.height
     local contentW = hasScroll and (pp.width - SCROLLBAR_W - 2) or pp.width
     local valX = math.floor(contentW * 0.52)
@@ -1327,14 +1593,12 @@ function UI:showInheritsPicker(row, rowIndex)
     picker:setY(rowScreenY)
     picker:setWidth(contentW - valX - 4)
 
-    -- Build options: _default plus all zones except self and its descendants
     local selfKey = sd.key
-    -- Collect all descendants to exclude (prevent circular inheritance)
     local descendants = {}
     local function collectDesc(k)
         for _, node in ipairs(self.treeNodes) do
             if node.zone and node.zone.inherits == k and node.key ~= selfKey then
-                descendants[node.key] = true
+                descendants[node.key] = true;
                 collectDesc(node.key)
             end
         end
@@ -1345,16 +1609,14 @@ function UI:showInheritsPicker(row, rowIndex)
     local current = sd.raw.inherits or "_default"
     local selectedIdx = 1
     local idx = 1
-    -- _default always first
     picker:addOption("_default")
     if current == "_default" then
         selectedIdx = idx
     end
     idx = idx + 1
 
-    -- Add all other zones sorted by title
     local options = {}
-    for k, v in pairs(Core.data.zones or {}) do
+    for k, v in pairs(zones(self)) do
         if k ~= selfKey and k ~= "_default" and not descendants[k] then
             table.insert(options, {
                 key = k,
@@ -1377,6 +1639,11 @@ function UI:showInheritsPicker(row, rowIndex)
     picker:setVisible(true)
 end
 
+function UI:onPropHover(panel, x, y)
+    local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
+    self.propHover = (i >= 1 and i <= #self.propRows) and i or -1
+end
+
 function UI:commitInlineEdit()
     local ie = self.controls.inlineEdit
     if not ie:isVisible() then
@@ -1390,13 +1657,12 @@ function UI:commitInlineEdit()
         return
     end
 
-    -- Read directly from the text box at commit time
     local raw = ie:getText()
     local fdef = row.fdef
     local val
 
     if fdef.type == "int" then
-        val = tonumber(raw)
+        val = tonumber(raw);
         if val == nil then
             return
         end
@@ -1421,7 +1687,9 @@ function UI:cancelInlineEdit()
     self._editingRow = nil
 end
 
--- Save a single property field — accumulates into _pendingChanges, no server call yet
+-- ===========================================================================
+-- PROP SAVE / PENDING CHANGES
+-- ===========================================================================
 function UI:saveProp(fieldKey, newValue)
     local sd = self.selectedData
     if not sd or not sd.key then
@@ -1432,7 +1700,7 @@ function UI:saveProp(fieldKey, newValue)
     local val = newValue
     if fdef then
         if fdef.type == "int" then
-            val = tonumber(newValue)
+            val = tonumber(newValue);
             if val == nil then
                 return
             end
@@ -1443,38 +1711,36 @@ function UI:saveProp(fieldKey, newValue)
         end
     end
 
-    -- Track pending change per zone
     local key = sd.key
     if not self._pendingChanges[key] then
         self._pendingChanges[key] = {}
     end
     self._pendingChanges[key][fieldKey] = val
 
-    -- Optimistic local update so UI reflects change immediately
-    if Core.data.zones[key] then
-        Core.data.zones[key][fieldKey] = val
+    -- Optimistically update self.data so the UI reflects the change immediately,
+    -- without touching Core.data global state.
+    local zoneData = zones(self)
+    if zoneData[key] then
+        zoneData[key][fieldKey] = val
     end
-    if Core.data.lookup[key] then
-        Core.data.lookup[key][fieldKey] = val
+    local lookupData = lookup(self)
+    if lookupData[key] then
+        lookupData[key][fieldKey] = val
     end
     sd.raw[fieldKey] = val
     sd.merged[fieldKey] = val
 
-    -- If title changed, rebuild tree so label updates immediately
     if fieldKey == "title" then
         self:buildTree()
     end
-    -- If inherits changed, rebuild tree so hierarchy updates immediately
     if fieldKey == "inherits" then
         self:buildTree()
     end
 
-    -- Enable Save button based on pending state
     self:updateSaveDiscardButtons()
     self:refreshProperties()
 end
 
--- Returns true if there are any pending changes across any zone
 function UI:hasPendingChanges()
     for _ in pairs(self._pendingChanges) do
         return true
@@ -1482,7 +1748,6 @@ function UI:hasPendingChanges()
     return false
 end
 
--- Flush all pending changes across all zones
 function UI:flushPendingChanges()
     self:commitInlineEdit()
     if not self:hasPendingChanges() then
@@ -1491,28 +1756,44 @@ function UI:flushPendingChanges()
 
     local changes = {}
     for zoneKey, fields in pairs(self._pendingChanges) do
-        local zones = Core.data and Core.data.zones or {}
-        local raw = zones[zoneKey] or {}
+        local zoneData = zones(self)
+        local raw = zoneData[zoneKey] or {}
         local inherited = {}
         if zoneKey ~= "_default" then
             local parentKey = raw.inherits
-            inherited = Core.data.lookup[parentKey or "_default"] or {}
+            local lookupData = lookup(self)
+            inherited = lookupData[parentKey or "_default"] or {}
         end
 
-        local zoneData = {}
+        local zoneChanges = {}
+
+        -- Pending property changes
         for fieldKey, val in pairs(fields) do
-            if inherited[fieldKey] ~= val then
-                zoneData[fieldKey] = val
+            if fieldKey ~= "_points" then
+                if inherited[fieldKey] ~= val then
+                    zoneChanges[fieldKey] = val
+                end
             end
         end
 
+        -- Pending geometry — write via ModData (same path as the old savePoint)
+        if fields._points then
+            local md = ModData.getOrCreate(Core.const.modifiedModData)
+            if not md[zoneKey] then
+                md[zoneKey] = {}
+            end
+            md[zoneKey].points = fields._points
+            -- Include points in the change payload so Core.saveChanges persists them
+            zoneChanges.points = fields._points
+        end
+
         local hasData = false
-        for _ in pairs(zoneData) do
+        for _ in pairs(zoneChanges) do
             hasData = true;
             break
         end
         if hasData then
-            changes[zoneKey] = zoneData
+            changes[zoneKey] = zoneChanges
         end
     end
 
@@ -1525,8 +1806,7 @@ function UI:flushPendingChanges()
         break
     end
     if hasChanges then
-        Core.saveChanges(changes) -- single batch call for all zones
-        -- Re-sync UI with updated data, preserving current selection
+        Core.saveChanges(changes)
         local currentKey = self.selectedData and self.selectedData.key
         self:rebuildUI(currentKey and {
             key = currentKey
@@ -1534,181 +1814,150 @@ function UI:flushPendingChanges()
     end
 end
 
--- Update Save button enabled state
 function UI:updateSaveDiscardButtons()
     self.controls.btnSave.enable = self:hasPendingChanges()
 end
 
-function UI:onPropHover(panel, x, y)
-    local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
-    self.propHover = (i >= 1 and i <= #self.propRows) and i or -1
-end
-
 -- ===========================================================================
--- MAP: click to select zone
+-- COORD BAR
 -- ===========================================================================
-function UI:onMapClick(x, y, mapPanel)
-    -- Suppress if tree/prop click just happened, or if inline edit is open
-    if self._suppressMapSelectUntil and getTimestampMs() < self._suppressMapSelectUntil then
-        return
-    end
-    if self.controls.inlineEdit and self.controls.inlineEdit:isVisible() then
+
+-- Update the X1/Y1/X2/Y2 fields and W/H label from the given point table {x1,y1,x2,y2}
+-- or clear them if pt is nil.
+function UI:updateCoordBar(pt)
+    local cf = self.controls.coordFields
+    if not cf then
         return
     end
 
-    local api = self.controls.mapui.map and self.controls.mapui.map.mapAPI
-    if not api then
-        return
-    end
-    local wx = api:uiToWorldX(x, y)
-    local wy = api:uiToWorldY(x, y)
-
-    -- Find which zone's rect contains this world point
-    local zones = Core.data and Core.data.zones or {}
-    for key, z in pairs(zones) do
-        for _, pt in ipairs(z.points or {}) do
-            if wx >= pt[1] and wy >= pt[2] and wx <= pt[3] and wy <= pt[4] then
-                self:selectZone(key)
-                return
-            end
+    if pt then
+        local vals = {pt[1], pt[2], pt[3], pt[4]}
+        for i, c in ipairs(cf) do
+            c.field:setText(tostring(math.floor(vals[i])))
+        end
+        local w = math.abs(math.floor(pt[3]) - math.floor(pt[1]))
+        local h = math.abs(math.floor(pt[4]) - math.floor(pt[2]))
+        if self.controls.lblWH then
+            self.controls.lblWH.name = "W: " .. w .. "  H: " .. h
+        end
+    else
+        for _, c in ipairs(cf) do
+            c.field:setText("")
+        end
+        if self.controls.lblWH then
+            self.controls.lblWH.name = "W: –   H: –"
         end
     end
 end
 
--- ===========================================================================
--- MAP DRAW MODE (for adding rects)
--- ===========================================================================
-function UI:enterDrawMode()
-    self._drawMode = true
-    self._drawStart = nil
-    -- Visual hint: override map mouse handlers temporarily
-    local map = self.controls.mapui
-    if not map or not map.map then
+-- Called when user presses Enter/Tab in a coord field.
+-- Reads all four fields, validates, and queues a point change.
+function UI:commitCoordField()
+    local cf = self.controls.coordFields
+    if not cf or not self.selectedData or not self.selectedPtIdx then
         return
     end
 
-    local origDown = map.map.onMouseDown
-    local origMove = map.map.onMouseMove
-    local origUp = map.map.onMouseUp
-
-    map.map.onMouseDown = function(s, mx, my)
-        local api = s.mapAPI
-        self._drawStart = {
-            wx = api:uiToWorldX(mx, my),
-            wy = api:uiToWorldY(mx, my)
-        }
-    end
-
-    map.map.onMouseMove = function(s, dx, dy)
-        if self._drawStart then
-            -- Could draw a live preview rect here via map:setData overlay
-        end
-    end
-
-    map.map.onMouseUp = function(s, mx, my)
-        if not self._drawStart then
+    local vals = {}
+    for _, c in ipairs(cf) do
+        local n = tonumber(c.field:getText())
+        if not n then
             return
-        end
-        local api = s.mapAPI
-        local wx2 = api:uiToWorldX(mx, my)
-        local wy2 = api:uiToWorldY(mx, my)
-        local x1 = math.min(self._drawStart.wx, wx2)
-        local y1 = math.min(self._drawStart.wy, wy2)
-        local x2 = math.max(self._drawStart.wx, wx2)
-        local y2 = math.max(self._drawStart.wy, wy2)
-
-        self._drawMode = false
-        self._drawStart = nil
-
-        -- Restore original handlers
-        map.map.onMouseDown = origDown
-        map.map.onMouseMove = origMove
-        map.map.onMouseUp = origUp
-
-        -- Open XY popup pre-filled with drawn coords
-        Core.ui.xy.OnOpenPanel(self.player, {
-            region = self.selectedData.region,
-            zone = self.selectedData.zone,
-            x = math.floor(x1),
-            y = math.floor(y1),
-            x2 = math.floor(x2),
-            y2 = math.floor(y2)
-        }, function(nxy)
-            self:savePoint(nxy)
-        end)
+        end -- invalid input — silently ignore
+        table.insert(vals, math.floor(n))
     end
+
+    local x1, y1, x2, y2 = vals[1], vals[2], vals[3], vals[4]
+    -- Normalise so x1<x2, y1<y2
+    if x1 > x2 then
+        x1, x2 = x2, x1
+    end
+    if y1 > y2 then
+        y1, y2 = y2, y1
+    end
+
+    local key = self.selectedData.key
+    local ptIdx = self.selectedPtIdx
+
+    local zone = zones(self)[key]
+    if not zone or not zone.points or not zone.points[ptIdx] then
+        return
+    end
+
+    self:queuePointChange(key, ptIdx, x1, y1, x2, y2)
+
+    -- Refresh the coord bar with normalised values
+    self:updateCoordBar({x1, y1, x2, y2})
 end
 
 -- ===========================================================================
--- DATA: refresh all
+-- DATA
 -- ===========================================================================
--- Called by the OnZonesUpdated event — Core.data is already current by the time this fires
 function UI:refreshData(zone)
-    self.data = Core.data
+    -- Always re-build self.data from scratch, respecting the current filter state.
+    -- This keeps Core.data untouched.
+    self.data = Core.buildZoneData(self._filterActive or false)
     self:rebuildUI(zone)
 end
 
--- Called internally after saves — Core.data is already up to date, no updateZoneData needed
 function UI:rebuildUI(zone)
     self:buildTree()
 
-    -- Re-select previously selected zone if possible, skip _default/void
     if zone then
         local targetKey = zone.key or zone.region
-        if targetKey and targetKey ~= "_default" and targetKey ~= "void" and Core.data.zones[targetKey] then
+        local zoneData = zones(self)
+        if targetKey and targetKey ~= "_default" and targetKey ~= "void" and zoneData[targetKey] then
             self:selectZone(targetKey)
             return
         end
     end
 
-    -- No location match - leave nothing selected
     self.selectedData = nil
     self:refreshProperties()
 end
 
--- ===========================================================================
--- DATA: zone points
--- ===========================================================================
 function UI:refreshZonePoints(points, selectedIdx)
     self.selectedPoint = nil
-    self.controls.btnEditRect.enable = false
     self.controls.btnDeleteRect.enable = false
+    self:updateCoordBar(nil)
 
-    -- Pass points to map for rendering
     self.controls.mapui:setData(points, nil)
 
     if points and #points > 0 then
         local idx = selectedIdx or 1
+        idx = math.max(1, math.min(idx, #points))
         self.selectedPoint = {
             x = points[idx][1],
             y = points[idx][2],
             x2 = points[idx][3],
             y2 = points[idx][4]
         }
-        self.controls.btnEditRect.enable = true
         self.controls.btnDeleteRect.enable = true
         self.controls.mapui:setData(points, self.selectedPoint)
+        self.controls.mapui.selectedPointIndex = idx
+        self.selectedPtIdx = idx
+
+        self:updateCoordBar(points[idx])
+
+        if self.overlay then
+            self.overlay:setSelectedPoint(idx)
+        end
     end
 end
 
--- ===========================================================================
--- DATA: save zone properties
--- ===========================================================================
 function UI:saveData(data)
-    -- Compute inherited baseline to diff against
     local inherited = {}
-    local zones = Core.data.zones or {}
+    local lookupData = lookup(self)
     if data.key and data.key ~= "_default" then
         local parentKey = data.inherits
         if parentKey then
-            inherited = Core.data.lookup[parentKey] or {}
+            inherited = lookupData[parentKey] or {}
         else
-            inherited = Core.data.lookup["_default"] or {}
+            inherited = lookupData["_default"] or {}
         end
     end
 
-    -- Build zoneData diff and save with correct signature
-    local zoneData = {}
+    local zoneChanges = {}
     for k, v in pairs(Core.fields) do
         local final
         if v.type == "string" then
@@ -1720,9 +1969,8 @@ function UI:saveData(data)
         elseif v.type == "boolean" then
             final = data[k]
         end
-        -- Only include if different from inherited
         if k ~= "key" and inherited[k] ~= final then
-            zoneData[k] = final
+            zoneChanges[k] = final
         end
     end
 
@@ -1732,72 +1980,67 @@ function UI:saveData(data)
     end
 
     Core.saveChanges({
-        [key] = zoneData
+        [key] = zoneChanges
     })
     self:rebuildUI({
         key = key
     })
 end
 
--- ===========================================================================
--- DATA: save rect point
--- ===========================================================================
 function UI:savePoint(xy, pointIndex)
-    local zones = Core.data.zones or {}
-    local key = xy.region -- legacy compat; ideally xy.key
-    local zone = zones[key]
+    -- Route through queuePointChange so all geometry goes via pending,
+    -- not directly to the server. The caller (dropRectAtViewportCentre,
+    -- Edit Rect popup, etc.) doesn't need to know the difference.
+    local key = xy.region
+    local zone = zones(self)[key]
     if not zone then
         return
     end
 
-    local md = ModData.getOrCreate(Core.const.modifiedModData)
-    if not md[key] then
-        md[key] = {}
+    -- Build the updated points list locally
+    if not zone.points then
+        zone.points = {}
     end
-    if not md[key].points then
-        md[key].points = {}
-        -- copy existing
-        for _, p in ipairs(zone.points or {}) do
-            table.insert(md[key].points, p)
-        end
-    end
-
+    local ptIdx
     if pointIndex then
-        md[key].points[pointIndex] = {xy.x, xy.y, xy.x2, xy.y2}
+        zone.points[pointIndex] = {xy.x, xy.y, xy.x2, xy.y2}
+        ptIdx = pointIndex
     else
-        table.insert(md[key].points, {xy.x, xy.y, xy.x2, xy.y2})
+        table.insert(zone.points, {xy.x, xy.y, xy.x2, xy.y2})
+        ptIdx = #zone.points
     end
 
-    Core.saveChanges({
-        [key] = md[key]
-    })
-    -- Reload raw data and re-render
-    self.data = Core.buildZoneData(not self.controls.chkAll:isSelected(1))
-    local updatedZone = Core.data.zones[key]
-    self:refreshZonePoints(updatedZone and updatedZone.points or {}, pointIndex)
+    self:queuePointChange(key, ptIdx, xy.x, xy.y, xy.x2, xy.y2)
+
+    -- Re-select zone and point so handles appear immediately
+    self:selectZone(key)
+    self:refreshZonePoints(zone.points, ptIdx)
+end
+
+function UI:openImportModal()
+    Core.ui.configEditor:open(false)
 end
 
 -- ===========================================================================
--- NEW ZONE: name prompt
+-- NEW ZONE
 -- ===========================================================================
 function UI:promptNewZone()
     local sw = getCore():getScreenWidth()
     local sh = getCore():getScreenHeight()
     local w, h = 300, 120
     local entry
-    local modal =
-        ISModalDialog:new(sw / 2 - w / 2, sh / 2 - h / 2, w, h, "Enter zone name:", true, self, -- true = has cancel button
-            function(owner, button)
-                if button.internal ~= "YES" then
-                    return
-                end
-                local name = entry and entry:getText() or ""
-                name = name:match("^%s*(.-)%s*$")
-                if name == "" then
-                    return
-                end
-                owner:createNewZone(name)
-            end)
+    local modal = ISModalDialog:new(sw / 2 - w / 2, sh / 2 - h / 2, w, h, "Enter zone name:", true, self,
+        function(owner, button)
+            if button.internal ~= "YES" then
+                return
+            end
+            local name = entry and entry:getText() or ""
+            name = name:match("^%s*(.-)%s*$")
+            if name == "" then
+                return
+            end
+            owner:createNewZone(name)
+        end)
     modal:initialise()
     entry = ISTextEntryBox:new("", 10, 60, w - 20, FONT_HGT_SMALL + 6)
     entry:initialise()
@@ -1812,13 +2055,12 @@ function UI:createNewZone(name)
         return
     end
 
-    -- Ensure key is unique — append incrementing number if taken
-    local zones = Core.data and Core.data.zones or {}
-    if zones[key] then
+    local zoneData = zones(self)
+    if zoneData[key] then
         local i = 2
         local candidate = key .. tostring(i)
-        while zones[candidate] do
-            i = i + 1
+        while zoneData[candidate] do
+            i = i + 1;
             candidate = key .. tostring(i)
         end
         key = candidate
@@ -1836,7 +2078,7 @@ function UI:createNewZone(name)
 end
 
 -- ===========================================================================
--- DELETE zone
+-- DELETE
 -- ===========================================================================
 function UI:confirmDelete()
     local selected = self.selectedData
@@ -1865,10 +2107,9 @@ function UI:confirmDeleteRect()
     if not self.selectedPoint or not self.selectedData then
         return
     end
-    -- For now: save with the point removed
+
     local key = self.selectedData.key
-    local zones = Core.data.zones or {}
-    local zone = zones[key]
+    local zone = zones(self)[key]
     if not zone then
         return
     end
@@ -1881,18 +2122,28 @@ function UI:confirmDeleteRect()
         end
     end
 
-    local md = ModData.getOrCreate(Core.const.modifiedModData)
-    if not md[key] then
-        md[key] = {}
-    end
-    md[key].points = pts
-    Core.saveChanges({
-        [key] = md[key]
-    })
+    -- Update local data immediately so the overlay stops rendering the rect
+    zone.points = pts
 
-    self.data = Core.buildZoneData(not self.controls.chkAll:isSelected(1))
-    local updated = Core.data.zones[key]
-    self:refreshZonePoints(updated and updated.points or {})
+    -- Queue the deletion as pending (committed on Save)
+    if not self._pendingChanges[key] then
+        self._pendingChanges[key] = {}
+    end
+    self._pendingChanges[key]._points = {}
+    for _, p in ipairs(pts) do
+        table.insert(self._pendingChanges[key]._points, {p[1], p[2], p[3], p[4]})
+    end
+    self:updateSaveDiscardButtons()
+
+    -- Sync overlay zones and clear point selection
+    if self.overlay then
+        self.overlay:setZones(zones(self))
+        self.overlay:setSelectedPoint(nil)
+    end
+
+    -- Refresh point list UI, selecting adjacent point if one exists
+    local newIdx = math.min(idx, #pts)
+    self:refreshZonePoints(pts, #pts > 0 and newIdx or nil)
 end
 
 -- ===========================================================================
@@ -1901,7 +2152,7 @@ end
 function UI:close()
     if self._closing then
         return
-    end -- prevent re-entry from ISCollapsableWindowJoypad.close
+    end
     if self:hasPendingChanges() then
         local modal = ISModalDialog:new(0, 0, 300, 150, getText("IGUI_PhunZones_UnsavedChanges") or
             "You have unsaved changes. Save before closing?", true, self, UI.onCloseModalResult)
@@ -1921,9 +2172,8 @@ end
 
 function UI:doClose()
     self._closing = true
-    ISCollapsableWindowJoypad.close(self)
     self:setVisible(false)
-    self:removeFromUIManager()
+    ISCollapsableWindowJoypad.close(self)
     self.instances[self.playerIndex] = nil
 end
 
@@ -1934,23 +2184,4 @@ function UI:isKeyConsumed(key)
         end
     end
     return key == Keyboard.KEY_ESCAPE
-end
-
-function UI:onKeyPressed(key)
-    local ie = self.controls.inlineEdit
-    if ie and ie:isVisible() then
-        if key == Keyboard.KEY_RETURN or key == Keyboard.KEY_NUMPADENTER then
-            self:commitInlineEdit()
-            return
-        elseif key == Keyboard.KEY_ESCAPE then
-            self:cancelInlineEdit()
-            return
-        end
-    end
-end
-
-function UI:onKeyRelease(key)
-    if key == Keyboard.KEY_ESCAPE then
-        self:close()
-    end
 end

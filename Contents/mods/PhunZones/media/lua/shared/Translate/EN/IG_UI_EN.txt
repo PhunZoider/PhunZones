@@ -10,11 +10,28 @@ IGUI_EN = {
     IGUI_PhunZones_Property = "Property",
     IGUI_PhunZones_Value = "Value",
 
+    IGUI_PhunZones_Zone = "Zone"
+    IGUI_PhunZones_Zones = "Zones"
+    IGUI_PhunZones_AddZone = "Add Zone"
+    IGUI_PhunZones_AddZoneTooltip = "Add a new zone"
+    IGUI_PhunZones_DelZone = "Delete Zone"#
+    IGUI_PhunZones_DelZoneTooltip = "Delete selected zone"
+    IGUI_PhunZones_DelRect = "Delete Rect"
+    IGUI_PhunZones_DelRectTooltip = "Delete selected Rectangle from zone"
+    IGUI_PhunZones_Plus = " + "
+    IGUI_PhunZones_AddRect = "Add Rect"
+    IGUI_PhunZones_AddRectTooltip = "Add a new rect at the current map centre for the selected zone"
+    IGUI_PhunZones_Minus = " - "
+    IGUI_PhunZones_File = "File Contents"
+    IGUI_PhunZones_FileTooltip = "View contents of your lua/PhunZones.lua file"
+    
+    IGUI_PhunZones_SavePending = "Save pending property changes"
+
+
     IGUI_PhunZones_AddRegion = "Add Region",
     IGUI_PhunZones_AddSub = "Add Sub Zone",
     IGUI_PhunZones_EditRegion = "Edit Region",
 
-    IGUI_PhunZones_AddZone = "Add Zone",
     IGUI_PhunZones_EditZone = "Edit Zone",
 
     IGUI_PhunZones_NoSafeHouse = "You cannot create a safehouse in this area"

@@ -4,12 +4,12 @@ end
 
 require "DebugUIs/DebugMenu/ISDebugMenu"
 local Core = PhunZones
-local PL = PhunLib
+
 local function showPhunZonesConfigs()
-    -- if PL.isAdmin(getPlayer()) then
+
     local c = Core
     c.ui.zones.OnOpenPanel(getPlayer());
-    -- end
+
 end
 
 local ISDebugMenu_setupButtons = ISDebugMenu.setupButtons;

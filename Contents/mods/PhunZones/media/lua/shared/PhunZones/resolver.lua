@@ -1,6 +1,5 @@
 require "PhunZones/process"
 local Core = PhunZones
-local PL = PhunLib
 
 function Core.normalizeZoneData(raw)
     local flat = {}

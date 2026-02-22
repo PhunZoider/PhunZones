@@ -77,7 +77,6 @@ description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]P
 description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]
 
 
-require=phunlib
 tags=Build 41;Build 42;Multiplayer
 visibility=public
 
