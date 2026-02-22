@@ -13,7 +13,7 @@ Commands[PZ.commands.playerSetup] = function(player)
         modData.PhunZones = {}
     end
     modData.PhunZones.modified = false
-    PZ:updateModData(player, true, true)
+    PZ.updateModData(player, true, true)
     sendServerCommand(player, PZ.name, PZ.commands.playerSetup, {
         data = ModData.get(PZ.const.modifiedModData) or {},
         deletes = ModData.get(PZ.const.modifiedDeletions) or {}
@@ -21,7 +21,13 @@ Commands[PZ.commands.playerSetup] = function(player)
 end
 
 Commands[PZ.commands.modifyZone] = function(player, data)
-    PZ:saveChanges(data)
+    if not data or not data.key or not data.data then
+        return
+    end
+    PZ.saveChanges({
+        key = data.key,
+        value = data.data
+    })
     ModData.transmit(PZ.const.modifiedModData)
     ModData.transmit(PZ.const.modifiedDeletions)
     PZ:updatePlayers()

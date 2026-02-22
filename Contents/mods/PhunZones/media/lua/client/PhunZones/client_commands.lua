@@ -17,12 +17,12 @@ Commands[PZ.commands.playerSetup] = function(data)
     local players = PL.onlinePlayers()
     for i = 0, players:size() - 1 do
         local p = players:get(i)
-        PZ:updateModData(p, true, true)
+        PZ.updateModData(p, true, true)
     end
 end
 
 Commands[PZ.commands.playerTeleport] = function(data)
-    PZ:portPlayer(PL.getPlayerByUsername(data.username), data.x, data.y, data.z)
+    PZ.portPlayer(PL.getPlayerByUsername(data.username), data.x, data.y, data.z)
 end
 
 Commands[PZ.commands.teleportVehicle] = function(data)
@@ -30,31 +30,6 @@ Commands[PZ.commands.teleportVehicle] = function(data)
     local player = PL.getPlayerByUsername(data.username)
     if player and vehicle then
         PZ:portVehicle(player, vehicle, data.x, data.y, data.z)
-    end
-end
-
-Commands[PZ.commands.updatePlayerZone] = function(args)
-    local p = nil
-    local players = PL.onlinePlayers()
-    for i = 0, players:size() - 1 do
-        local player = players:get(i)
-        if player:getOnlineID() == args.pid then
-            p = player
-            break
-        end
-    end
-
-    if p then
-        args.pid = nil
-        local name = p:getUsername()
-        if not PZ.players then
-            PZ.players = ModData.getOrCreate(PZ.const.playerData)
-        end
-        local old = PZ:getPlayerData(p)
-        local existing = old
-        PZ.players[name] = args
-        p:getModData().PhunZones = args
-        triggerEvent(PZ.events.OnPhunZonesPlayerLocationChanged, p, args, existing)
     end
 end
 

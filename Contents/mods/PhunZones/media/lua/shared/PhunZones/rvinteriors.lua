@@ -51,7 +51,7 @@ function PZ:setTrackedVehicleData(vehicleId)
                     if not self.trackedVehicles[interiorInstance] then
                         self.trackedVehicles[interiorInstance] = {}
                     end
-                    self.trackedVehicles[interiorInstance] = self:getLocation(vehicle)
+                    self.trackedVehicles[interiorInstance] = self.getLocation(vehicle)
                     self.trackedVehicles[interiorInstance].vehicleId = vehicleId
                     self.trackedVehicles[interiorInstance].x = vehicle:getX()
                     self.trackedVehicles[interiorInstance].y = vehicle:getY()

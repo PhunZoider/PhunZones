@@ -45,10 +45,22 @@ function PZ:ISSafetyPrerender(player)
     end
 end
 
+function PZ:updatePlayers()
+
+    local players = self.tools.onlinePlayers(not self.settings.ProcessOnClient)
+    for i = 0, players:size() - 1, 1 do
+        local p = players:get(i)
+        self:updatePlayer(p)
+    end
+end
+
+function PZ:updatePlayer(playerObj)
+    self.updateModData(playerObj, true)
+end
+
 function PZ:updatePlayerUI(playerObj, info, existing)
 
     local zone = info or playerObj:getModData().PhunZones or {}
-    -- local existing = PZ:getPlayerData(playerObj)
     local existing = existing or {}
     PZ.ui.welcome.OnOpenPanel(playerObj, zone)
 
@@ -97,7 +109,7 @@ function PZ:checkFire(fire)
     end
 
     local square = fire:getSquare()
-    local extinguish = self:getLocation(square).fire == false
+    local extinguish = self.getLocation(square).fire == false
 
     if extinguish then
 
@@ -131,18 +143,6 @@ function PZ:checkFire(fire)
 
 end
 
-function PZ:portPlayer(player, x, y, z)
-    player:setX(x)
-    player:setY(y)
-    player:setZ(z)
-    if player.setLx then
-        -- b41?
-        player:setLx(x)
-        player:setLy(y)
-        player:setLz(z)
-    end
-end
-
 function PZ:rvInteriorFlags(entering, args)
     if not self.settings.VehicleTracking then
         return
@@ -174,7 +174,7 @@ if BanditScheduler then
 
     function BanditScheduler.GenerateSpawnPoint(player, d)
 
-        local zone = PZ:getLocation(player:getX(), player:getY())
+        local zone = PZ.getLocation(player:getX(), player:getY())
 
         if zone and zone.bandits == false then
             return false

@@ -1,38 +1,21 @@
 if isServer() then
     return
 end
-local PZ = PhunZones
-local PL = PhunLib
+local Core = PhunZones
 local Commands = require "PhunZones/client_commands"
 
-Events[PZ.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, zone, oldZone)
+Events[Core.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, newEffective, prevEffective)
 
-    if PZ.isLocal or PZ.settings.ProcessOnClient then
-        local players = PL.onlinePlayers()
-        if not PZ.players then
-            PZ.players = ModData.getOrCreate(PZ.const.playerData)
-        end
-        for i = 0, players:size() - 1 do
-            local p = players:get(i)
-            if p:getID() == playerObj:getID() then
-                local existing = PL.table.deepCopy(p:getModData().PhunZones)
-                PZ.players[p:getID()] = zone
-                p:getModData().PhunZones = zone
-                PZ:updatePlayerUI(p, zone, existing)
-
-            end
-
-        end
-    end
+    Core:updatePlayerUI(playerObj, newEffective, prevEffective)
 
 end)
 
-Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
+Events[Core.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
     -- check if zed is in a nozed zone
     if instanceof(object, "IsoZombie") then
         local doRemove = false
         if zone.zeds == false then
-            PZ:updateModData(object)
+            Core.updateModData(object)
             doRemove = true
         elseif zone.bandits == false and object:getModData().brain ~= nil then
             object:getModData().PZChecked = nil
@@ -40,11 +23,11 @@ Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
         end
         if doRemove then
             if isClient() then
-                sendClientCommand(PZ.name, PZ.commands.cleanPlayersZeds, {
-                    id = PZ.getZId(object)
+                sendClientCommand(Core.name, Core.commands.cleanPlayersZeds, {
+                    id = Core.getZId(object)
                 })
             end
-            triggerEvent(PZ.events.OnZombieRemoved, PZ.getZId(object))
+            triggerEvent(Core.events.OnZombieRemoved, Core.getZId(object))
             object:removeFromWorld()
             object:removeFromSquare()
 
@@ -52,38 +35,45 @@ Events[PZ.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
     end
 end)
 
-Events[PZ.events.OnPhunZoneReady].Add(function()
+Events[Core.events.OnPhunZoneReady].Add(function()
     Events.OnZombieUpdate.Add(function(zed)
         if not zed then
             return
         end
         local md = zed:getModData()
         local checked = zed:getModData().PZChecked or 0
-        if not md.PhunZones or md.PhunZones.id ~= PZ.getZId(zed) or not md.PhunZones.checked or md.PhunZones.checked <
+        if not md.PhunZones or md.PhunZones.id ~= Core.getZId(zed) or not md.PhunZones.checked or md.PhunZones.checked <
             getTimestamp() then
-            md.PhunZones = getTimestamp() + (PZ.settings.ZedUpdateFrequency or 10)
-            PZ:updateModData(zed, true)
+            md.PhunZones = getTimestamp() + (Core.settings.ZedUpdateFrequency or 10)
+            Core.updateModData(zed, true)
         end
     end)
 
-    if PZ.settings.ProcessOnClient then
+    if Core.settings.ProcessOnClient then
         local nextCheck = 0
 
         Events.OnTick.Add(function()
             if getTimestamp() >= nextCheck then
-                nextCheck = getTimestamp() + (PZ.settings.updateInterval or 1)
-                local players = PL.onlinePlayers()
+                nextCheck = getTimestamp() + (Core.settings.updateInterval or 1)
+                local players = Core.tools.onlinePlayers()
                 for i = 0, players:size() - 1, 1 do
                     local p = players:get(i)
-                    PZ:updateModData(p, true)
+                    Core.updateModData(p, true)
                 end
             end
         end)
     end
 end)
 
-Events[PZ.events.OnZonesUpdated].Add(function(playerObj, buttonId)
-    PZ:updatePlayers()
+Events[Core.events.OnZonesUpdated].Add(function(playerObj, buttonId)
+    Core:updatePlayers()
+
+    -- In your process/rebuild code, after data is ready:
+    for _, instance in pairs(Core.ui.zones.instances or {}) do
+        if instance.refreshData then
+            instance:refreshData()
+        end
+    end
 end)
 
 Events.OnCreatePlayer.Add(function(id)
@@ -100,30 +90,30 @@ Events.OnCreatePlayer.Add(function(id)
 end)
 
 Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
-    PZ:showContext(playerObj, context, worldobjects)
+    Core:showContext(playerObj, context, worldobjects)
 end);
 
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
-    if tableName == PZ.const.modifiedModData then
-        ModData.add(PZ.const.modifiedModData, tableData)
-        PZ:updateZoneData(true, tableData)
-    elseif tableName == PZ.const.modifiedDeletions then
-        ModData.add(PZ.const.modifiedDeletions, tableData)
-        PZ:updateZoneData(true, tableData)
+    if tableName == Core.const.modifiedModData then
+        ModData.add(Core.const.modifiedModData, tableData)
+        Core:updateZoneData(true, tableData)
+    elseif tableName == Core.const.modifiedDeletions then
+        ModData.add(Core.const.modifiedDeletions, tableData)
+        Core:updateZoneData(true, tableData)
     end
 end)
 
 Events.OnEnterVehicle.Add(function(player)
-    if player and PZ.settings.VehicleTracking then
+    if player and Core.settings.VehicleTracking then
         local vehicle = player:getVehicle();
         if vehicle then
-            PZ:setTrackedVehicleData(vehicle:getId())
+            Core:setTrackedVehicleData(vehicle:getId())
         end
     end
 end)
 
 Events.OnServerCommand.Add(function(module, command, arguments)
-    if module == PZ.name then
+    if module == Core.name then
         if Commands[command] then
             Commands[command](arguments)
         end
@@ -133,9 +123,9 @@ end)
 local sh = nil
 local function setup()
     Events.OnTick.Remove(setup)
-    PZ:ini()
-    PZ:showWidgets()
-    sendClientCommand(PZ.name, PZ.commands.playerSetup, {})
+    Core:ini()
+    Core:showWidgets()
+    sendClientCommand(Core.name, Core.commands.playerSetup, {})
 
     if sh == nil then
         sh = SafeHouse.canBeSafehouse
@@ -151,7 +141,7 @@ local function setup()
 end
 
 Events.OnNewFire.Add(function(fire)
-    PZ:checkFire(fire)
+    Core:checkFire(fire)
 end)
 
 Events.OnTick.Add(setup)
