@@ -237,8 +237,22 @@ function UI:createChildren()
     -- Wire map click -> zone select
     local outerSelf = self
     if map.map then
+        map.map.onMouseDown = function(s, x, y)
+            outerSelf._mapMouseDownX = x
+            outerSelf._mapMouseDownY = y
+        end
         map.map.onMouseUp = function(s, x, y)
-            outerSelf:onMapClick(x, y, s)
+            -- Only fire if mousedown also started on the map
+            if outerSelf._mapMouseDownX == nil then
+                return
+            end
+            local dx = math.abs(x - outerSelf._mapMouseDownX)
+            local dy = math.abs(y - outerSelf._mapMouseDownY)
+            outerSelf._mapMouseDownX = nil
+            outerSelf._mapMouseDownY = nil
+            if dx <= 4 and dy <= 4 then
+                outerSelf:onMapClick(x, y, s)
+            end
         end
     end
 
@@ -269,7 +283,9 @@ function UI:createChildren()
     chkAll.tooltip = getText("IGUI_PhunZones_AllZones_tooltip")
     chkAll.onMouseUp = function(s, x, y)
         ISTickBox.onMouseUp(s, x, y)
-        self:refreshData()
+        local filterActive = not s:isSelected(1)
+        self.data = Core.buildZoneData(filterActive)
+        self:rebuildUI()
     end
     self:addChild(chkAll)
     self.controls.chkAll = chkAll
@@ -288,7 +304,13 @@ function UI:createChildren()
     } -- fully transparent
     treePanel.drawBorder = false
     treePanel.onMouseUp = function(s, x, y)
-        self:onTreeClick(s, x, y)
+        -- Only select if mouseup is on the same node as mousedown
+        local i = math.floor((y + self.treeScroll) / ROW_HGT) + 1
+        local upNode = self.treeNodes[i] and self.treeNodes[i].key
+        if upNode and upNode == self._treeMouseDownNode then
+            self:onTreeClick(s, x, y)
+        end
+        self._treeMouseDownNode = nil
     end
     treePanel.onMouseMove = function(s, x, y)
         self:onTreeHover(s, x, y)
@@ -299,7 +321,10 @@ function UI:createChildren()
         return true
     end
     treePanel.onMouseDown = function(s, x, y)
-        self:commitInlineEdit() -- clicking tree commits any open prop edit
+        self:commitInlineEdit()
+        -- Record which node was under the cursor on mousedown
+        local i = math.floor((y + self.treeScroll) / ROW_HGT) + 1
+        self._treeMouseDownNode = (self.treeNodes[i] and self.treeNodes[i].key) or nil
         local totalH = #self.treeNodes * ROW_HGT
         if totalH > s.height and x >= s.width - SCROLLBAR_W then
             self._treeScrDrag = true
@@ -355,7 +380,12 @@ function UI:createChildren()
     } -- fully transparent
     propPanel.drawBorder = false
     propPanel.onMouseUp = function(s, x, y)
-        self:onPropClick(s, x, y)
+        -- Only fire click if mouseup is on the same row as mousedown
+        local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
+        if i == self._propMouseDownRow then
+            self:onPropClick(s, x, y)
+        end
+        self._propMouseDownRow = nil
     end
     propPanel.onMouseMove = function(s, x, y)
         self:onPropHover(s, x, y)
@@ -366,7 +396,10 @@ function UI:createChildren()
         return true
     end
     propPanel.onMouseDown = function(s, x, y)
-        self:commitInlineEdit() -- clicking anywhere in prop panel commits current edit
+        self:commitInlineEdit()
+        -- Record which row was under cursor on mousedown
+        local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
+        self._propMouseDownRow = (self.propRows[i] and not self.propRows[i].isGroupHeader) and i or nil
         local totalH = #self.propRows * ROW_HGT
         if totalH > s.height and x >= s.width - SCROLLBAR_W then
             self._propScrDrag = true
@@ -1495,7 +1528,7 @@ function UI:flushPendingChanges()
         Core.saveChanges(changes) -- single batch call for all zones
         -- Re-sync UI with updated data, preserving current selection
         local currentKey = self.selectedData and self.selectedData.key
-        self:refreshData(currentKey and {
+        self:rebuildUI(currentKey and {
             key = currentKey
         } or nil)
     end
@@ -1609,10 +1642,14 @@ end
 -- ===========================================================================
 -- DATA: refresh all
 -- ===========================================================================
+-- Called by the OnZonesUpdated event — Core.data is already current by the time this fires
 function UI:refreshData(zone)
-    local filterActive = not self.controls.chkAll:isSelected(1)
-    self.data = Core.updateZoneData(filterActive)
+    self.data = Core.data
+    self:rebuildUI(zone)
+end
 
+-- Called internally after saves — Core.data is already up to date, no updateZoneData needed
+function UI:rebuildUI(zone)
     self:buildTree()
 
     -- Re-select previously selected zone if possible, skip _default/void
@@ -1624,7 +1661,7 @@ function UI:refreshData(zone)
         end
     end
 
-    -- No location match - leave nothing selected, user can click a zone
+    -- No location match - leave nothing selected
     self.selectedData = nil
     self:refreshProperties()
 end
@@ -1689,10 +1726,15 @@ function UI:saveData(data)
         end
     end
 
+    local key = data.key or data.region
+    if not key then
+        return
+    end
+
     Core.saveChanges({
         [key] = zoneData
     })
-    self:refreshData({
+    self:rebuildUI({
         key = key
     })
 end
@@ -1730,7 +1772,7 @@ function UI:savePoint(xy, pointIndex)
         [key] = md[key]
     })
     -- Reload raw data and re-render
-    self.data = Core.updateZoneData(not self.controls.chkAll:isSelected(1))
+    self.data = Core.buildZoneData(not self.controls.chkAll:isSelected(1))
     local updatedZone = Core.data.zones[key]
     self:refreshZonePoints(updatedZone and updatedZone.points or {}, pointIndex)
 end
@@ -1742,57 +1784,53 @@ function UI:promptNewZone()
     local sw = getCore():getScreenWidth()
     local sh = getCore():getScreenHeight()
     local w, h = 300, 120
-    local entry -- captured in closure
-
-    local modal = ISModalDialog:new(sw / 2 - w / 2, sh / 2 - h / 2, w, h, "Enter zone name:", false, self,
-        function(owner, button)
-            if button.internal ~= "OK" then
-                return
-            end
-            local name = entry and entry:getText() or ""
-            name = name:match("^%s*(.-)%s*$") -- trim whitespace
-            if name == "" then
-                return
-            end
-            owner:createNewZone(name)
-        end)
+    local entry
+    local modal =
+        ISModalDialog:new(sw / 2 - w / 2, sh / 2 - h / 2, w, h, "Enter zone name:", true, self, -- true = has cancel button
+            function(owner, button)
+                if button.internal ~= "YES" then
+                    return
+                end
+                local name = entry and entry:getText() or ""
+                name = name:match("^%s*(.-)%s*$")
+                if name == "" then
+                    return
+                end
+                owner:createNewZone(name)
+            end)
     modal:initialise()
-
     entry = ISTextEntryBox:new("", 10, 60, w - 20, FONT_HGT_SMALL + 6)
     entry:initialise()
     modal:addChild(entry)
-    entry:focus()
     modal:addToUIManager()
+    entry:focus()
 end
 
 function UI:createNewZone(name)
-    -- Generate a key: strip spaces/special chars, PascalCase
     local key = name:gsub("[^%w]", "")
     if key == "" then
         return
     end
 
-    -- Ensure key is unique — append number if taken
+    -- Ensure key is unique — append incrementing number if taken
     local zones = Core.data and Core.data.zones or {}
     if zones[key] then
         local i = 2
-        while zones[key .. i] do
+        local candidate = key .. tostring(i)
+        while zones[candidate] do
             i = i + 1
+            candidate = key .. tostring(i)
         end
-        key = key .. i
+        key = candidate
     end
 
-    local zoneData = {
-        title = name,
-        inherits = "_default"
-    }
-
     Core.saveChanges({
-        [key] = zoneData
+        [key] = {
+            title = name,
+            inherits = "_default"
+        }
     })
-    -- Select the new zone once data refreshes
-    self._pendingSelectKey = key
-    self:refreshData({
+    self:rebuildUI({
         key = key
     })
 end
@@ -1852,7 +1890,7 @@ function UI:confirmDeleteRect()
         [key] = md[key]
     })
 
-    self.data = Core.updateZoneData(not self.controls.chkAll:isSelected(1))
+    self.data = Core.buildZoneData(not self.controls.chkAll:isSelected(1))
     local updated = Core.data.zones[key]
     self:refreshZonePoints(updated and updated.points or {})
 end

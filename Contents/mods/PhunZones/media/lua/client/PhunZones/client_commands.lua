@@ -2,34 +2,45 @@ if isServer() then
     return
 end
 
-local PZ = PhunZones
-local PL = PhunLib
+local Core = PhunZones
+
 local Commands = {}
 
-Commands[PZ.commands.playerSetup] = function(data)
+Commands[Core.commands.playerSetup] = function(data)
     -- send any exemption/changes to the client
-    print("PhunZones: Received player setup data")
-    PL.debug(data)
-    ModData.add(PZ.const.modifiedModData, data.data or {})
-    ModData.add(PZ.const.modifiedDeletions, data.deletes or {})
-    PZ:updateZoneData(true, data)
+    -- print("PhunZones: Received player setup data")
+    -- Coredebug(data)
+    ModData.add(Core.const.modifiedModData, data.data or {})
+    ModData.add(Core.const.modifiedDeletions, data.deletes or {})
+    Core:updateZoneData(true, data)
 
-    local players = PL.onlinePlayers()
+    local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do
         local p = players:get(i)
-        PZ.updateModData(p, true, true)
+        Core.updateModData(p, true, true)
     end
 end
 
-Commands[PZ.commands.playerTeleport] = function(data)
-    PZ.portPlayer(PL.getPlayerByUsername(data.username), data.x, data.y, data.z)
+Commands[Core.commands.zoneUpdated] = function(data)
+    ModData.add(Core.const.modifiedModData, data.data or {})
+    ModData.add(Core.const.modifiedDeletions, data.deletes or {})
+    Core:updateZoneData(true, data)
+    local players = Core.tools.onlinePlayers()
+    for i = 0, players:size() - 1 do
+        local p = players:get(i)
+        Core.updateModData(p, true, true)
+    end
 end
 
-Commands[PZ.commands.teleportVehicle] = function(data)
+Commands[Core.commands.playerTeleport] = function(data)
+    Core.portPlayer(Core.tools.getPlayerByUsername(data.username), data.x, data.y, data.z)
+end
+
+Commands[Core.commands.teleportVehicle] = function(data)
     local vehicle = getVehicleById(data.id)
-    local player = PL.getPlayerByUsername(data.username)
+    local player = Core.tools.getPlayerByUsername(data.username)
     if player and vehicle then
-        PZ:portVehicle(player, vehicle, data.x, data.y, data.z)
+        Core:portVehicle(player, vehicle, data.x, data.y, data.z)
     end
 end
 

@@ -392,8 +392,7 @@ end
 function Core.loadAdminConfig()
     if isClient() then
         -- Clients receive customisations via ModData, not from disk
-        return {}
-        -- return ModData.get(Core.const.modifiedModData) or {}
+        return ModData.get(Core.const.modifiedModData) or {}
     end
 
     local d = Core.tools.loadTable(Core.const.modifiedLuaFile)
@@ -501,60 +500,48 @@ function Core.addDeletion(key)
 end
 
 -- ---------------------------------------------------------------------------
--- UPDATE ZONE DATA
--- Master pipeline. Runs the full processing chain and stores results.
--- Called on server/SP startup and after any config change.
--- `omitMods`: when true, applies mod filtering and stores data globally.
+-- BUILD ZONE DATA
+-- Runs the full processing pipeline and returns the result.
+-- Does not store globally or trigger events.
+-- omitMods: when false, skips mod filtering (useful for UI editor which
+-- needs to see all zones including those excluded by current modset)
 -- ---------------------------------------------------------------------------
-function Core.updateZoneData(omitMods)
-    -- 1. Select base dataset
+function Core.buildZoneData(omitMods)
     local base = Core.settings.LoadDefaults and allLocations or {
         ["_default"] = {
             title = "Kentucky",
             difficulty = 2
         }
     }
-
-    -- 2. Load admin customisations
     local custom = Core.loadAdminConfig()
-
-    -- 3. Merge layers (admin wins, tombstones applied)
     local merged = Core.mergeLayers(base, custom)
-
-    -- 4. Normalise format (old subzone nesting → flat inherits)
-    -- local flat = Core.normaliseFormat(merged)
     local flat = Core.normaliseFormat(merged)
 
-    -- 5. Apply mod filter (drop zones that fail mod conditions)
     if omitMods then
         flat = Core.applyModFilter(flat)
     end
 
-    -- 6. Assign deterministic orders (topological, children > parents)
     local ordered = Core.assignOrders(flat)
-
-    -- 7. Resolve inheritance chains into effective property sets
     local lookup = Core.resolveInheritance(ordered)
-
-    -- 8. Build spatial chunk map from raw geometry
     local cells = Core.buildChunkMap(ordered)
-
-    -- 9. Store globally if this is the authoritative build (omitMods = true)
-    if omitMods then
-        Core.data = {
-            cells = cells, -- chunk map for spatial lookup
-            zones = ordered, -- raw flat zones (with orders baked in) — transmitted to clients
-            lookup = lookup -- fully resolved property sets — built client-side too
-        }
-    end
-
-    triggerEvent(Core.events.OnZonesUpdated)
 
     return {
         cells = cells,
         zones = ordered,
         lookup = lookup
     }
+end
+
+-- ---------------------------------------------------------------------------
+-- UPDATE ZONE DATA
+-- Runs the pipeline, stores results globally, and triggers OnZonesUpdated.
+-- This is the authoritative rebuild — call this on startup and after saves.
+-- ---------------------------------------------------------------------------
+function Core.updateZoneData()
+    local result = Core.buildZoneData(true) -- always filter mods for live data
+    Core.data = result
+    triggerEvent(Core.events.OnZonesUpdated)
+    return result
 end
 
 -- ---------------------------------------------------------------------------

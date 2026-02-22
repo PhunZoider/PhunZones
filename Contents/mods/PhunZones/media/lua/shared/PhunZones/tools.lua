@@ -27,6 +27,19 @@ function tools.printTable(t, indent)
     end
 end
 
+function tools.getPlayerByUsername(name, caseSensitive)
+    local online = tools.onlinePlayers()
+    local text = caseSensitive and name or name:lower()
+    for i = 0, online:size() - 1 do
+        local player = online:get(i);
+        if (caseSensitive and player:getUsername() == name) or
+            (not caseSensitive and player:getUsername():lower() == text) then
+            return player
+        end
+    end
+    return nil
+end
+
 function tools.onlinePlayers(all)
 
     local onlinePlayers;

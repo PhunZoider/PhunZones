@@ -21,23 +21,20 @@ Commands[PZ.commands.playerSetup] = function(player)
 end
 
 Commands[PZ.commands.modifyZone] = function(player, data)
-    if not data or not data.key or not data.data then
+    if not data then
         return
     end
-    PZ.saveChanges({
-        key = data.key,
-        value = data.data
-    })
+    PZ.tools.debug("data", data)
+    PZ.saveChanges(data.changes)
     ModData.transmit(PZ.const.modifiedModData)
     ModData.transmit(PZ.const.modifiedDeletions)
-    PZ:updatePlayers()
+
 end
 
 Commands[PZ.commands.deleteZone] = function(player, data)
     PZ:addDeletion(data.key, data.subzone)
     ModData.transmit(PZ.const.modifiedModData)
     ModData.transmit(PZ.const.modifiedDeletions)
-    PZ:updatePlayers()
 end
 
 Commands[PZ.commands.cleanPlayersZeds] = function(player, args)
