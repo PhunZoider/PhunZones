@@ -34,12 +34,12 @@ IGUI_EN = {
 
     IGUI_PhunZones_EditZone = "Edit Zone",
 
-    IGUI_PhunZones_NoSafeHouse = "You cannot create a safehouse in this area"
-    IGUI_PhunZones_NoBuild = "You cannot build in this area"
-    IGUI_PhunZones_NoDestruction = "You cannot use sledgehammer here"
-    IGUI_PhunZones_NoPlacing = "You cannot place items here"
-    IGUI_PhunZones_NoPickup = "You cannot pickup here"
-    IGUI_PhunZones_NoScrap = "You cannot scrap here"
+    IGUI_PhunZones_SayNoSafeHouse = "You cannot create a safehouse in this area"
+    IGUI_PhunZones_SayNoBuild = "You cannot build in this area"
+    IGUI_PhunZones_SayNoDestruction = "You cannot use sledgehammer here"
+    IGUI_PhunZones_SayNoPlacing = "You cannot place items here"
+    IGUI_PhunZones_SayNoPickup = "You cannot pickup here"
+    IGUI_PhunZones_SayNoScrap = "You cannot scrap here"
 
     IGUI_PhunZones_Coordinates = "Coordinates",
     IGUI_PhunZones_Region = "Region",
@@ -72,8 +72,8 @@ IGUI_EN = {
     IGUI_PhunZones_AllZones = "Show All"
     IGUI_PhunZones_AllZones_tooltip = "Tick to show everything in system - or untick to show just what has been loaded"
 
-    IGUI_PhunZones_SafeHouse = "Allow Safehouses"
-    IGUI_PhunZones_Safehouse_tooltip = "Untick to explicitly forbid safehouse creation in zone"
+    IGUI_PhunZones_NoSafeHouse = "No Safehouse"
+    IGUI_PhunZones_NoSafehouse_tooltip = "Explicitly forbid safehouse creation in zone"
 
     IGUI_PhunZones_NoBuilding = "No Building"
     IGUI_PhunZones_NoBuilding_tooltip = "Untick to explicitly forbid building items like walls and such in zone"

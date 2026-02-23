@@ -112,24 +112,14 @@ Events.OnServerCommand.Add(function(module, command, arguments)
     end
 end)
 
-local sh = nil
 local function setup()
     Events.OnTick.Remove(setup)
     Core:ini()
+    Core.iniBuilding()
+    Core.iniSafehouses()
     Core:showWidgets()
     sendClientCommand(Core.name, Core.commands.playerSetup, {})
 
-    if sh == nil then
-        sh = SafeHouse.canBeSafehouse
-        SafeHouse.canBeSafehouse = function(square, player)
-            local md = player:getModData().PhunZones
-            if md.safehouse == false then
-                return getText("IGUI_PhunZones_NoSafeHouse")
-            end
-
-            return sh(square, player)
-        end
-    end
 end
 
 Events.OnNewFire.Add(Core.checkFire)

@@ -9,8 +9,8 @@ function Core.checkFire(fire)
     if extinguish then
         local fireSpread = getSandboxOptions():getOptionByName("FireSpread"):getValue()
         getSandboxOptions():set("FireSpread", false)
-        print("PhunZones: NoFire zone detected, extinguishing fire. Fire spread is currently set to " ..
-                  tostring(fireSpread))
+        Core.debugLn("NoFire zone detected, extinguishing fire. Fire spread is currently set to " ..
+                         tostring(fireSpread))
         for i = 1, square:getMovingObjects():size() do
             local chr = square:getMovingObjects():get(i - 1)
             if instanceof(chr, "IsoGameCharacter") and chr:isOnFire() then

@@ -451,13 +451,15 @@ function MapOverlay:_onMouseDown(widget, x, y)
 
             -- Check if clicking inside the body of the active rect → translate drag
             if x >= x1s and x <= x2s and y >= y1s and y <= y2s then
-                self._bodyDrag = true
-                self._bodyOrigPt = {pt[1], pt[2], pt[3], pt[4]}
-                self._bodyStartWx, self._bodyStartWy = self:_sToW(x, y)
-                self._bodyWx = self._bodyStartWx
-                self._bodyWy = self._bodyStartWy
-                widget:setCapture(true)
-                return
+                if isKeyDown(Keyboard.KEY_LSHIFT) or isKeyDown(Keyboard.KEY_RSHIFT) then
+                    self._bodyDrag = true
+                    self._bodyOrigPt = {pt[1], pt[2], pt[3], pt[4]}
+                    self._bodyStartWx, self._bodyStartWy = self:_sToW(x, y)
+                    self._bodyWx = self._bodyStartWx
+                    self._bodyWy = self._bodyStartWy
+                    widget:setCapture(true)
+                    return
+                end
             end
         end
     end

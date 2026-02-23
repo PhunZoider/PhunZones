@@ -119,10 +119,10 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Enabled_tooltip",
             group = "general"
         },
-        safehouse = {
-            label = "IGUI_PhunZones_SafeHouse",
+        nosafehouse = {
+            label = "IGUI_PhunZones_NoSafeHouse",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Safehouse_tooltip",
+            tooltip = "IGUI_PhunZones_NoSafehouse_tooltip",
             group = "functionality"
         },
         nobuilding = {
