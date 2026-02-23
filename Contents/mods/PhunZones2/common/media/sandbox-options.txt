@@ -1,28 +1,5 @@
 VERSION = 1,
 
-option PhunZones.LoadDefaults
-{ 
-    type = boolean,
-    default = true,
-    page = PhunZones,
-    translation = PhunZones_LoadDefaults,
-}
-
-option PhunZones.ProcessOnClient
-{ 
-    type = boolean,
-    default = true,
-    page = PhunZones,
-    translation = PhunZones_ProcessOnClient,
-}
-
-option PhunZones.ShowZoneChange
-{ 
-    type = boolean,
-    default = true,
-    page = PhunZones,
-    translation = PhunZones_ShowZoneChange,
-}
 
 option PhunZones.Widget
 { 
@@ -78,12 +55,11 @@ option PhunZones.ZedUpdateFrequency
     translation = PhunZones_ZedUpdateFrequency,
 }
 
-option PhunZones.PvPMode
+option PhunZones.Debug
 { 
-    type = enum,
-    numValues = 3,
-    default = 1, 
-    valueTranslation = PhunZones_PvPMode_Option,
+    type = boolean,
+    default = false,
     page = PhunZones, 
-    translation = PhunZones_PvPMode,
+    translation = PhunZones_Debug,
 }
+

@@ -402,7 +402,6 @@ function Core.loadAdminConfig()
     end
 
     -- Store in ModData so it survives and is accessible for transmission
-    ModData.add(Core.const.modifiedDeletions, d.deletions or {})
     ModData.add(Core.const.modifiedModData, d.data or {})
 
     print("PhunZones: loaded customisations from ./lua/" .. Core.const.modifiedLuaFile)
@@ -476,7 +475,7 @@ function Core.addDeletion(key)
         custom = ModData.get(Core.const.modifiedModData) or {}
     end
 
-    print("PhunZones: marking zone '" .. tostring(key) .. "' as disabled")
+    Core.debugLn("marking zone '" .. tostring(key) .. "' as disabled")
 
     -- Tombstone: disabled = true suppresses the zone in mergeLayers
     custom[key] = custom[key] or {}

@@ -2,7 +2,7 @@ local luautils = luautils
 local loadstring = loadstring
 local tools = {}
 
-local isLocal = not isClient() and not isServer() and not isCoopHost()
+tools.isLocal = not isClient() and not isServer() and not isCoopHost()
 
 function tools.debug(...)
 
@@ -46,7 +46,7 @@ function tools.onlinePlayers(all)
 
     local onlinePlayers;
 
-    if isLocal then
+    if tools.isLocal then
         onlinePlayers = ArrayList.new();
         local p = getPlayer()
         onlinePlayers:add(p);

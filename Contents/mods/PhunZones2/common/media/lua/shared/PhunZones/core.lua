@@ -13,11 +13,10 @@ PhunZones = {
     const = {
         modifiedLuaFile = "PhunZones.lua",
         modifiedModData = "PhunZones",
-        modifiedDeletions = "PhunZonesDeletions",
+
         playerData = "PhunZonesPlayers",
         trackedVehicles = "PhunZonesTrackedVehicles"
     },
-    extended = {},
     ui = {},
     data = {},
     commands = {
@@ -30,7 +29,6 @@ PhunZones = {
     },
     tools = require("PhunZones/tools"),
     groups = {
-
         combat = {
             label = "Combat",
             order = 3
@@ -51,21 +49,18 @@ PhunZones = {
             label = "Other",
             order = 10
         }
-
     },
     fields = {
         region = {
             label = "IGUI_PhunZones_Region",
             type = "string",
             tooltip = "IGUI_PhunZones_Region_tooltip",
-            disableOnEdit = true,
             group = "general"
         },
         zone = {
             label = "IGUI_PhunZones_Zone",
             type = "string",
             tooltip = "IGUI_PhunZones_Zone_tooltip",
-            disableOnEdit = true,
             group = "general"
         },
         title = {
@@ -98,14 +93,12 @@ PhunZones = {
             label = "IGUI_PhunZones_Zeds",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Zeds_tooltip",
-            trueIsNil = true,
             group = "combat"
         },
         bandits = {
             label = "IGUI_PhunZones_Bandits",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Bandits_tooltip",
-            trueIsNil = true,
             group = "mods"
         },
         rv = {
@@ -124,63 +117,54 @@ PhunZones = {
             label = "IGUI_PhunZones_Enabled",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Enabled_tooltip",
-            trueIsNil = true,
             group = "general"
         },
         safehouse = {
             label = "IGUI_PhunZones_SafeHouse",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Safehouse_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         building = {
             label = "IGUI_PhunZones_Building",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Building_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         placing = {
             label = "IGUI_PhunZones_Placing",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Placing_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         pickup = {
             label = "IGUI_PhunZones_Pickup",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Pickup_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         scrap = {
             label = "IGUI_PhunZones_Scrap",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Scrap_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         destruction = {
             label = "IGUI_PhunZones_Destruction",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Destruction_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         fire = {
             label = "IGUI_PhunZones_Fire",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Fire_tooltip",
-            trueIsNil = true,
             group = "functionality"
         },
         players = {
             label = "IGUI_PhunZones_Players",
             type = "boolean",
             tooltip = "IGUI_PhunZones_Players_tooltip",
-            trueIsNil = true,
             group = "general"
         },
         order = {
@@ -192,7 +176,7 @@ PhunZones = {
 }
 
 local Core = PhunZones
-Core.isLocal = not isClient() and not isServer() and not isCoopHost()
+Core.isLocal = Core.tools.isLocal
 Core.settings = SandboxVars[Core.name] or {}
 
 -- ---------------------------------------------------------------------------
@@ -205,6 +189,18 @@ Core.settings = SandboxVars[Core.name] or {}
 for _, event in pairs(Core.events or {}) do
     if not Events[event] then
         LuaEventManager.AddEvent(event)
+    end
+end
+
+function Core.debugLn(str)
+    if Core.settings.Debug then
+        print("[" .. Core.name .. "] " .. str)
+    end
+end
+
+function Core.debug(...)
+    if Core.settings.Debug then
+        Core.tools.debug(Core.name, ...)
     end
 end
 
@@ -303,9 +299,7 @@ function Core:ini()
     end
     self.inied = true
 
-    self.players = ModData.getOrCreate(self.const.playerData)
-
-    if (not isClient() and not isServer() and not isCoopHost()) or isServer() then
+    if (Core.tools.isLocal or isServer()) then
         print("PhunZones: Loading changes as server")
         self:updateZoneData(true)
         self.trackedVehicles = ModData.getOrCreate(self.const.trackedVehicles)
@@ -314,7 +308,6 @@ function Core:ini()
         self:updateZoneData(true, ModData.getOrCreate(self.const.modifiedModData))
     end
 
-    print("PhunZones: Triggering OnPhunZoneReady")
     triggerEvent(self.events.OnPhunZoneReady)
 end
 
@@ -480,7 +473,7 @@ function Core.updateModData(obj, triggerChangeEvent, force)
 end
 
 -- ---------------------------------------------------------------------------
--- Player teleport (B42)
+-- Player teleport
 -- ---------------------------------------------------------------------------
 
 function Core.portPlayer(player, x, y, z)

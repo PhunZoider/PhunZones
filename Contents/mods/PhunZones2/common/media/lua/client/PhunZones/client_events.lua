@@ -96,9 +96,6 @@ Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == Core.const.modifiedModData then
         ModData.add(Core.const.modifiedModData, tableData)
         Core:updateZoneData(true, tableData)
-    elseif tableName == Core.const.modifiedDeletions then
-        ModData.add(Core.const.modifiedDeletions, tableData)
-        Core:updateZoneData(true, tableData)
     end
 end)
 

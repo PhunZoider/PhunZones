@@ -1,5 +1,0 @@
-Tooltip_FR = {
-    Tooltip_NoSledgehammerHere = "Vous ne pouvez pas utiliser de masse ici."
-    Tooltip_NoDissasembleHere = "Vous ne pouvez pas utiliser de masse ici."
-    Tooltip_NoClaimHere = "Vous ne pouvez pas revendiquer de planques ici."
-}

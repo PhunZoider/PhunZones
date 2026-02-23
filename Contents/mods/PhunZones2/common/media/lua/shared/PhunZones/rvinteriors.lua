@@ -1,9 +1,9 @@
 require "PhunZones/core"
-local PZ = PhunZones
+local Core = PhunZones
 -- From RVinteriors mod
 local modDataName = "rvInteriorMod"
 local function checkModData(vehicleName)
-    if not PZ.settings.VehicleTracking then
+    if not Core.settings.VehicleTracking then
         return
     end
     if not ModData.exists(modDataName) then
@@ -20,7 +20,7 @@ local function checkModData(vehicleName)
 end
 
 local function getInteriorModData(vehicleName, interiorInstance, create)
-    if not PZ.settings.VehicleTracking then
+    if not Core.settings.VehicleTracking then
         return
     end
     checkModData(vehicleName)
@@ -36,7 +36,7 @@ local function getInteriorModData(vehicleName, interiorInstance, create)
     end
 end
 
-function PZ:setTrackedVehicleData(vehicleId)
+function Core:setTrackedVehicleData(vehicleId)
 
     if RVInterior and self.settings.VehicleTracking then
         if not self.trackedVehicles then

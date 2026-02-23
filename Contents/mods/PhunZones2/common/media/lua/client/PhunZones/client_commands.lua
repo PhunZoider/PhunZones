@@ -11,7 +11,6 @@ Commands[Core.commands.playerSetup] = function(data)
     -- print("PhunZones: Received player setup data")
     -- Coredebug(data)
     ModData.add(Core.const.modifiedModData, data.data or {})
-    ModData.add(Core.const.modifiedDeletions, data.deletes or {})
     Core:updateZoneData(true, data)
 
     local players = Core.tools.onlinePlayers()
@@ -23,7 +22,6 @@ end
 
 Commands[Core.commands.zoneUpdated] = function(data)
     ModData.add(Core.const.modifiedModData, data.data or {})
-    ModData.add(Core.const.modifiedDeletions, data.deletes or {})
     Core:updateZoneData(true, data)
     local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do
