@@ -88,10 +88,6 @@ Events.OnCreatePlayer.Add(function(id)
     end
 end)
 
-Events.OnPreFillWorldObjectContextMenu.Add(function(playerObj, context, worldobjects)
-    Core:showContext(playerObj, context, worldobjects)
-end);
-
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == Core.const.modifiedModData then
         ModData.add(Core.const.modifiedModData, tableData)
@@ -136,27 +132,7 @@ local function setup()
     end
 end
 
-Events.OnNewFire.Add(function(fire)
-    Core:checkFire(fire)
-end)
+Events.OnNewFire.Add(Core.checkFire)
 
 Events.OnTick.Add(setup)
 
-local oldDestroyStuffAction = ISDestroyStuffAction["isValid"];
-
-ISDestroyStuffAction["isValid"] = function(self)
-
-    if self.character then
-
-        local p = self.character
-        local md = p:getModData().PhunZones
-
-        if md.destruction == false then
-            p:setHaloNote(getText("IGUI_PhunZones_NoDestruction"), 255, 255, 0, 300);
-            return false
-        end
-
-    end
-    return oldDestroyStuffAction(self)
-
-end

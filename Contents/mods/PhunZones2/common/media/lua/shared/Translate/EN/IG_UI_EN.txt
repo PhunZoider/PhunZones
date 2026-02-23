@@ -75,25 +75,25 @@ IGUI_EN = {
     IGUI_PhunZones_SafeHouse = "Allow Safehouses"
     IGUI_PhunZones_Safehouse_tooltip = "Untick to explicitly forbid safehouse creation in zone"
 
-    IGUI_PhunZones_Building = "Building"
-    IGUI_PhunZones_Building_tooltip = "Untick to explicitly forbid building items like walls and such in zone"
+    IGUI_PhunZones_NoBuilding = "No Building"
+    IGUI_PhunZones_NoBuilding_tooltip = "Untick to explicitly forbid building items like walls and such in zone"
 
-    IGUI_PhunZones_Placing = "Placing"
-    IGUI_PhunZones_Placing_tooltip = "Untick to explicitly forbid placing items like TV's and suck in zone"
+    IGUI_PhunZones_NoPlacing = "No Placing"
+    IGUI_PhunZones_NoPlacing_tooltip = "Explicitly forbid placing items like TV's and suck in zone"
 
-    IGUI_PhunZones_Pickup = "Pickup"
-    IGUI_PhunZones_Pickup_tooltip = "Untick to explicitly forbid picking up objects like TV here"
+    IGUI_PhunZones_NoPickup = "No Pickup"
+    IGUI_PhunZones_NoPickup_tooltip = "Explicitly forbid picking up objects like TV here"
 
-    IGUI_PhunZones_Scrap = "Scrapping"
-    IGUI_PhunZones_Scrap_tooltip = "Untick to explicitly forbid scrapping objects (eg furniture) here"
+    IGUI_PhunZones_NoScrap = "No Scrapping"
+    IGUI_PhunZones_NoScrap_tooltip = "Explicitly forbid scrapping objects (eg furniture) here"
 
 
-    IGUI_PhunZones_Destruction = "Destruction"
-    IGUI_PhunZones_Destruction_tooltip = "Untick to explicitly forbid using a sledgehammer or dissasembly in zone"
-    IGUI_PhunZones_NoDestruction = "You cannot use a sledgehammer in this area"
+    IGUI_PhunZones_NoDestruction = "No Destruction"
+    IGUI_PhunZones_NoDestruction_tooltip = "Explicitly forbid using a sledgehammer or dissasembly in zone"
+    IGUI_PhunZones_SayNoDestruction = "You cannot destroy in this area"
 
-    IGUI_PhunZones_Fire = "Fire"
-    IGUI_PhunZones_Fire_tooltip = "Untick to explicitly forbid fire from spreading in zone. Note that animations may show briefly, but will quickly fizzle out and no damage will occur"
+    IGUI_PhunZones_NoFire = "No Fire"
+    IGUI_PhunZones_NoFire_tooltip = "Explicitly forbid fire from spreading in zone. Note that animations may show briefly, but will quickly fizzle out and no damage will occur"
 
     IGUI_PhunZones_Players = "Players"
     IGUI_PhunZones_Players_tooltip = "Untick to explicitly prevent players from entering this zone"

@@ -125,40 +125,40 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Safehouse_tooltip",
             group = "functionality"
         },
-        building = {
-            label = "IGUI_PhunZones_Building",
+        nobuilding = {
+            label = "IGUI_PhunZones_NoBuilding",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Building_tooltip",
+            tooltip = "IGUI_PhunZones_NoBuilding_tooltip",
             group = "functionality"
         },
-        placing = {
-            label = "IGUI_PhunZones_Placing",
+        noplacing = {
+            label = "IGUI_PhunZones_NoPlacing",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Placing_tooltip",
+            tooltip = "IGUI_PhunZones_NoPlacing_tooltip",
             group = "functionality"
         },
-        pickup = {
-            label = "IGUI_PhunZones_Pickup",
+        nopickup = {
+            label = "IGUI_PhunZones_NoPickup",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Pickup_tooltip",
+            tooltip = "IGUI_PhunZones_NoPickup_tooltip",
             group = "functionality"
         },
-        scrap = {
-            label = "IGUI_PhunZones_Scrap",
+        noscrap = {
+            label = "IGUI_PhunZones_NoScrap",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Scrap_tooltip",
+            tooltip = "IGUI_PhunZones_NoScrap_tooltip",
             group = "functionality"
         },
-        destruction = {
-            label = "IGUI_PhunZones_Destruction",
+        nodestruction = {
+            label = "IGUI_PhunZones_NoDestruction",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Destruction_tooltip",
+            tooltip = "IGUI_PhunZones_NoDestruction_tooltip",
             group = "functionality"
         },
-        fire = {
-            label = "IGUI_PhunZones_Fire",
+        nofire = {
+            label = "IGUI_PhunZones_NoFire",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Fire_tooltip",
+            tooltip = "IGUI_PhunZones_NoFire_tooltip",
             group = "functionality"
         },
         players = {
