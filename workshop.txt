@@ -1,6 +1,5 @@
 version=1
-id=3388867450
-title=PhunZones
+title=PhunZones 2
 
 description=B41 / B42 server-side mod for customising game behaviour based on location.
 
@@ -77,7 +76,7 @@ description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]
 
-tags=Build 41;Build 42;Multiplayer
+tags=Build 42;Multiplayer
 visibility=public
 
 
