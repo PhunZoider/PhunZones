@@ -334,10 +334,11 @@ function Core.getLocation(x, y)
 
     if Core.data and Core.data.cells then
         local ckey = math.floor(xx / 300) .. "_" .. math.floor(yy / 300)
-        for _, v in ipairs(Core.data.cells[ckey] or {}) do
-            -- v[1]=region key, v[2]=zone key, v[3]=x1, v[4]=y1, v[5]=x2, v[6]=y2
-            if xx >= v[3] and xx <= v[5] and yy >= v[4] and yy <= v[6] then
-                return Core.data.lookup[v[1]][v[2]]
+        local test = Core.data.cells[ckey] or {}
+        for _, v in ipairs(test) do
+            -- v[1]=zone, v[2]=x1, v[3]=y1, v[4]=x2, v[5]=y2
+            if xx >= v[2] and xx <= v[4] and yy >= v[3] and yy <= v[5] then
+                return Core.data.lookup[v[1]]
             end
         end
     end

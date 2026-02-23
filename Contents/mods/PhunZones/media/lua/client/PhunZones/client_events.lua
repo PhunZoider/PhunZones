@@ -49,20 +49,19 @@ Events[Core.events.OnPhunZoneReady].Add(function()
         end
     end)
 
-    if Core.settings.ProcessOnClient then
-        local nextCheck = 0
+    local nextCheck = 0
 
-        Events.OnTick.Add(function()
-            if getTimestamp() >= nextCheck then
-                nextCheck = getTimestamp() + (Core.settings.updateInterval or 1)
-                local players = Core.tools.onlinePlayers()
-                for i = 0, players:size() - 1, 1 do
-                    local p = players:get(i)
-                    Core.updateModData(p, true)
-                end
+    Events.OnTick.Add(function()
+        if getTimestamp() >= nextCheck then
+            nextCheck = getTimestamp() + (Core.settings.updateInterval or 1)
+            local players = Core.tools.onlinePlayers()
+            for i = 0, players:size() - 1, 1 do
+                local p = players:get(i)
+                Core.updateModData(p, true)
             end
-        end)
-    end
+        end
+    end)
+
 end)
 
 Events[Core.events.OnZonesUpdated].Add(function(playerObj, buttonId)

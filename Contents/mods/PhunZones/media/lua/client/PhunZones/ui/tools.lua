@@ -124,10 +124,6 @@ function tools.getListbox(x, y, w, h, columns, fns)
         end
     end
 
-    -- box.prerender = function()
-    --     -- ISScrollingListBox.prerender(box);
-    -- end
-
     return box;
 end
 
