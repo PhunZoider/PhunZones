@@ -73,7 +73,7 @@ return {
     Muldraugh = {
         inherits = "Easy",
         title = "Muldraugh",
-        points = {{10558, 9175, 11023, 10692}}
+        points = {{10496, 9176, 11023, 10692}, {10247, 9221, 10497, 9457}}
     },
     Rosewood = {
         inherits = "Very_Easy",

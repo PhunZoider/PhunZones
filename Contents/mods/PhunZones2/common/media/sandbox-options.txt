@@ -14,7 +14,7 @@ option PhunZones.ShowDifficulty
     type = boolean,
     default = true,
     page = PhunZones,
-    translation = PhunZones_Difficulty,
+    translation = PhunZones_ShowDifficulty,
 }
 
 option PhunZones.MaxDifficulty

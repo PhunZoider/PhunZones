@@ -500,14 +500,9 @@ end
 -- needs to see all zones including those excluded by current modset)
 -- ---------------------------------------------------------------------------
 function Core.buildZoneData(omitMods)
-    local base = Core.settings.LoadDefaults and allLocations or {
-        ["_default"] = {
-            title = "Kentucky",
-            difficulty = 2
-        }
-    }
+
     local custom = Core.loadAdminConfig()
-    local flatBase = Core.normaliseFormat(base)
+    local flatBase = Core.normaliseFormat(allLocations)
     local flatCustom = Core.normaliseFormat(custom)
     local merged = Core.mergeLayers(flatBase, flatCustom)
 
