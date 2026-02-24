@@ -73,6 +73,7 @@ Events[Core.events.OnZonesUpdated].Add(function(playerObj, buttonId)
             instance:refreshData()
         end
     end
+
 end)
 
 Events.OnCreatePlayer.Add(function(id)

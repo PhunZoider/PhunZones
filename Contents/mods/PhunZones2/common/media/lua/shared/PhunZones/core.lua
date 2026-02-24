@@ -161,11 +161,11 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_NoFire_tooltip",
             group = "functionality"
         },
-        players = {
-            label = "IGUI_PhunZones_Players",
+        noplayers = {
+            label = "IGUI_PhunZones_NoPlayers",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Players_tooltip",
-            group = "general"
+            tooltip = "IGUI_PhunZones_NoPlayers_tooltip",
+            group = "functionality"
         },
         order = {
             label = "IGUI_PhunZones_Order",
@@ -368,7 +368,7 @@ end
 -- ---------------------------------------------------------------------------
 
 function Core.enforceZoneAccess(obj, effectiveZone, existing)
-    if effectiveZone.players ~= false then
+    if effectiveZone.noplayers ~= true then
         return true
     end
     if not existing.last then
@@ -382,6 +382,10 @@ function Core.enforceZoneAccess(obj, effectiveZone, existing)
         Core.teleportVehicleToCoords(obj, vehicle, lx, ly, lz)
     else
         Core.portPlayer(obj, lx, ly, lz)
+    end
+
+    if isClient() and instanceof(obj, "IsoPlayer") then
+        obj:setHaloNote(getText("IGUI_PhunZones_SayNoPlayers"), 255, 0, 0, 300)
     end
 
     return false

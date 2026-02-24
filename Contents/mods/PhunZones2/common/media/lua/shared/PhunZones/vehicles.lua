@@ -22,11 +22,18 @@ function Core.teleportVehicleToCoords(player, vehicle, x, y, z)
     end
 
     if transField then
+        vehicle:setForceBrake()
         local v_transform = getClassFieldVal(vehicle, transField)
         local w_transform = vehicle:getWorldTransform(v_transform)
         local origin_field = getClassField(w_transform, 1)
         local origin = getClassFieldVal(w_transform, origin_field)
-        origin:set(origin:x() - x, origin:y(), origin:z() - y)
+        local lx = origin:x()
+        local ly = origin:y()
+        local lz = origin:z()
+        origin:set(lx - x, ly, lz - y)
+        -- origin:set(origin:x() - x, origin:y() - y, origin:z() - z)
+        -- origin:set(x, y, z)
+
         vehicle:setWorldTransform(w_transform)
         if isClient() then
             pcall(vehicle.update, vehicle)

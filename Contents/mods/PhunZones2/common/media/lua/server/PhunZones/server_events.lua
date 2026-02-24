@@ -18,19 +18,6 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
     end
 end)
 
-Events[Core.events.OnPhunZoneReady].Add(function(playerObj, zone)
-    if not Core.settings.ProcessOnClient and not isClient() then
-        local nextCheck = 0
-
-        Events.OnTick.Add(function()
-            if getTimestamp() >= nextCheck then
-                nextCheck = getTimestamp() + (Core.settings.updateInterval or 1)
-                Core:updatePlayers()
-            end
-        end)
-    end
-end)
-
 Events.OnServerStarted.Add(function()
     Core:ini()
 end)

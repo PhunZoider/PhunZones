@@ -35,6 +35,7 @@ IGUI_EN = {
     IGUI_PhunZones_EditZone = "Edit Zone",
 
     IGUI_PhunZones_SayNoSafeHouse = "You cannot create a safehouse in this area"
+    IGUI_PhunZones_SayNoPlayers = "You cannot enter this area"
     IGUI_PhunZones_SayNoBuild = "You cannot build in this area"
     IGUI_PhunZones_SayNoDestruction = "You cannot use sledgehammer here"
     IGUI_PhunZones_SayNoPlacing = "You cannot place items here"
@@ -95,7 +96,7 @@ IGUI_EN = {
     IGUI_PhunZones_NoFire = "No Fire"
     IGUI_PhunZones_NoFire_tooltip = "Explicitly forbid fire from spreading in zone. Note that animations may show briefly, but will quickly fizzle out and no damage will occur"
 
-    IGUI_PhunZones_Players = "Players"
-    IGUI_PhunZones_Players_tooltip = "Untick to explicitly prevent players from entering this zone"
+    IGUI_PhunZones_NoPlayers = "No Players"
+    IGUI_PhunZones_NoPlayers_tooltip = "Explicitly prevent players from entering this zone"
     
 }
