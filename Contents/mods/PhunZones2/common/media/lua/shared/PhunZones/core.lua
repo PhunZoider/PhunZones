@@ -332,19 +332,19 @@ local function findNearestSafePosition(x, y, z, restrictedZoneKey)
     return nil
 end
 
--- lastPhysical is the stored.physical table { zone, x, y, z } from the previous
--- accepted tick — used as the teleport-back target when access is denied.
--- If lastPhysical is itself inside the restricted zone (e.g. login after a
+-- lastAt is stored.at { zone, x, y, z } from the previous accepted tick —
+-- used as the teleport-back target when access is denied.
+-- If lastAt is itself inside the restricted zone (e.g. login after a
 -- restriction was added), a spiral search finds the nearest safe tile instead.
-function Core.enforceZoneAccess(obj, effectiveZone, lastPhysical)
+function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     if effectiveZone.noplayers ~= true then
         return true
     end
 
     local tx, ty, tz
-    local lastZone = lastPhysical and lastPhysical.x and Core.getLocation(lastPhysical.x, lastPhysical.y)
+    local lastZone = lastAt and lastAt.x and Core.getLocation(lastAt.x, lastAt.y)
     if lastZone and lastZone.key ~= effectiveZone.key then
-        tx, ty, tz = lastPhysical.x, lastPhysical.y, lastPhysical.z
+        tx, ty, tz = lastAt.x, lastAt.y, lastAt.z
     else
         tx, ty, tz = findNearestSafePosition(obj:getX(), obj:getY(), obj:getZ(), effectiveZone.key)
     end
@@ -373,11 +373,8 @@ end
 
 function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     local modData = obj:getModData()
-    if not modData.PhunZones or not modData.PhunZones.physical then
-        modData.PhunZones = {
-            physical = {},
-            effective = {}
-        }
+    if not modData.PhunZones or not modData.PhunZones.at then
+        modData.PhunZones = { zone = nil, at = {} }
     end
 
     local stored = modData.PhunZones
@@ -396,53 +393,31 @@ function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     end
 
     local newPhysical = Core.getLocation(obj) or {}
-    local physicalChanged = newPhysical.key ~= stored.physical.zone
+    local physicalChanged = newPhysical.key ~= stored.at.zone
 
     if not force and not physicalChanged then
         -- No zone change — keep coords fresh
         local pos = currentPos()
-        stored.physical.x, stored.physical.y, stored.physical.z = pos.x, pos.y, pos.z
+        stored.at.x, stored.at.y, stored.at.z = pos.x, pos.y, pos.z
         return stored
     end
 
     -- Enforce on the incoming physical zone
-    if not Core.enforceZoneAccess(obj, newPhysical, stored.physical) then
+    if not Core.enforceZoneAccess(obj, newPhysical, stored.at) then
         return stored
     end
 
-    -- Accepted — record previous state, update physical, default effective to physical
-    local oldPhysical = {
-        zone = stored.physical.zone,
-        x = stored.physical.x,
-        y = stored.physical.y,
-        z = stored.physical.z
-    }
-    local oldEffective = {
-        zone = stored.effective.zone,
-        x = stored.effective.x,
-        y = stored.effective.y,
-        z = stored.effective.z
-    }
-
+    -- Accepted — record previous effective zone, update at, default display zone to physical
+    local oldZone = stored.zone
     local pos = currentPos()
-    stored.physical = {
-        zone = newPhysical.key,
-        x = pos.x,
-        y = pos.y,
-        z = pos.z
-    }
-    stored.effective = {
-        zone = newPhysical.key,
-        x = pos.x,
-        y = pos.y,
-        z = pos.z
-    }
+    stored.at   = { zone = newPhysical.key, x = pos.x, y = pos.y, z = pos.z }
+    stored.zone = newPhysical.key
 
     if triggerChangeEvent then
-        triggerEvent(Core.events.OnPhysicalZoneChanged, obj, stored, oldPhysical)
-        -- ^ handlers (e.g. RV mod) may mutate stored.effective in-place
+        triggerEvent(Core.events.OnPhysicalZoneChanged, obj, stored)
+        -- ^ handlers (e.g. RV mod) may mutate stored.zone in-place
 
-        if stored.effective.zone ~= oldEffective.zone then
+        if stored.zone ~= oldZone then
             triggerEvent(Core.events.OnEffectiveZoneChanged, obj, stored)
         end
     end
@@ -454,41 +429,29 @@ end
 -- Effective zone helpers
 -- ---------------------------------------------------------------------------
 
--- Returns the live zone properties table for obj's effective zone.
+-- Returns the live zone properties table for obj's display zone.
 -- Falls back to getLocation if moddata is not yet initialised.
 function Core.getEffectiveZone(obj)
     local md = obj and obj.getModData and obj:getModData()
     local stored = md and md.PhunZones
-    if stored and stored.effective and stored.effective.zone then
-        return Core.data.lookup[stored.effective.zone] or {}
+    if stored and stored.zone then
+        return Core.data.lookup[stored.zone] or {}
     end
     return Core.getLocation(obj) or {}
 end
 
--- External push: set obj's effective zone and fire OnEffectiveZoneChanged.
--- Called by mods (e.g. RV system) when effective zone changes independently
+-- External push: set obj's display zone and fire OnEffectiveZoneChanged.
+-- Called by mods (e.g. RV system) when the display zone changes independently
 -- of physical movement (e.g. vehicle drives into a new zone while player is offmap).
-function Core.setEffectiveZone(obj, zoneKey, x, y, z)
+function Core.setEffectiveZone(obj, zoneKey)
     local md = obj and obj.getModData and obj:getModData()
-    if not md then
-        return
-    end
-    if not md.PhunZones or not md.PhunZones.physical then
-        md.PhunZones = {
-            physical = {},
-            effective = {}
-        }
+    if not md then return end
+    if not md.PhunZones or not md.PhunZones.at then
+        md.PhunZones = { zone = nil, at = {} }
     end
     local stored = md.PhunZones
-    if stored.effective.zone == zoneKey then
-        return
-    end
-    stored.effective = {
-        zone = zoneKey,
-        x = x,
-        y = y,
-        z = z
-    }
+    if stored.zone == zoneKey then return end
+    stored.zone = zoneKey
     triggerEvent(Core.events.OnEffectiveZoneChanged, obj, stored)
 end
 

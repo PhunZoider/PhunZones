@@ -67,9 +67,9 @@ Events[Core.events.OnPhysicalZoneChanged].Add(function(obj, stored)
     end
 
     local zone = Core.getLocation(tracked.x or 0, tracked.y or 0)
-    if not zone or zone.key == stored.effective.zone then
+    if not zone or zone.key == stored.zone then
         return
     end
 
-    Core.setEffectiveZone(obj, zone.key, tracked.x, tracked.y, tracked.z or 0)
+    Core.setEffectiveZone(obj, zone.key)
 end)

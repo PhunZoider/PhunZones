@@ -9,11 +9,8 @@ Commands[Core.commands.playerSetup] = function(player)
     local p = player
     local modData = p:getModData()
 
-    if not modData.PhunZones or not modData.PhunZones.physical then
-        modData.PhunZones = {
-            physical = {},
-            effective = {}
-        }
+    if not modData.PhunZones or not modData.PhunZones.at then
+        modData.PhunZones = { zone = nil, at = {} }
     end
     Core.updateModData(player, true, true)
     sendServerCommand(player, Core.name, Core.commands.playerSetup, {

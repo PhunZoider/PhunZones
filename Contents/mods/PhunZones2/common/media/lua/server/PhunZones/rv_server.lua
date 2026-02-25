@@ -8,9 +8,9 @@ Events.OnClientCommand.Add(function(module, command, playerObj, arguments)
         local modData = ModData.getOrCreate("modPROJECTRVInterior")
         Core.debug("RVServer Command", command, modData)
         if command == "UpdateVehPos" then
-            Core.debug("Update Vehicle", arguments)
+            Core.debug("==Update Vehicle==", arguments, "-----")
         elseif command == "enterRV" then
-            Core.debug("Enter RV", arguments)
+            Core.debug("==Enter RV==", arguments, "-----")
         end
     end
 end)

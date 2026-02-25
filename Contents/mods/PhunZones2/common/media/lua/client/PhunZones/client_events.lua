@@ -5,7 +5,7 @@ local Core = PhunZones
 local Commands = require "PhunZones/client_commands"
 
 Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
-    local zone = Core.data.lookup[stored.effective.zone] or {}
+    local zone = Core.data.lookup[stored.zone] or {}
     Core:updatePlayerUI(playerObj, zone)
 end)
 
@@ -79,11 +79,8 @@ Events.OnCreatePlayer.Add(function(id)
     local playerObj = getSpecificPlayer(id)
     if playerObj then
         local data = playerObj:getModData()
-        if not data.PhunZones or not data.PhunZones.physical then
-            data.PhunZones = {
-                physical = {},
-                effective = {}
-            }
+        if not data.PhunZones or not data.PhunZones.at then
+            data.PhunZones = { zone = nil, at = {} }
         end
         if not data.PhunZonesVehicleInfo then
             data.PhunZonesVehicleInfo = {}

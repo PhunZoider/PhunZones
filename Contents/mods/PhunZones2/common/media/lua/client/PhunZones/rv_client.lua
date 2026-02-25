@@ -21,7 +21,7 @@ Events[Core.events.OnPhysicalZoneChanged].Add(function(obj, stored, oldPhysical)
         return
     end
 
-    local physZone = Core.data.lookup[stored.physical.zone] or {}
+    local physZone = Core.data.lookup[stored.at.zone] or {}
     if not physZone.rv then
         return
     end -- not an RV interior, nothing to do
@@ -46,8 +46,8 @@ Events[Core.events.OnPhysicalZoneChanged].Add(function(obj, stored, oldPhysical)
     end
 
     local zone = Core.getLocation(vx, vy)
-    if zone and zone.key ~= stored.effective.zone then
-        Core.setEffectiveZone(obj, zone.key, vx, vy, vz)
+    if zone and zone.key ~= stored.zone then
+        Core.setEffectiveZone(obj, zone.key)
     end
 end)
 
