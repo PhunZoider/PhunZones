@@ -27,14 +27,6 @@ option PhunZones.MaxDifficulty
     translation = PhunZones_MaxDifficulty,
 }
 
-option PhunZones.VehicleTracking
-{ 
-    type = boolean,
-    default = true,
-    page = PhunZones, 
-    translation = PhunZones_VehicleTracking,
-}
-
 option PhunZones.UpdateInterval
 { 
     type = integer, 
@@ -43,16 +35,6 @@ option PhunZones.UpdateInterval
     max = 1000,
     page = PhunZones, 
     translation = PhunZones_UpdateInterval,
-}
-
-option PhunZones.ZedUpdateFrequency
-{ 
-    type = integer, 
-    default = 10, 
-    min = 1,
-    max = 1000,
-    page = PhunZones, 
-    translation = PhunZones_ZedUpdateFrequency,
 }
 
 option PhunZones.Debug

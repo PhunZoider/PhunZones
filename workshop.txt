@@ -1,14 +1,12 @@
 version=1
 title=PhunZones 2
 
-description=B41 / B42 server-side mod for customising game behaviour based on location.
-
-description=Define rules, restrictions, and behaviours by zone — from entire cities down to a single building.
+description=The ultimate B42 mod for customising game behaviour based on location.
 
 description=[H1]TL;DR[/H1]
 description=PhunZones lets you control how the game behaves based on where players are.
 description=
-description=Create zones with custom rules for PvP*, zombies, building, looting, fire spread, safehouses, and more.
+description=Create zones with custom rules for zombies, building, looting, fire spread, safehouses, and more.
 description=
 description=Designed for multiplayer servers, performance-focused, and built to be extended by other mods.
 
@@ -26,19 +24,9 @@ description=[*]Toggle construction
 description=[*]Toggle fire spread (brief animation may still play)
 description=[*]Prevent players from entering specific zones
 description=[*]Toggle bandit spawning (Bandits mod support)
-description=[*]Editable default zone to define global behaviour
 description=[*]…and more
 description=[/list]
 description=[/list]
-
-description=
-description=[H2]* PvP Behaviour (B41 vs B42)[/H2]
-description=[list]
-description=[*][b]Build 41:[/b] PvP can be enabled or disabled per zone (unless disabled globally in server INI)
-description=[*][b]Build 42:[/b] Native PvP zones are handled by the base game so no longer present
-description=[/list]
-description=
-description=As a result, PvP toggling inside PhunZones is deprecated in B42 but retained for B41 compatibility.
 
 description=
 description=[H2]Built to Be Extended[/H2]
@@ -53,25 +41,7 @@ description=[*]Faction or territory mechanics
 description=[*]Event-driven gameplay
 description=[*]Server-specific rulesets
 description=[/list]
-
-description=
-description=The default zone can be edited to define global behaviour — ideal for mods extending PhunZones functionality
-description=(e.g. PhunLewts).
-
-description=
-description=[H2]Player-Friendly Feedback[/H2]
-description=[list]
-description=[*]Clean UI widget showing the current area name (e.g. Louisville – Mall)
-description=[*]Helps players understand why behaviour changes between locations
-description=[*]Reduces confusion without immersion-breaking messages
-description=[/list]
-description=
-description=🧩 PTBR Transalations by [url=https://steamcommunity.com/id/SIMBAproduz]SIMBAproduz[/url]
-description=🧩 FR translations by [url=https://steamcommunity.com/profiles/76561198144095229]F3niix[/url]
-description=
-description=[H2]More Phun Stuff[/H2]
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3606988132][img]https://i.ibb.co/ZtQtmJd/preview.png[/img][/url][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.ibb.co/k6cQ4h7d/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3628843367][img]https://i.ibb.co/wrZbknjt/preview.png[/img][/url]
-
+https://ibb.co/Gf5pcfNX
 description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]

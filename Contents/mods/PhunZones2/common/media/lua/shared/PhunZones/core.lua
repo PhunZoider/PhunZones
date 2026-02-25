@@ -22,7 +22,6 @@ PhunZones = {
     commands = {
         playerSetup = "PhunZonesPlayerSetup",
         modifyZone = "PhunZonesModifyZone",
-        cleanPlayersZeds = "PhunZonescleanPlayersZeds",
         playerTeleport = "PhunZonesPlayerTeleport",
         teleportVehicle = "PhunZonesTeleportVehicle",
         deleteZone = "PhunZonesDeleteZone",
@@ -91,28 +90,22 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Mods_tooltip",
             group = "general"
         },
-        zeds = {
+        nozeds = {
             label = "IGUI_PhunZones_NoZeds",
             type = "boolean",
             tooltip = "IGUI_PhunZones_NoZeds_tooltip",
             group = "combat"
         },
-        bandits = {
+        nobandits = {
             label = "IGUI_PhunZones_NoBandits",
             type = "boolean",
             tooltip = "IGUI_PhunZones_NoBandits_tooltip",
             group = "mods"
         },
-        Announce = {
+        noannounce = {
             label = "IGUI_PhunZones_NoWelcome",
             type = "boolean",
             tooltip = "IGUI_PhunZones_NoWelcome_tooltip",
-            group = "general"
-        },
-        enabled = {
-            label = "IGUI_PhunZones_Enabled",
-            type = "boolean",
-            tooltip = "IGUI_PhunZones_Enabled_tooltip",
             group = "general"
         },
         nosafehouse = {

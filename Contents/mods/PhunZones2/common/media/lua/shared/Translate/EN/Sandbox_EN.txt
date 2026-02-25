@@ -10,9 +10,6 @@ Sandbox_EN = {
     Sandbox_PhunZones_MaxDifficulty = "Max Difficulty",
     Sandbox_PhunZones_ShowDifficulty_tooltip = "Maximum number of difficulty you use (default is 4)",
 
-    Sandbox_PhunZones_VehicleTracking = "Vehicle Tracking",
-    Sandbox_PhunZones_VehicleTracking_tooltip = "Use the location of the last vehicle entered as the players current location. Ideal for RV Interiors",    
-
     Sandbox_PhunZones_UpdateInterval = "Zone check frequency",
     Sandbox_PhunZones_UpdateInterval_tooltip = "The number of seconds between scanning for zone changes. Higher number is easier on the server",
 

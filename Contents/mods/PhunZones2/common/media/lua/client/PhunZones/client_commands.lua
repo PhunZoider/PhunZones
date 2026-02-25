@@ -7,9 +7,6 @@ local Core = PhunZones
 local Commands = {}
 
 Commands[Core.commands.playerSetup] = function(data)
-    -- send any exemption/changes to the client
-    -- print("PhunZones: Received player setup data")
-    -- Coredebug(data)
     ModData.add(Core.const.modifiedModData, data.data or {})
     Core:updateZoneData(true, data)
 

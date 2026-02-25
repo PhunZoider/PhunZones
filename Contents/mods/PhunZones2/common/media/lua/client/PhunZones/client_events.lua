@@ -4,50 +4,32 @@ end
 local Core = PhunZones
 local Commands = require "PhunZones/client_commands"
 
+local playersInNozedZone = {}
+local nozedPlayerCount = 0
+
 Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
     local zone = Core.data.lookup[stored.zone] or {}
+    local playerNum = playerObj:getPlayerNum()
+    local wasIn = playersInNozedZone[playerNum]
+    local inNozedZone = zone.nozeds or zone.nobandits
+    playersInNozedZone[playerNum] = inNozedZone or nil
+    if inNozedZone and not wasIn then
+        nozedPlayerCount = nozedPlayerCount + 1
+    elseif not inNozedZone and wasIn then
+        nozedPlayerCount = nozedPlayerCount - 1
+    end
+
     Core:updatePlayerUI(playerObj, zone)
-    if zone.nozeds then
+    if inNozedZone then
         Core.evictZeds(playerObj, zone.key)
     end
 end)
 
 Events[Core.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
-    -- check if zed is in a nozed zone
-    -- if instanceof(object, "IsoZombie") then
-    --     local doRemove = false
-    --     if zone.nozeds then
-    --         Core.updateModData(object)
-    --         doRemove = true
-    --     elseif zone.nobandits and object:getModData().brain ~= nil then
-    --         object:getModData().PZChecked = nil
-    --         doRemove = true
-    --     end
-    --     if doRemove then
-    --         if isClient() then
-    --             sendClientCommand(Core.name, Core.commands.cleanPlayersZeds, {
-    --                 zone = zone.key
-    --             })
-    --         else
-    --             Core.evictZeds(object, zone.key)
-    --         end
-    --     end
-    -- end
+
 end)
 
 Events[Core.events.OnPhunZoneReady].Add(function()
-    Events.OnZombieUpdate.Add(function(zed)
-        if not zed then
-            return
-        end
-        local md = zed:getModData()
-        if not md.PhunZones or md.PhunZones.id ~= Core.getZId(zed) or not md.PhunZones.checked or md.PhunZones.checked <
-            getTimestamp() then
-            md.PhunZones = md.PhunZones or {}
-            md.PhunZones.checked = getTimestamp() + (Core.settings.ZedUpdateFrequency or 10)
-            Core.updateModData(zed, true)
-        end
-    end)
 
     local nextCheck = 0
 
@@ -58,9 +40,11 @@ Events[Core.events.OnPhunZoneReady].Add(function()
             for i = 0, players:size() - 1, 1 do
                 local p = players:get(i)
                 Core.updateModData(p, true)
-                local stored = p:getModData().PhunZones
-                if stored and stored.zone then
-                    Core.evictZeds(p, stored.zone)
+                if nozedPlayerCount > 0 then
+                    local stored = p:getModData().PhunZones
+                    if stored and stored.zone then
+                        Core.evictZeds(p, stored.zone)
+                    end
                 end
             end
         end
@@ -69,7 +53,24 @@ Events[Core.events.OnPhunZoneReady].Add(function()
 end)
 
 Events[Core.events.OnZonesUpdated].Add(function(playerObj, buttonId)
+    playersInNozedZone = {}
+    nozedPlayerCount = 0
     Core:updatePlayers()
+    local players = Core.tools.onlinePlayers()
+    for i = 0, players:size() - 1 do
+        local p = players:get(i)
+        local num = p:getPlayerNum()
+        if not playersInNozedZone[num] then
+            local stored = p:getModData().PhunZones
+            if stored and stored.zone then
+                local zone = Core.data.lookup[stored.zone] or {}
+                if zone.nozeds or zone.nobandits then
+                    playersInNozedZone[num] = true
+                    nozedPlayerCount = nozedPlayerCount + 1
+                end
+            end
+        end
+    end
 
     -- In your process/rebuild code, after data is ready:
     for _, instance in pairs(Core.ui.zones.instances or {}) do

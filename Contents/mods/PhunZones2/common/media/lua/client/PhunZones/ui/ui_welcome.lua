@@ -50,13 +50,8 @@ local function getDT()
 end
 
 function UI.OnOpenPanel(playerObj, zone)
-    if not Core.settings or not Core.settings.ShowZoneChange then
-        return
-    end
+
     if not playerObj or not zone then
-        return
-    end
-    if zone.Announce == false then
         return
     end
 
@@ -78,7 +73,9 @@ function UI.OnOpenPanel(playerObj, zone)
         title = title,
         subtitle = subtitle
     }
-
+    if zone.noannounce then
+        return
+    end
     local instance = UI.instances[playerIndex]
     local core = getCore()
 

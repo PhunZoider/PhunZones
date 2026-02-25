@@ -36,36 +36,8 @@ Commands[Core.commands.deleteZone] = function(player, data)
     ModData.transmit(Core.const.modifiedModData)
 end
 
-Commands[Core.commands.cleanPlayersZeds] = function(player, args)
-    Core.evictZeds(player, args and args.zone)
-    -- local ids = {}
-    -- local passed = type(args.id) == "table" and args.id or {args.id}
-
-    -- for _, id in ipairs(passed) do
-    --     ids[id] = true
-    -- end
-    -- local removed = {}
-    -- local zombies = player:getCell():getZombieList()
-    -- Core.debugLn("There are " .. tostring(zombies:size()) .. " zombies in " .. player:getUsername() .. " cell " ..
-    --                  tostring(player:getX()) .. ", " .. tostring(player:getY()))
-    -- for i = 0, zombies:size() - 1 do
-    --     local zombie = zombies:get(i)
-    --     local id = Core.getZId(zombie)
-    --     if instanceof(zombie, "IsoZombie") and ids[id] then
-    --         Core.debugLn("removing zombie " .. tostring(id))
-    --         table.insert(removed, tostring(id))
-    --         zombie:removeFromWorld()
-    --         zombie:removeFromSquare()
-    --         break
-    --     end
-    -- end
-    -- if #removed > 0 then
-    --     triggerEvent(Core.events.OnZombieRemoved, removed)
-    -- end
-
-end
-
 Commands[Core.commands.evictZeds] = function(player, args)
+    print("evicting zeds for " .. player:getUsername() .. " in zone " .. tostring(args and args.zone))
     Core.evictZeds(player, args and args.zone)
 end
 
