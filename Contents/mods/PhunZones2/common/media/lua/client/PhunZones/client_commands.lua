@@ -30,6 +30,13 @@ Commands[Core.commands.zoneUpdated] = function(data)
     end
 end
 
+Commands[Core.commands.updateEffectiveZone] = function(data)
+    local player = Core.tools.getPlayerByUsername(data.player)
+    if player then
+        Core.setEffectiveZone(player, data.zone)
+    end
+end
+
 Commands[Core.commands.playerTeleport] = function(data)
     Core.portPlayer(Core.tools.getPlayerByUsername(data.username), data.x, data.y, data.z)
 end

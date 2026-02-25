@@ -15,8 +15,7 @@ PhunZones = {
         modifiedLuaFile = "PhunZones.lua",
         modifiedModData = "PhunZones",
 
-        playerData = "PhunZonesPlayers",
-        trackedVehicles = "PhunZonesTrackedVehicles"
+        playerData = "PhunZonesPlayers"
     },
     ui = {},
     data = {},
@@ -26,7 +25,8 @@ PhunZones = {
         cleanPlayersZeds = "PhunZonescleanPlayersZeds",
         playerTeleport = "PhunZonesPlayerTeleport",
         teleportVehicle = "PhunZonesTeleportVehicle",
-        deleteZone = "PhunZonesDeleteZone"
+        deleteZone = "PhunZonesDeleteZone",
+        updateEffectiveZone = "PhunZonesUpdateEffectiveZone"
     },
     tools = require("PhunZones/tools"),
     groups = {
@@ -194,15 +194,15 @@ for _, event in pairs(Core.events or {}) do
 end
 
 function Core.debugLn(str)
-    if Core.settings.Debug then
-        print("[" .. Core.name .. "] " .. str)
-    end
+    -- if Core.settings.Debug then
+    print("[" .. Core.name .. "] " .. str)
+    -- end
 end
 
 function Core.debug(...)
-    if Core.settings.Debug then
-        Core.tools.debug(Core.name, ...)
-    end
+    -- if Core.settings.Debug then
+    Core.tools.debug(Core.name, ...)
+    -- end
 end
 
 -- ---------------------------------------------------------------------------
@@ -244,7 +244,6 @@ function Core:ini()
     if (Core.tools.isLocal or isServer()) then
         print("PhunZones: Loading changes as server")
         self:updateZoneData(true)
-        self.trackedVehicles = ModData.getOrCreate(self.const.trackedVehicles)
     else
         print("PhunZones: Loading changes as client")
         self:updateZoneData(true, ModData.getOrCreate(self.const.modifiedModData))
@@ -374,7 +373,10 @@ end
 function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     local modData = obj:getModData()
     if not modData.PhunZones or not modData.PhunZones.at then
-        modData.PhunZones = { zone = nil, at = {} }
+        modData.PhunZones = {
+            zone = nil,
+            at = {}
+        }
     end
 
     local stored = modData.PhunZones
@@ -410,7 +412,12 @@ function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     -- Accepted — record previous effective zone, update at, default display zone to physical
     local oldZone = stored.zone
     local pos = currentPos()
-    stored.at   = { zone = newPhysical.key, x = pos.x, y = pos.y, z = pos.z }
+    stored.at = {
+        zone = newPhysical.key,
+        x = pos.x,
+        y = pos.y,
+        z = pos.z
+    }
     stored.zone = newPhysical.key
 
     if triggerChangeEvent then
@@ -445,12 +452,19 @@ end
 -- of physical movement (e.g. vehicle drives into a new zone while player is offmap).
 function Core.setEffectiveZone(obj, zoneKey)
     local md = obj and obj.getModData and obj:getModData()
-    if not md then return end
+    if not md then
+        return
+    end
     if not md.PhunZones or not md.PhunZones.at then
-        md.PhunZones = { zone = nil, at = {} }
+        md.PhunZones = {
+            zone = nil,
+            at = {}
+        }
     end
     local stored = md.PhunZones
-    if stored.zone == zoneKey then return end
+    if stored.zone == zoneKey then
+        return
+    end
     stored.zone = zoneKey
     triggerEvent(Core.events.OnEffectiveZoneChanged, obj, stored)
 end
