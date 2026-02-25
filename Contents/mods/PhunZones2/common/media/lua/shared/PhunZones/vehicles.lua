@@ -47,48 +47,29 @@ function Core.teleportVehicleToCoords(player, vehicle, x, y, z)
 end
 
 local rvInterior
-local excludedTrackingProps = {"rv", "isVoid", "bandits", "zeds", "zones", "zone", "region", "x", "y", "vehicleId"}
 
-Core.registerZoneOverride("rv", function(obj, physicalZone)
-    if not physicalZone.rv then
-        return nil
-    end
-    -- ... resolve vehicle position, return merged table or nil
-
+Events[Core.events.OnPhysicalZoneChanged].Add(function(obj, stored)
     if rvInterior == nil then
         rvInterior = RVInterior or false
     end
     if not rvInterior then
-        return false
+        return
     end
+
     local interior = rvInterior.calculatePlayerInteriorInstance(obj)
     if not interior then
-        return false
+        return
     end
 
     local tracked = Core.trackedVehicles and Core.trackedVehicles[interior.interiorInstance]
     if not tracked then
-        return false
+        return
     end
 
     local zone = Core.getLocation(tracked.x or 0, tracked.y or 0)
-    if not zone or zone.key == existing.mkey then
-        return false
+    if not zone or zone.key == stored.effective.zone then
+        return
     end
 
-    for k, v in pairs(zone) do
-        local excluded = false
-        for _, ek in ipairs(excludedTrackingProps) do
-            if ek == k then
-                excluded = true;
-                break
-            end
-        end
-        if not excluded then
-            existing[k] = v
-        end
-    end
-
-    new.mkey = zone.key
-    return true
-end, 10)
+    Core.setEffectiveZone(obj, zone.key, tracked.x, tracked.y, tracked.z or 0)
+end)

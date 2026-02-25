@@ -4,10 +4,9 @@ end
 local Core = PhunZones
 local Commands = require "PhunZones/client_commands"
 
-Events[Core.events.OnPhunZonesPlayerLocationChanged].Add(function(playerObj, newEffective, prevEffective)
-
-    Core:updatePlayerUI(playerObj, newEffective, prevEffective)
-
+Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
+    local zone = Core.data.lookup[stored.effective.zone] or {}
+    Core:updatePlayerUI(playerObj, zone)
 end)
 
 Events[Core.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
@@ -41,10 +40,10 @@ Events[Core.events.OnPhunZoneReady].Add(function()
             return
         end
         local md = zed:getModData()
-        local checked = zed:getModData().PZChecked or 0
         if not md.PhunZones or md.PhunZones.id ~= Core.getZId(zed) or not md.PhunZones.checked or md.PhunZones.checked <
             getTimestamp() then
-            md.PhunZones = getTimestamp() + (Core.settings.ZedUpdateFrequency or 10)
+            md.PhunZones = md.PhunZones or {}
+            md.PhunZones.checked = getTimestamp() + (Core.settings.ZedUpdateFrequency or 10)
             Core.updateModData(zed, true)
         end
     end)
@@ -80,8 +79,11 @@ Events.OnCreatePlayer.Add(function(id)
     local playerObj = getSpecificPlayer(id)
     if playerObj then
         local data = playerObj:getModData()
-        if not data.PhunZones then
-            data.PhunZones = {}
+        if not data.PhunZones or not data.PhunZones.physical then
+            data.PhunZones = {
+                physical = {},
+                effective = {}
+            }
         end
         if not data.PhunZonesVehicleInfo then
             data.PhunZonesVehicleInfo = {}

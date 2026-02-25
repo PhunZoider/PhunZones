@@ -17,10 +17,8 @@ function Core:updatePlayer(playerObj)
     self.updateModData(playerObj, true)
 end
 
-function Core:updatePlayerUI(playerObj, info, existing)
-
-    local zone = info or playerObj:getModData().PhunZones or {}
-    local existing = existing or {}
+function Core:updatePlayerUI(playerObj, zone)
+    zone = zone or Core.getEffectiveZone(playerObj)
     Core.ui.welcome.OnOpenPanel(playerObj, zone)
 
     if self.settings.Widget then
@@ -65,12 +63,13 @@ function Core:rvInteriorFlags(entering, args)
     end
 
     if player then
-        local data = player:getModData().PhunZones
-
-        if data then
-            data.vehicleId = entering and data.lastVehicleId or nil
-            data.inVehicleInterior = entering and args.interiorInstance or nil
+        local data = player:getModData()
+        if not data.PhunZonesVehicleInfo then
+            data.PhunZonesVehicleInfo = {}
         end
+        local vi = data.PhunZonesVehicleInfo
+        vi.vehicleId = entering and vi.lastVehicleId or nil
+        vi.inVehicleInterior = entering and args.interiorInstance or nil
     end
 end
 

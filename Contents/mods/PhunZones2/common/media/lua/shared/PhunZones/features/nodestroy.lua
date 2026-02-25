@@ -7,7 +7,7 @@ ISDestroyStuffAction["isValid"] = function(self)
     if self.character then
 
         local p = self.character
-        local md = p:getModData().PhunZones
+        local md = Core.getEffectiveZone(p)
 
         if md.nodestruction == true then
             p:setHaloNote(getText("IGUI_PhunZones_SayNoDestruction"), 255, 255, 0, 300);

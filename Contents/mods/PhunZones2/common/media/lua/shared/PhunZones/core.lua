@@ -4,7 +4,8 @@ PhunZones = {
     name = 'PhunZones',
     events = {
         OnPhunZoneReady = "PhunZonesOnPhunZoneReady",
-        OnPhunZonesPlayerLocationChanged = "PhunZonesOnPhunZonesPlayerLocationChanged",
+        OnPhysicalZoneChanged = "PhunZonesOnPhysicalZoneChanged",
+        OnEffectiveZoneChanged = "PhunZonesOnEffectiveZoneChanged",
         OnPhunZonesObjectLocationChanged = "PhunZonesOnPhunZonesObjectLocationChanged",
         OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked",
         OnZonesUpdated = "PhunZonesOnZonesUpdated",
@@ -207,65 +208,6 @@ end
 -- ---------------------------------------------------------------------------
 -- Cached module-level locals
 -- ---------------------------------------------------------------------------
-local excludedProps = {"x", "y", "vehicleId"}
-
--- ---------------------------------------------------------------------------
--- Zone override registry
---
--- Overrides allow any system to redirect a player's effective zone (PhunZones)
--- away from their physical zone (PhunZonesRaw). The RV interior system is one
--- consumer; other mods can register their own via Core.registerZoneOverride.
---
--- Override function signature:
---   fn(obj, physicalZone) -> string | table | nil
---
---   string  -> treated as a zone key; Core resolves it to a zone table.
---              If the key is unknown, a warning is logged and the override
---              is skipped.
---   table   -> used directly as the effective zone dataset. The override is
---              responsible for any merging it wants to do against physicalZone.
---   nil     -> no override; fall through to the next registered override.
---
--- Priority: lower number = higher priority. Defaults to 50.
--- ---------------------------------------------------------------------------
-local zoneOverrides = {}
-
-function Core.registerZoneOverride(name, fn, priority)
-    for i, entry in ipairs(zoneOverrides) do
-        if entry.name == name then
-            table.remove(zoneOverrides, i)
-            break
-        end
-    end
-    table.insert(zoneOverrides, {
-        name = name,
-        fn = fn,
-        priority = priority or 50
-    })
-    table.sort(zoneOverrides, function(a, b)
-        return a.priority < b.priority
-    end)
-end
-
-local function resolveEffectiveZone(obj, physicalZone)
-    for _, entry in ipairs(zoneOverrides) do
-        local ok, result = pcall(entry.fn, obj, physicalZone)
-        if not ok then
-            print("PhunZones: zone override '" .. entry.name .. "' errored: " .. tostring(result))
-        elseif type(result) == "string" then
-            local resolved = Core.getLocation(result)
-            if resolved and resolved ~= Core.data.lookup._default then
-                return resolved
-            else
-                print("PhunZones: zone override '" .. entry.name .. "' returned unknown key '" .. result ..
-                          "', skipping")
-            end
-        elseif type(result) == "table" then
-            return result
-        end
-    end
-    return physicalZone
-end
 
 -- ---------------------------------------------------------------------------
 -- Settings
@@ -322,6 +264,7 @@ function Core.getLocation(x, y)
 
     local xx, yy = x, y
     if not y and x.getX then
+        -- Assume IsoObject or similar with getX/getY
         xx, yy = x:getX(), x:getY()
     end
 
@@ -350,41 +293,74 @@ function Core.updateObjectZoneData(obj, triggerChangeEvent)
     end
 
     local existing = modData.PhunZones
-    local ldata = Core.getLocation(obj) or {}
+    local newZone = Core.getLocation(obj) or {}
+    local newId = Core.getZId(obj)
 
-    modData.PhunZones = Core.tools.shallowCopy(ldata)
-    modData.PhunZones.id = Core.getZId(obj)
+    modData.PhunZones = {
+        zone = newZone.key,
+        id = newId,
+        checked = getTimestamp()
+    }
 
-    local id = Core.getZId(obj)
-    if triggerChangeEvent and (id ~= existing.id or ldata.key ~= existing.key) then
-        triggerEvent(Core.events.OnPhunZonesObjectLocationChanged, obj, modData.PhunZones)
+    if triggerChangeEvent and (newId ~= existing.id or newZone.key ~= existing.zone) then
+        triggerEvent(Core.events.OnPhunZonesObjectLocationChanged, obj, newZone)
     end
 
-    return ldata
+    return newZone
 end
 
 -- ---------------------------------------------------------------------------
 -- Zone access enforcement — client-side only, returns false if player ejected
 -- ---------------------------------------------------------------------------
 
-function Core.enforceZoneAccess(obj, effectiveZone, existing)
+-- Walks outward in expanding perimeter squares from (x, y) until a tile is
+-- found whose zone key differs from restrictedZoneKey. Returns x, y, z or nil
+-- if no safe tile is found within the search radius.
+local function findNearestSafePosition(x, y, z, restrictedZoneKey)
+    for radius = 1, 50 do
+        for dx = -radius, radius do
+            for dy = -radius, radius do
+                if math.abs(dx) == radius or math.abs(dy) == radius then
+                    local zone = Core.getLocation(x + dx, y + dy)
+                    if not zone or zone.key ~= restrictedZoneKey then
+                        return x + dx, y + dy, z
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- lastPhysical is the stored.physical table { zone, x, y, z } from the previous
+-- accepted tick — used as the teleport-back target when access is denied.
+-- If lastPhysical is itself inside the restricted zone (e.g. login after a
+-- restriction was added), a spiral search finds the nearest safe tile instead.
+function Core.enforceZoneAccess(obj, effectiveZone, lastPhysical)
     if effectiveZone.noplayers ~= true then
         return true
     end
-    if not existing.last then
-        return true
+
+    local tx, ty, tz
+    local lastZone = lastPhysical and lastPhysical.x and Core.getLocation(lastPhysical.x, lastPhysical.y)
+    if lastZone and lastZone.key ~= effectiveZone.key then
+        tx, ty, tz = lastPhysical.x, lastPhysical.y, lastPhysical.z
+    else
+        tx, ty, tz = findNearestSafePosition(obj:getX(), obj:getY(), obj:getZ(), effectiveZone.key)
+    end
+
+    if not tx then
+        return true -- zone fills entire search area; let player stay
     end
 
     local vehicle = obj.getVehicle and obj:getVehicle() or nil
-    local lx, ly, lz = existing.last.x, existing.last.y, existing.last.z
-
     if vehicle then
-        Core.teleportVehicleToCoords(obj, vehicle, lx, ly, lz)
+        Core.teleportVehicleToCoords(obj, vehicle, tx, ty, tz)
     else
-        Core.portPlayer(obj, lx, ly, lz)
+        Core.portPlayer(obj, tx, ty, tz)
     end
 
-    if isClient() and instanceof(obj, "IsoPlayer") then
+    if (isClient() or Core.isLocal) and instanceof(obj, "IsoPlayer") then
         obj:setHaloNote(getText("IGUI_PhunZones_SayNoPlayers"), 255, 0, 0, 300)
     end
 
@@ -397,14 +373,14 @@ end
 
 function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     local modData = obj:getModData()
-    if not modData.PhunZones then
-        modData.PhunZones = {}
+    if not modData.PhunZones or not modData.PhunZones.physical then
+        modData.PhunZones = {
+            physical = {},
+            effective = {}
+        }
     end
 
-    local existingEffective = modData.PhunZones
-    local existingRaw = modData.PhunZonesRaw or existingEffective
-    local physicalZone = Core.getLocation(obj) or {}
-    local effectiveZone = resolveEffectiveZone(obj, physicalZone)
+    local stored = modData.PhunZones
     local vehicle = obj.getVehicle and obj:getVehicle() or nil
 
     local function currentPos()
@@ -419,45 +395,101 @@ function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
         }
     end
 
-    local physicalChanged = physicalZone.key ~= existingRaw.key
-    local effectiveChanged = effectiveZone.key ~= existingEffective.key
+    local newPhysical = Core.getLocation(obj) or {}
+    local physicalChanged = newPhysical.key ~= stored.physical.zone
 
-    if force or physicalChanged or effectiveChanged then
-        if not Core.enforceZoneAccess(obj, effectiveZone, existingEffective) then
-            return
-        end
-
-        local prevEffective = Core.tools.shallowCopy(existingEffective, excludedProps)
-        local prevRaw = Core.tools.shallowCopy(existingRaw, excludedProps)
-        local newEffective = Core.tools.shallowCopy(effectiveZone, excludedProps)
-        local newRaw = Core.tools.shallowCopy(physicalZone, excludedProps)
-
+    if not force and not physicalChanged then
+        -- No zone change — keep coords fresh
         local pos = currentPos()
-        newEffective.modified = getTimestamp()
-        newEffective.last = pos
-        newRaw.last = pos
-
-        modData.PhunZones = newEffective
-        modData.PhunZonesRaw = newRaw
-
-        if triggerChangeEvent then
-            -- Raw data is bundled into .raw on each arg rather than passed as
-            -- separate arguments — server-side triggerEvent is limited to 3
-            -- args (eventName + 2) and will throw if given more.
-            newEffective.raw = newRaw
-            prevEffective.raw = prevRaw
-            triggerEvent(Core.events.OnPhunZonesPlayerLocationChanged, obj, newEffective, prevEffective)
-        end
-
-        return prevEffective
+        stored.physical.x, stored.physical.y, stored.physical.z = pos.x, pos.y, pos.z
+        return stored
     end
 
-    -- No zone change — keep last position fresh in both datasets
-    local pos = currentPos()
-    existingEffective.last = pos
-    existingRaw.last = pos
+    -- Enforce on the incoming physical zone
+    if not Core.enforceZoneAccess(obj, newPhysical, stored.physical) then
+        return stored
+    end
 
-    return existingEffective
+    -- Accepted — record previous state, update physical, default effective to physical
+    local oldPhysical = {
+        zone = stored.physical.zone,
+        x = stored.physical.x,
+        y = stored.physical.y,
+        z = stored.physical.z
+    }
+    local oldEffective = {
+        zone = stored.effective.zone,
+        x = stored.effective.x,
+        y = stored.effective.y,
+        z = stored.effective.z
+    }
+
+    local pos = currentPos()
+    stored.physical = {
+        zone = newPhysical.key,
+        x = pos.x,
+        y = pos.y,
+        z = pos.z
+    }
+    stored.effective = {
+        zone = newPhysical.key,
+        x = pos.x,
+        y = pos.y,
+        z = pos.z
+    }
+
+    if triggerChangeEvent then
+        triggerEvent(Core.events.OnPhysicalZoneChanged, obj, stored, oldPhysical)
+        -- ^ handlers (e.g. RV mod) may mutate stored.effective in-place
+
+        if stored.effective.zone ~= oldEffective.zone then
+            triggerEvent(Core.events.OnEffectiveZoneChanged, obj, stored)
+        end
+    end
+
+    return stored
+end
+
+-- ---------------------------------------------------------------------------
+-- Effective zone helpers
+-- ---------------------------------------------------------------------------
+
+-- Returns the live zone properties table for obj's effective zone.
+-- Falls back to getLocation if moddata is not yet initialised.
+function Core.getEffectiveZone(obj)
+    local md = obj and obj.getModData and obj:getModData()
+    local stored = md and md.PhunZones
+    if stored and stored.effective and stored.effective.zone then
+        return Core.data.lookup[stored.effective.zone] or {}
+    end
+    return Core.getLocation(obj) or {}
+end
+
+-- External push: set obj's effective zone and fire OnEffectiveZoneChanged.
+-- Called by mods (e.g. RV system) when effective zone changes independently
+-- of physical movement (e.g. vehicle drives into a new zone while player is offmap).
+function Core.setEffectiveZone(obj, zoneKey, x, y, z)
+    local md = obj and obj.getModData and obj:getModData()
+    if not md then
+        return
+    end
+    if not md.PhunZones or not md.PhunZones.physical then
+        md.PhunZones = {
+            physical = {},
+            effective = {}
+        }
+    end
+    local stored = md.PhunZones
+    if stored.effective.zone == zoneKey then
+        return
+    end
+    stored.effective = {
+        zone = zoneKey,
+        x = x,
+        y = y,
+        z = z
+    }
+    triggerEvent(Core.events.OnEffectiveZoneChanged, obj, stored)
 end
 
 -- ---------------------------------------------------------------------------

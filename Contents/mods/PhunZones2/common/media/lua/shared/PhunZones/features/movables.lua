@@ -9,7 +9,7 @@ if ISMoveablesAction then
         if not square then
             return false
         end
-        local zone = self.character:getModData().PhunZones or {}
+        local zone = Core.getEffectiveZone(self.character)
         if zone and zone.noplacing == true and self.mode == "place" then
             self.character:setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);
             return false

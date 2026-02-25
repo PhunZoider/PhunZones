@@ -55,7 +55,7 @@ Core.iniBuilding = function()
         local oldBuildUtilCanBePlace = buildUtil.canBePlace
         function buildUtil.canBePlace(...)
             local playerObj = getSpecificPlayer(0)
-            local zone = playerObj:getModData().PhunZones or {}
+            local zone = Core.getEffectiveZone(playerObj)
             if zone and zone.nobuilding == true then
                 playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
                 return false

@@ -38,6 +38,11 @@ end
 
 function Core:setTrackedVehicleData(vehicleId)
 
+    local data = {
+        physical = {zonename, x, y, z},
+        display = {zonename, x, y, z}
+    }
+
     if RVInterior and self.settings.VehicleTracking then
         if not self.trackedVehicles then
             self.trackedVehicles = {}
