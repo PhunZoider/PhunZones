@@ -7,31 +7,32 @@ local Commands = require "PhunZones/client_commands"
 Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
     local zone = Core.data.lookup[stored.zone] or {}
     Core:updatePlayerUI(playerObj, zone)
+    if zone.nozeds then
+        Core.evictZeds(playerObj, zone.key)
+    end
 end)
 
 Events[Core.events.OnPhunZonesObjectLocationChanged].Add(function(object, zone)
     -- check if zed is in a nozed zone
-    if instanceof(object, "IsoZombie") then
-        local doRemove = false
-        if zone.zeds == false then
-            Core.updateModData(object)
-            doRemove = true
-        elseif zone.bandits == false and object:getModData().brain ~= nil then
-            object:getModData().PZChecked = nil
-            doRemove = true
-        end
-        if doRemove then
-            if isClient() then
-                sendClientCommand(Core.name, Core.commands.cleanPlayersZeds, {
-                    id = Core.getZId(object)
-                })
-            end
-            triggerEvent(Core.events.OnZombieRemoved, Core.getZId(object))
-            object:removeFromWorld()
-            object:removeFromSquare()
-
-        end
-    end
+    -- if instanceof(object, "IsoZombie") then
+    --     local doRemove = false
+    --     if zone.nozeds then
+    --         Core.updateModData(object)
+    --         doRemove = true
+    --     elseif zone.nobandits and object:getModData().brain ~= nil then
+    --         object:getModData().PZChecked = nil
+    --         doRemove = true
+    --     end
+    --     if doRemove then
+    --         if isClient() then
+    --             sendClientCommand(Core.name, Core.commands.cleanPlayersZeds, {
+    --                 zone = zone.key
+    --             })
+    --         else
+    --             Core.evictZeds(object, zone.key)
+    --         end
+    --     end
+    -- end
 end)
 
 Events[Core.events.OnPhunZoneReady].Add(function()
@@ -57,6 +58,10 @@ Events[Core.events.OnPhunZoneReady].Add(function()
             for i = 0, players:size() - 1, 1 do
                 local p = players:get(i)
                 Core.updateModData(p, true)
+                local stored = p:getModData().PhunZones
+                if stored and stored.zone then
+                    Core.evictZeds(p, stored.zone)
+                end
             end
         end
     end)
@@ -80,7 +85,10 @@ Events.OnCreatePlayer.Add(function(id)
     if playerObj then
         local data = playerObj:getModData()
         if not data.PhunZones or not data.PhunZones.at then
-            data.PhunZones = { zone = nil, at = {} }
+            data.PhunZones = {
+                zone = nil,
+                at = {}
+            }
         end
         if not data.PhunZonesVehicleInfo then
             data.PhunZonesVehicleInfo = {}
@@ -92,15 +100,6 @@ Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == Core.const.modifiedModData then
         ModData.add(Core.const.modifiedModData, tableData)
         Core:updateZoneData(true, tableData)
-    end
-end)
-
-Events.OnEnterVehicle.Add(function(player)
-    if player and Core.settings.VehicleTracking then
-        local vehicle = player:getVehicle();
-        if vehicle then
-            Core:setTrackedVehicleData(vehicle:getId())
-        end
     end
 end)
 

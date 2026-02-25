@@ -26,7 +26,8 @@ PhunZones = {
         playerTeleport = "PhunZonesPlayerTeleport",
         teleportVehicle = "PhunZonesTeleportVehicle",
         deleteZone = "PhunZonesDeleteZone",
-        updateEffectiveZone = "PhunZonesUpdateEffectiveZone"
+        updateEffectiveZone = "PhunZonesUpdateEffectiveZone",
+        evictZeds = "PhunZonesEvictZeds"
     },
     tools = require("PhunZones/tools"),
     groups = {
@@ -91,21 +92,15 @@ PhunZones = {
             group = "general"
         },
         zeds = {
-            label = "IGUI_PhunZones_Zeds",
+            label = "IGUI_PhunZones_NoZeds",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Zeds_tooltip",
+            tooltip = "IGUI_PhunZones_NoZeds_tooltip",
             group = "combat"
         },
         bandits = {
-            label = "IGUI_PhunZones_Bandits",
+            label = "IGUI_PhunZones_NoBandits",
             type = "boolean",
-            tooltip = "IGUI_PhunZones_Bandits_tooltip",
-            group = "mods"
-        },
-        rv = {
-            label = "IGUI_PhunZones_RVInteriors",
-            type = "boolean",
-            tooltip = "IGUI_PhunZones_RVInteriors_tooltip",
+            tooltip = "IGUI_PhunZones_NoBandits_tooltip",
             group = "mods"
         },
         Announce = {
@@ -315,7 +310,7 @@ end
 -- Walks outward in expanding perimeter squares from (x, y) until a tile is
 -- found whose zone key differs from restrictedZoneKey. Returns x, y, z or nil
 -- if no safe tile is found within the search radius.
-local function findNearestSafePosition(x, y, z, restrictedZoneKey)
+function Core.findNearestSafePosition(x, y, z, restrictedZoneKey)
     for radius = 1, 50 do
         for dx = -radius, radius do
             for dy = -radius, radius do
@@ -345,7 +340,7 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     if lastZone and lastZone.key ~= effectiveZone.key then
         tx, ty, tz = lastAt.x, lastAt.y, lastAt.z
     else
-        tx, ty, tz = findNearestSafePosition(obj:getX(), obj:getY(), obj:getZ(), effectiveZone.key)
+        tx, ty, tz = Core.findNearestSafePosition(obj:getX(), obj:getY(), obj:getZ(), effectiveZone.key)
     end
 
     if not tx then

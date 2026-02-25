@@ -5,12 +5,12 @@ return {
     },
     void = {
         difficulty = 0,
-        title = "Void",
+        title = "RV",
         isVoid = true,
         zeds = false,
         bandits = false,
-        rv = true,
-        points = {{21000, 6000, 100000, 100000}}
+        points = {{22500, 12000, 100000, 100000}},
+        modsRequired = "\\PROJECTRVInterior42"
     },
     Very_Easy = {
         difficulty = 0
