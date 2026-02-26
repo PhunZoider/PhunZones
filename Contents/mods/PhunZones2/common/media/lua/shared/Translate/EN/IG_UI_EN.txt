@@ -1,16 +1,4 @@
 IGUI_EN = {
-    IGUI_PhunZones_PvPOn = "PvP On",
-    IGUI_PhunZones_PvPOff = "PvP Off",
-    IGUI_PhunZones_Mild = "Mild",
-    IGUI_PhunZones_Medium = "Medium",
-    IGUI_PhunZones_Spicy = "Spicy",
-    IGUI_PhunZones_SuperSpicy = "Super Spicy",
-
-
-    IGUI_PhunZones_Property = "Property",
-    IGUI_PhunZones_Value = "Value",
-
-    IGUI_PhunZones_Zone = "Zone"
     IGUI_PhunZones_Zones = "Zones"
     IGUI_PhunZones_AddZone = "Add Zone"
     IGUI_PhunZones_AddZoneTooltip = "Add a new zone"
@@ -18,23 +6,12 @@ IGUI_EN = {
     IGUI_PhunZones_DelZoneTooltip = "Delete selected zone"
     IGUI_PhunZones_DelRect = "Delete Rect"
     IGUI_PhunZones_DelRectTooltip = "Delete selected Rectangle from zone"
-    IGUI_PhunZones_Plus = " + "
     IGUI_PhunZones_AddRect = "Add Rect"
     IGUI_PhunZones_AddRectTooltip = "Add a new rect at the current map centre for the selected zone"
-    IGUI_PhunZones_Minus = " - "
     IGUI_PhunZones_File = "File Contents"
     IGUI_PhunZones_FileTooltip = "View contents of your lua/PhunZones.lua file"
-    
     IGUI_PhunZones_SavePending = "Save pending property changes"
-
-
     IGUI_PhunZones_UnsavedChanges="You have unsaved changes. Save them now?"
-    IGUI_PhunZones_AddRegion = "Add Region",
-    IGUI_PhunZones_AddSub = "Add Sub Zone",
-    IGUI_PhunZones_EditRegion = "Edit Region",
-
-    IGUI_PhunZones_EditZone = "Edit Zone",
-
     IGUI_PhunZones_SayNoSafeHouse = "You cannot create a safehouse in this area"
     IGUI_PhunZones_SayNoPlayers = "You cannot enter this area"
     IGUI_PhunZones_SayNoBuild = "You cannot build in this area"
@@ -45,7 +22,6 @@ IGUI_EN = {
 
     IGUI_PhunZones_Coordinates = "Coordinates",
     IGUI_PhunZones_Region = "Region",
-    IGUI_PhunZones_Regions = "Regions",
     IGUI_PhunZones_Region_tooltip = "Unique key for this region.",
     IGUI_PhunZones_Zone = "Zone",
     IGUI_PhunZones_Zone_tooltip "Unique key for this zone.",
@@ -75,7 +51,7 @@ IGUI_EN = {
     IGUI_PhunZones_Order = "Order",
     IGUI_PhunZones_Order_tooltip = "Allows you to override an existing entry in the list. Just make this number higher than what you are wanting to override"
     IGUI_PhunZones_AllZones = "Show All"
-    IGUI_PhunZones_AllZones_tooltip = "Tick to show everything in system - or untick to show just what has been loaded"
+    IGUI_PhunZones_AllZones_tooltip = "Tick to show everything in system - or untick to show just what zones are active"
 
     IGUI_PhunZones_NoSafeHouse = "No Safehouse"
     IGUI_PhunZones_NoSafehouse_tooltip = "Explicitly forbid safehouse creation in zone"
