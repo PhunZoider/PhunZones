@@ -413,9 +413,6 @@ function UI:createChildren()
         end
         self._treeMouseDownNode = nil
     end
-    treePanel.onMouseMove = function(s, x, y)
-        self:onTreeHover(s, x, y)
-    end
     treePanel.onMouseWheel = function(s, del)
         local totalH = #self.treeNodes * ROW_HGT
         self.treeScroll = math.max(0, math.min(self.treeScroll + del * ROW_HGT * 3, math.max(0, totalH - s.height)))
@@ -488,9 +485,6 @@ function UI:createChildren()
         end
         self._propMouseDownRow = nil
     end
-    propPanel.onMouseMove = function(s, x, y)
-        self:onPropHover(s, x, y)
-    end
     propPanel.onMouseWheel = function(s, del)
         local totalH = #self.propRows * ROW_HGT
         self.propScroll = math.max(0, math.min(self.propScroll + del * ROW_HGT * 3, math.max(0, totalH - s.height)))
@@ -547,6 +541,33 @@ function UI:createChildren()
     inheritsPicker:setVisible(false)
     self:addChild(inheritsPicker)
     self.controls.inheritsPicker = inheritsPicker
+
+    -- -----------------------------------------------------------------------
+    -- Generic field combo picker (for fdef.type == "combo" rows)
+    -- -----------------------------------------------------------------------
+    local fieldPicker
+    fieldPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + 4, self, function(owner)
+        if fieldPicker._pendingField and fieldPicker._opts then
+            local text = fieldPicker:getSelectedText()
+            local idx = nil
+            for i, opt in ipairs(fieldPicker._opts) do
+                if tostring(opt) == text then
+                    idx = i
+                    break
+                end
+            end
+            if idx then
+                owner:saveProp(fieldPicker._pendingField, idx)
+            end
+        end
+        fieldPicker._pendingField = nil
+        fieldPicker._opts = nil
+        fieldPicker:setVisible(false)
+    end)
+    fieldPicker:initialise()
+    fieldPicker:setVisible(false)
+    self:addChild(fieldPicker)
+    self.controls.fieldPicker = fieldPicker
 
     -- -----------------------------------------------------------------------
     -- Buttons
@@ -916,6 +937,12 @@ function UI:prerender()
     -- Tree
     local tp = self.controls.treePanel
     if tp then
+        if tp:isMouseOver() then
+            local i = math.floor((tp:getMouseY() + self.treeScroll) / ROW_HGT) + 1
+            self.treeHover = (i >= 1 and i <= #self.treeNodes) and i or -1
+        else
+            self.treeHover = -1
+        end
         local ox, oy = tp.x, tp.y
         self:drawRect(ox, oy, tp.width, tp.height, 1, C.panel.r, C.panel.g, C.panel.b)
         self:drawRectBorder(ox, oy, tp.width, tp.height, C.border.a, C.border.r, C.border.g, C.border.b)
@@ -924,7 +951,23 @@ function UI:prerender()
 
     -- Props
     local pp = self.controls.propPanel
+    self._tipText = nil
+    self._tipMX = 0
+    self._tipMY = 0
     if pp then
+        if pp:isMouseOver() then
+            local i = math.floor((pp:getMouseY() + self.propScroll) / ROW_HGT) + 1
+            self.propHover = (i >= 1 and i <= #self.propRows) and i or -1
+            local row = self.propRows[self.propHover]
+            local tipKey = row and row.fdef and row.fdef.tooltip
+            if tipKey then
+                self._tipText = getText(tipKey)
+                self._tipMX = pp.x + pp:getMouseX()
+                self._tipMY = pp.y + pp:getMouseY()
+            end
+        else
+            self.propHover = -1
+        end
         local ox, oy = pp.x, pp.y
         self:drawRect(ox, oy, pp.width, pp.height, 1, C.panel.r, C.panel.g, C.panel.b)
         self:drawRectBorder(ox, oy, pp.width, pp.height, C.border.a, C.border.r, C.border.g, C.border.b)
@@ -934,6 +977,22 @@ end
 
 function UI:render()
     ISCollapsableWindowJoypad.render(self)
+    if self._tipText then
+        local mx, my = self._tipMX, self._tipMY
+        local tipW = getTextManager():MeasureStringX(UIFont.Small, self._tipText) + 16
+        local tipH = FONT_HGT_SMALL + 8
+        local tx = mx + 12
+        local ty = my - tipH - 4
+        if tx + tipW > self.width - 4 then
+            tx = self.width - tipW - 4
+        end
+        if ty < 0 then
+            ty = my + 16
+        end
+        self:drawRect(tx, ty, tipW, tipH, 0.95, 0.08, 0.08, 0.12)
+        self:drawRectBorder(tx, ty, tipW, tipH, 1.0, C.border.r, C.border.g, C.border.b)
+        self:drawText(self._tipText, tx + 8, ty + 2, C.text.r, C.text.g, C.text.b, 1.0, UIFont.Small)
+    end
 end
 
 -- Keep Esc cancelling draw mode before closing
@@ -1198,11 +1257,6 @@ function UI:onTreeClick(panel, x, y)
     self:selectZone(node.key)
 end
 
-function UI:onTreeHover(panel, x, y)
-    local i = math.floor((y + self.treeScroll) / ROW_HGT) + 1
-    self.treeHover = (i >= 1 and i <= #self.treeNodes) and i or -1
-end
-
 function UI:selectZone(key)
     self:cancelInlineEdit()
     self.propHover = -1
@@ -1343,10 +1397,17 @@ function UI:refreshProperties()
             local k, fdef = f.k, f.fdef
             local val = pending[k] ~= nil and pending[k] or merged[k]
             local isOver = raw[k] ~= nil or pending[k] ~= nil
+            local displayVal = nil
+            if fdef.type == "combo" then
+                local opts = fdef.options or (fdef.getOptions and fdef.getOptions()) or {}
+                local idx = tonumber(val)
+                displayVal = idx and tostring(opts[idx]) or nil
+            end
             table.insert(self.propRows, {
                 key = k,
                 label = getText(fdef.label or k),
                 value = val,
+                displayVal = displayVal,
                 override = isOver,
                 origin = fdef.mod or nil,
                 fdef = fdef
@@ -1474,20 +1535,47 @@ function UI:renderProps(ox, oy, w, h)
                         lr, lg, lb = C.danger.r, C.danger.g, C.danger.b
                     end
 
-                    self:drawText(row.label, ox + 6, ay + 2, lr, lg, lb, la, UIFont.Small)
+                    local isButton = row.fdef and row.fdef.type == "button"
+                    local isCombo = row.fdef and row.fdef.type == "combo"
 
-                    local valStr = tostring(row.value ~= nil and row.value or "--")
-                    local vr, vg, vb, va
-                    if row.override then
-                        vr, vg, vb, va = C.accent.r, C.accent.g, C.accent.b, 1.0
+                    if isButton then
+                        -- Label spans the full row; right side shows a clickable hint
+                        self:drawText(row.label, ox + 6, ay + 2, C.accent.r, C.accent.g, C.accent.b, la, UIFont.Small)
+                        local hint = "[ click ]"
+                        local hw = getTextManager():MeasureStringX(UIFont.Small, hint)
+                        self:drawText(hint, ox + contentW - hw - 6, ay + 2, C.accentDim.r, C.accentDim.g, C.accentDim.b,
+                            0.8, UIFont.Small)
                     else
-                        vr, vg, vb, va = C.textDim.r, C.textDim.g, C.textDim.b, 0.9
-                    end
-                    if row.danger and row.value == true then
-                        vr, vg, vb = C.danger.r, C.danger.g, C.danger.b
-                    end
+                        self:drawText(row.label, ox + 6, ay + 2, lr, lg, lb, la, UIFont.Small)
 
-                    self:drawText(valStr, ox + valX + 4, ay + 2, vr, vg, vb, va, UIFont.Small)
+                        local valStr
+                        if isCombo then
+                            valStr = row.displayVal or tostring(row.value ~= nil and row.value or "--")
+                        else
+                            valStr = tostring(row.value ~= nil and row.value or "--")
+                        end
+                        local vr, vg, vb, va
+                        if row.override then
+                            vr, vg, vb, va = C.accent.r, C.accent.g, C.accent.b, 1.0
+                        else
+                            vr, vg, vb, va = C.textDim.r, C.textDim.g, C.textDim.b, 0.9
+                        end
+                        if row.danger and row.value == true then
+                            vr, vg, vb = C.danger.r, C.danger.g, C.danger.b
+                        end
+
+                        -- Clip value text to available column width
+                        local valColW = contentW - valX - 6
+                        local tm = getTextManager()
+                        if tm:MeasureStringX(UIFont.Small, valStr) > valColW then
+                            while #valStr > 0 and tm:MeasureStringX(UIFont.Small, valStr .. "...") > valColW do
+                                valStr = valStr:sub(1, -2)
+                            end
+                            valStr = valStr .. "..."
+                        end
+
+                        self:drawText(valStr, ox + valX + 4, ay + 2, vr, vg, vb, va, UIFont.Small)
+                    end
                     self:drawRect(ox, ay + ROW_HGT - 1, contentW, 1, C.border.a * 0.4, C.border.r, C.border.g,
                         C.border.b)
                 end
@@ -1548,6 +1636,19 @@ function UI:onPropClick(panel, x, y)
             cur = sd.merged[row.key]
         end
         self:saveProp(row.key, not cur);
+        return
+    end
+
+    if fdef.type == "combo" then
+        local opts = fdef.options or (fdef.getOptions and fdef.getOptions()) or {}
+        self:showFieldPicker(row, i, opts)
+        return
+    end
+
+    if fdef.type == "button" then
+        if fdef.onClick then
+            fdef.onClick(self, row.key, row.value)
+        end
         return
     end
 
@@ -1639,9 +1740,27 @@ function UI:showInheritsPicker(row, rowIndex)
     picker:setVisible(true)
 end
 
-function UI:onPropHover(panel, x, y)
-    local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
-    self.propHover = (i >= 1 and i <= #self.propRows) and i or -1
+function UI:showFieldPicker(row, rowIndex, opts)
+    local pp = self.controls.propPanel
+    local hasScroll = (#self.propRows * ROW_HGT) > pp.height
+    local contentW = hasScroll and (pp.width - SCROLLBAR_W - 2) or pp.width
+    local valX = math.floor(contentW * 0.52)
+    local rowScreenY = pp.y + (rowIndex - 1) * ROW_HGT - self.propScroll
+
+    local picker = self.controls.fieldPicker
+    picker:setX(pp.x + valX)
+    picker:setY(rowScreenY)
+    picker:setWidth(contentW - valX - 4)
+    picker:clear()
+    picker._opts = opts
+    picker._pendingField = row.key
+
+    local currentIdx = tonumber(row.value) or 1
+    for _, opt in ipairs(opts) do
+        picker:addOption(tostring(opt))
+    end
+    picker:select(math.max(1, math.min(currentIdx, math.max(1, #opts))))
+    picker:setVisible(true)
 end
 
 function UI:commitInlineEdit()
@@ -1684,6 +1803,12 @@ function UI:cancelInlineEdit()
     if ip and ip:isVisible() then
         ip:setVisible(false)
     end
+    local fp = self.controls.fieldPicker
+    if fp and fp:isVisible() then
+        fp:setVisible(false)
+        fp._pendingField = nil
+        fp._opts = nil
+    end
     self._editingRow = nil
 end
 
@@ -1707,7 +1832,7 @@ function UI:saveProp(fieldKey, newValue)
         elseif fdef.type == "boolean" then
             val = (newValue == true or newValue == "true" or newValue == 1)
         elseif fdef.type == "combo" then
-            val = (newValue ~= "" and newValue or nil)
+            val = tonumber(newValue) or nil
         end
     end
 
@@ -2172,6 +2297,7 @@ end
 
 function UI:doClose()
     self._closing = true
+    self._tipText = nil
     self:setVisible(false)
     ISCollapsableWindowJoypad.close(self)
     self.instances[self.playerIndex] = nil

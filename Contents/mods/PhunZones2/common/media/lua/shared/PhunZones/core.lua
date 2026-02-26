@@ -102,6 +102,16 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_NoBandits_tooltip",
             group = "mods"
         },
+        bandits = {
+            label = "IGUI_PhunZones_NoBandits",
+            type = "combo",
+            tooltip = "IGUI_PhunZones_NoBandits_tooltip",
+            group = "mods",
+            getOptions = function()
+                local options = {" ", "Port from zone", "Remove"}
+                return options
+            end
+        },
         noannounce = {
             label = "IGUI_PhunZones_NoWelcome",
             type = "boolean",
