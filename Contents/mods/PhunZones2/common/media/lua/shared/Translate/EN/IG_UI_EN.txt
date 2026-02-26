@@ -55,14 +55,21 @@ IGUI_EN = {
     IGUI_PhunZones_Subtitle_tooltip = "Optional subtitle that is displayed to the player",
     IGUI_PhunZones_Difficulty = "Difficulty",
     IGUI_PhunZones_Difficulty_tooltip = "Zone difficulty level. Give your players an indication of the areas difficulty. Just a visual cue, not tied to functionality ",
-    IGUI_PhunZones_Mods = "Mods",
-    IGUI_PhunZones_Mods_tooltip = "Mods that are required to be activated for this zone to be active. You can add multiple mods by separating each with a semi-colon",
+    IGUI_PhunZones_ModsRequired = "Required Mods",
+    IGUI_PhunZones_ModsRequired_tooltip = "Mods that are required to be activated for this zone to be active. You can add multiple mods by separating each with a semi-colon. eg \\Bandits2;\\PhunZones",
     IGUI_PhunZones_PvP = "PvP On",
     IGUI_PhunZones_PvP_tooltip = "Overrides the PvP settings on the server for this zone. This will have no effect if PvP is disabled in your server settings",
     IGUI_PhunZones_NoZeds = "No Zombies",
     IGUI_PhunZones_NoZeds_tooltip = "Do not allow zeds here",
     IGUI_PhunZones_NoBandits = "No Bandits",
     IGUI_PhunZones_NoBandits_tooltip = "Do not allow bandits here",
+    
+    IGUI_PhunZones_Bandits = "Bandits",
+    IGUI_PhunZones_Bandits_tooltip = "If Bandits2 mod is installed and there are bandits in this zone, do nothing, move them out of the zone or remove them from game",
+
+    IGUI_PhunZones_Zeds = "Zeds",
+    IGUI_PhunZones_Zeds_tooltip = "When a zed is in this zone: do nothing, move them out of the zone or remove them from game. Note that removing will include player corpses!",
+
     IGUI_PhunZones_NoWelcome = "No Announce",
     IGUI_PhunZones_NoWelcome_tooltip = "True prevents the name of the zone on screen when the player enters",
     IGUI_PhunZones_Order = "Order",
@@ -74,7 +81,7 @@ IGUI_EN = {
     IGUI_PhunZones_NoSafehouse_tooltip = "Explicitly forbid safehouse creation in zone"
 
     IGUI_PhunZones_NoBuilding = "No Building"
-    IGUI_PhunZones_NoBuilding_tooltip = "Untick to explicitly forbid building items like walls and such in zone"
+    IGUI_PhunZones_NoBuilding_tooltip = "Explicitly forbid building items like walls and such in zone"
 
     IGUI_PhunZones_NoPlacing = "No Placing"
     IGUI_PhunZones_NoPlacing_tooltip = "Explicitly forbid placing items like TV's and suck in zone"

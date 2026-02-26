@@ -1451,7 +1451,7 @@ function UI:refreshProperties()
 
     table.insert(self.propRows, 1, {
         key = "disabled",
-        label = "Disabled (tombstone)",
+        label = "Disabled",
         value = raw.disabled == true,
         override = raw.disabled ~= nil,
         special = true,
@@ -1460,7 +1460,7 @@ function UI:refreshProperties()
     table.insert(self.propRows, 1, {
         key = "inherits",
         label = "Inherits from",
-        value = raw.inherits or "(none — root)",
+        value = raw.inherits or "(none)",
         override = true,
         special = true
     })

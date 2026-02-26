@@ -26,7 +26,8 @@ PhunZones = {
         teleportVehicle = "PhunZonesTeleportVehicle",
         deleteZone = "PhunZonesDeleteZone",
         updateEffectiveZone = "PhunZonesUpdateEffectiveZone",
-        evictZeds = "PhunZonesEvictZeds"
+        evictZeds = "PhunZonesEvictZeds",
+        removeZeds = "PhunZonesRemoveZeds"
     },
     tools = require("PhunZones/tools"),
     groups = {
@@ -82,34 +83,31 @@ PhunZones = {
             label = "IGUI_PhunZones_Difficulty",
             type = "int",
             tooltip = "IGUI_PhunZones_Difficulty_tooltip",
-            group = "combat"
+            group = "combat",
+            order = 1
         },
-        mods = {
-            label = "IGUI_PhunZones_Mods",
+        modsRequired = {
+            label = "IGUI_PhunZones_ModsRequired",
             type = "string",
-            tooltip = "IGUI_PhunZones_Mods_tooltip",
-            group = "general"
-        },
-        nozeds = {
-            label = "IGUI_PhunZones_NoZeds",
-            type = "boolean",
-            tooltip = "IGUI_PhunZones_NoZeds_tooltip",
-            group = "combat"
-        },
-        nobandits = {
-            label = "IGUI_PhunZones_NoBandits",
-            type = "boolean",
-            tooltip = "IGUI_PhunZones_NoBandits_tooltip",
+            tooltip = "IGUI_PhunZones_ModsRequired_tooltip",
             group = "mods"
         },
-        bandits = {
-            label = "IGUI_PhunZones_NoBandits",
+        zeds = {
+            label = "IGUI_PhunZones_Zeds",
             type = "combo",
-            tooltip = "IGUI_PhunZones_NoBandits_tooltip",
-            group = "mods",
+            tooltip = "IGUI_PhunZones_Zeds_tooltip",
+            group = "combat",
             getOptions = function()
-                local options = {" ", "Port from zone", "Remove"}
-                return options
+                return {" ", "Move", "Remove"}
+            end
+        },
+        bandits = {
+            label = "IGUI_PhunZones_Bandits",
+            type = "combo",
+            tooltip = "IGUI_PhunZones_Bandits_tooltip",
+            group = "combat",
+            getOptions = function()
+                return {" ", "Move", "Remove"}
             end
         },
         noannounce = {
@@ -310,10 +308,48 @@ end
 -- Zone access enforcement — client-side only, returns false if player ejected
 -- ---------------------------------------------------------------------------
 
--- Walks outward in expanding perimeter squares from (x, y) until a tile is
--- found whose zone key differs from restrictedZoneKey. Returns x, y, z or nil
--- if no safe tile is found within the search radius.
+-- Returns a position just outside the zone rect containing (x, y).
+-- Fast path: looks up the containing rect directly and jumps to its nearest
+-- edge in O(1). Falls back to a spiral search only when overlapping rects
+-- of the same zone cover that edge tile.
 function Core.findNearestSafePosition(x, y, z, restrictedZoneKey)
+    -- Find the specific rect for this zone that contains (x, y)
+    local ckey = math.floor(x / 300) .. "_" .. math.floor(y / 300)
+    local rects = Core.data and Core.data.cells and Core.data.cells[ckey] or {}
+    local x1, y1, x2, y2
+    for _, v in ipairs(rects) do
+        if v[1] == restrictedZoneKey and x >= v[2] and x <= v[4] and y >= v[3] and y <= v[5] then
+            x1, y1, x2, y2 = v[2], v[3], v[4], v[5]
+            break
+        end
+    end
+
+    if x1 then
+        -- Distance (in tiles) to clear each edge
+        local dLeft = x - x1 + 1
+        local dRight = x2 - x + 1
+        local dTop = y - y1 + 1
+        local dBot = y2 - y + 1
+        local tx, ty
+        local best = math.min(dLeft, dRight, dTop, dBot)
+        if best == dLeft then
+            tx, ty = x1 - 1, y
+        elseif best == dRight then
+            tx, ty = x2 + 1, y
+        elseif best == dTop then
+            tx, ty = x, y1 - 1
+        else
+            tx, ty = x, y2 + 1
+        end
+        -- Single check: verify the edge tile isn't inside an overlapping rect
+        local check = Core.getLocation(tx, ty)
+        if not check or check.key ~= restrictedZoneKey then
+            return tx, ty, z
+        end
+        -- Overlapping rect covers that edge — fall through to spiral
+    end
+
+    -- Fallback spiral for degenerate/heavily-overlapping cases
     for radius = 1, 50 do
         for dx = -radius, radius do
             for dy = -radius, radius do

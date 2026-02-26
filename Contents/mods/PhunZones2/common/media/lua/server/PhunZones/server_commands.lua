@@ -41,4 +41,30 @@ Commands[Core.commands.evictZeds] = function(player, args)
     Core.evictZeds(player, args and args.zone)
 end
 
+Commands[Core.commands.removeZeds] = function(player, args)
+
+    local ids = {}
+    local passed = type(args.id) == "table" and args.id or {args.id}
+
+    for _, id in ipairs(passed) do
+        ids[id] = true
+    end
+    local removed = {}
+    local zombies = player:getCell():getZombieList()
+    for i = 0, zombies:size() - 1 do
+        local zombie = zombies:get(i)
+        local id = Core.getZId(zombie)
+        if instanceof(zombie, "IsoZombie") and ids[id] then
+            table.insert(removed, tostring(id))
+            zombie:removeFromWorld()
+            zombie:removeFromSquare()
+            break
+        end
+    end
+    if #removed > 0 then
+        triggerEvent(Core.events.OnZombieRemoved, removed)
+    end
+
+end
+
 return Commands

@@ -6,17 +6,16 @@ local Core = PhunZones
 local activeMods = getActivatedMods()
 local bandits2Active = activeMods:contains("\\Bandits2")
 
+-- Evicts (moves) zeds/bandits out of a zone. Called for zones with action=1 (Move).
+-- Removal (action=2) is handled client-side in client_events via sendClientCommand.
 Core.evictZeds = function(playerObj, zoneKey)
     if not playerObj or not zoneKey then
         return
     end
 
     local zone = Core.data.lookup[zoneKey] or {}
-    if not zone.nozeds and not (bandits2Active and zone.nobandits) then
-        return
-    end
-    local shouldEvictZeds = zone.nozeds == true
-    local shouldEvictBandits = bandits2Active and zone.nobandits == true
+    local shouldEvictZeds = tonumber(zone.zeds) == 2
+    local shouldEvictBandits = bandits2Active and tonumber(zone.bandits) == 2
 
     if not shouldEvictZeds and not shouldEvictBandits then
         return
@@ -33,7 +32,6 @@ Core.evictZeds = function(playerObj, zoneKey)
                 if shouldEvict then
                     local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zoneKey)
                     if ex then
-                        local offset = ZombRand(-2, 2)
                         zed:setX(ex + ZombRand(-2, 2))
                         zed:setY(ey + ZombRand(-2, 2))
                         zed:setZ(ez)
@@ -45,7 +43,7 @@ Core.evictZeds = function(playerObj, zoneKey)
 end
 
 if bandits2Active then
-    -- Prevent bandits mod from spawning bandits in this zone
+    -- Prevent bandits mod from spawning bandits in zones with any bandit action set
     local BanditScheduler = BanditScheduler
     if BanditScheduler then
         local oldfn = BanditScheduler.GenerateSpawnPoint
@@ -54,7 +52,7 @@ if bandits2Active then
 
             local zone = Core.getLocation(player:getX(), player:getY())
 
-            if zone and zone.nobandits then
+            if zone and (tonumber(zone.bandits) or 0) > 1 then
                 return false
             end
 
