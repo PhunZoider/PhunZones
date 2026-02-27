@@ -65,8 +65,13 @@ end
 -- Converts old nested subzone format into the new flat format with explicit
 -- `inherits` fields. New-format configs pass through unchanged.
 -- Safe to remove once old configs are no longer in circulation.
+--
+-- addDefaultInherits (bool): when true, zones without an explicit `inherits`
+-- get `inherits = "_default"` injected. Pass false for the custom/admin layer
+-- so that absent `inherits` means "keep whatever the base layer says" rather
+-- than "override with _default".
 -- ---------------------------------------------------------------------------
-function Core.normaliseFormat(zones)
+function Core.normaliseFormat(zones, addDefaultInherits)
     local flat = {}
     for key, zone in pairs(zones) do
         if key == "_default" then
@@ -79,7 +84,7 @@ function Core.normaliseFormat(zones)
                 end
             end
 
-            if not entry.inherits and not entry.isolated then
+            if addDefaultInherits and not entry.inherits and not entry.isolated then
                 entry.inherits = "_default"
             end
 
@@ -88,7 +93,7 @@ function Core.normaliseFormat(zones)
             if zone.subzones then
                 for subKey, sub in pairs(zone.subzones) do
                     local subEntry = Core.tools.shallowCopy(sub)
-                    if not subEntry.inherits then
+                    if addDefaultInherits and not subEntry.inherits then
                         subEntry.inherits = key
                     end
                     flat[key .. "_" .. subKey] = subEntry
@@ -502,8 +507,10 @@ end
 function Core.buildZoneData(filter)
 
     local custom = Core.loadAdminConfig()
-    local flatBase = Core.normaliseFormat(allLocations)
-    local flatCustom = Core.normaliseFormat(custom)
+    local flatBase = Core.normaliseFormat(allLocations, true)
+    -- Custom layer must NOT auto-inject inherits=_default: absent inherits means
+    -- "keep whatever the base layer says", not "override parent to _default".
+    local flatCustom = Core.normaliseFormat(custom, false)
     local merged = Core.mergeLayers(flatBase, flatCustom)
 
     if filter then

@@ -63,7 +63,12 @@
             {
                 "match": ".*",
                 "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test\\Tests 2>nul"
-            },            
+            },
+            // copy TEST mod root overrides (mod.info, icon, poster) into workshop mod subfolder
+            {
+                "match": ".*",
+                "cmd": "xcopy ${workspaceFolder}\\Tests\\root ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test\\Contents\\mods\\PhunZones2 /Y /I /E /F"
+            },
 
             // copy TEST preview file to workshop version
             {

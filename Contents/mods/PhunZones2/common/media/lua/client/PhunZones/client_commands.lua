@@ -18,7 +18,14 @@ Commands[Core.commands.playerSetup] = function(data)
 end
 
 Commands[Core.commands.zoneUpdated] = function(data)
-    ModData.add(Core.const.modifiedModData, data.data or {})
+    -- data.data is only set by playerSetup; zoneUpdated sends data.changes.
+    -- Calling ModData.add with an empty table can wipe the client's zone data,
+    -- so only update ModData when the server actually provides a full dataset.
+    -- OnReceiveGlobalModData (triggered by ModData.transmit on the server) handles
+    -- the authoritative full-data sync for all clients.
+    if data.data and next(data.data) then
+        ModData.add(Core.const.modifiedModData, data.data)
+    end
     Core.updateZoneData()
     local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do

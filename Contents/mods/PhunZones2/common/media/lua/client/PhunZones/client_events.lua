@@ -198,7 +198,8 @@ Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
 
     for _, instance in pairs(Core.ui.zones.instances or {}) do
         if instance.refreshData then
-            instance:refreshData()
+            -- Preserve the current selection across the data rebuild
+            instance:refreshData(instance.selectedData)
         end
     end
 

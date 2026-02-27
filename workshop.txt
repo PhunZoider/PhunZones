@@ -1,52 +1,42 @@
 version=1
 title=PhunZones 2
-
-description=The ultimate B42 mod for customising game behaviour based on location.
-
-description=[H1]TL;DR[/H1]
-description=PhunZones lets you control how the game behaves based on where players are.
+description=Welcome to [b]PhunZones 2[/b]. A complete rewrite of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450]PhunZones[/url], rebuilt specifically for Build 42+.
 description=
-description=Create zones with custom rules for zombies, building, looting, fire spread, safehouses, and more.
+description=Create unlimited custom zones across Kentucky, each with unique rules and behaviors to shape your world exactly how you want it.
 description=
-description=Designed for multiplayer servers, performance-focused, and built to be extended by other mods.
-
-description=
-description=[H1]Key Features[/H1]
+description=[h2]Features[/h2]
 description=[list]
-description=[*]Create and manage zones with unique, configurable properties
+description=[*]Display custom location names when entering zones
+description=[*]Create zombie-free areas
+description=[*]Block Bandits (requires Bandits 2)
+description=[*]Prevent safehouse creation
+description=[*]Restrict picking up or placing objects
+description=[*]Restrict dismantling and crafting
+description=[*]Block construction
+description=[*]Prevent fire spread
+description=[*]Block player entry to specific zones
+description=[*]Zone detection works inside [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299]Project RV Interior[/url]
+description=[/list]
+description=
+description=[h2]Built for Extendability[/h2]
+description=Other mods can register their own properties directly into the zone editor. Most Phun mods already integrate seamlessly.
+description=
+description=[h2]What’s New in PhunZones 2[/h2]
 description=[list]
-description=[*]Optional area title displayed when players enter a zone
-description=[*]Toggle zombie spawning
-description=[*]Toggle safehouse creation
-description=[*]Toggle pickup and placement of objects
-description=[*]Toggle scrapping / disassembling
-description=[*]Toggle construction
-description=[*]Toggle fire spread (brief animation may still play)
-description=[*]Prevent players from entering specific zones
-description=[*]Toggle bandit spawning (Bandits mod support)
-description=[*]…and more
+description=[*]No external dependencies (PhunLib no longer required)
+description=[*]Build 42+ focused (B41 support retired)
+description=[*]Major performance improvements
+description=[*]Completely redesigned zone editor UI
+description=[*]True inheritance system — define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
 description=[/list]
-description=[/list]
-
 description=
-description=[H2]Built to Be Extended[/H2]
-description=PhunZones is designed as both a standalone system and a foundation for other mods.
+description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.
 description=
-description=Other mods can query zone data or hook into PhunZones behaviour to drive their own logic.
+description=[h2]More Phun Mods[/h2]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450][img]https://i.ibb.co/3mQpB8ST/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.ibb.co/d4y0BhnF/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3628843367][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url]
 description=
-description=This makes it ideal for:
-description=[list]
-description=[*]Custom loot systems
-description=[*]Faction or territory mechanics
-description=[*]Event-driven gameplay
-description=[*]Server-specific rulesets
-description=[/list]
-https://ibb.co/Gf5pcfNX
-description=
-description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
+description=Coded with love for the awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]
 
 tags=Build 42;Multiplayer
 visibility=public
-
-

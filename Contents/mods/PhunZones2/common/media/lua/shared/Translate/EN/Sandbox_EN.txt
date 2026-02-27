@@ -2,23 +2,18 @@ Sandbox_EN = {
     Sandbox_PhunZones = "PhunZones"
 
     Sandbox_PhunZones_Widget = "Show Widget",
-    Sandbox_PhunZones_Widget_tooltip = "Displays the PhunZones widget. May require a client restart for this to take effect",
+    Sandbox_PhunZones_Widget_tooltip = "Displays a moveable widget that displays the current zones title and subtitle. It can also show pips that signify the danger level for the current zone",
 
     Sandbox_PhunZones_ShowDifficulty = "Show Difficulty",
-    Sandbox_PhunZones_ShowDifficulty_tooltip = "Show difficulty level as pips in location widget. Requires Show Widget to be ticked.",
+    Sandbox_PhunZones_ShowDifficulty_tooltip = "Show difficulty level for zone as pips in widget. Requires Show Widget to be ticked.",
 
     Sandbox_PhunZones_MaxDifficulty = "Max Difficulty",
-    Sandbox_PhunZones_ShowDifficulty_tooltip = "Maximum number of difficulty you use (default is 4)",
+    Sandbox_PhunZones_ShowDifficulty_tooltip = "Maximum number of difficulty. This is the max number of pips in your widget (default is 4)",
 
-    Sandbox_PhunZones_UpdateInterval = "Zone check frequency",
-    Sandbox_PhunZones_UpdateInterval_tooltip = "The number of seconds between scanning for zone changes. Higher number is easier on the server",
-
-    Sandbox_PhunZones_ZedUpdateFrequency = "Zed check frequency",
-    Sandbox_PhunZones_ZedUpdateFrequency_tooltip = "The number of seconds between updating zeds with zone information used for removing them and by other mods. The higher the number, the less resource intensive it is",
+    Sandbox_PhunZones_UpdateInterval = "Zone check",
+    Sandbox_PhunZones_UpdateInterval_tooltip = "The number of seconds between scanning for zone changes. 1 should be more than fine",
 
     Sandbox_PhunZones_Debug = "Debug",
-    Sandbox_PhunZones_Debug_tooltip = "Increase verbosity of logging to help diagnose issues",
-
-
+    Sandbox_PhunZones_Debug_tooltip = "Increase verbosity of logging to help diagnose issues. Best to leave off otherwise",
 
 }

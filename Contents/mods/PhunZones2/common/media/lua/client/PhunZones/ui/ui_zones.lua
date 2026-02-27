@@ -9,7 +9,6 @@ end
 local Core = PhunZones
 
 local mapui = require("PhunZones/ui/ui_map")
-local tools = require("PhunZones/ui/tools")
 local MapOverlay = require("PhunZones/ui/ui_map_overlay")
 
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
@@ -161,8 +160,32 @@ function UI.OnOpenPanel(playerObj, key)
     instance:initialise()
     instance:instantiate()
     instance:addToUIManager()
+    ISLayoutManager.RegisterWindow(profileName, UI, instance)
     instance:setVisible(true)
-    instance:refreshData(Core.getLocation(playerObj))
+    instance:refreshData(Core.getLocation(playerObj:getX(), playerObj:getY()))
+
+    -- After refreshData, explicitly zoom the map to the selected zone's full bounds.
+    -- refreshZonePoints → setData already calls zoomAndCentreMapToBounds, but the
+    -- map widget may not be fully laid-out yet at that point. Calling it here
+    -- (after the window is visible) ensures the zoom/centre actually takes effect.
+    local mapui = instance.controls.mapui
+    if mapui then
+        local sd = instance.selectedData
+        if sd and sd.raw and sd.raw.points and #sd.raw.points > 0 then
+            local minx, miny, maxx, maxy = 1e9, 1e9, -1e9, -1e9
+            for _, p in ipairs(sd.raw.points) do
+                minx = math.min(minx, p[1]);
+                miny = math.min(miny, p[2])
+                maxx = math.max(maxx, p[3]);
+                maxy = math.max(maxy, p[4])
+            end
+            mapui:zoomAndCentreMapToBounds(minx, miny, maxx, maxy)
+        else
+            -- No zone selected (or zone has no points): centre on the player
+            local px, py = playerObj:getX(), playerObj:getY()
+            mapui:zoomAndCentreMapToBounds(px - 150, py - 150, px + 150, py + 150)
+        end
+    end
 
     for k, v in pairs(Core.fields) do
         if v.initialize then
@@ -191,7 +214,7 @@ function UI:new(x, y, width, height, player, key)
     o.anchorBottom = true
     o.zOffsetSmallFont = 25
     o.data = {}
-    o._filterActive = false
+    o._filterActive = true
     o.selectedData = nil
     o.selectedPoint = nil
     o.treeNodes = {}
@@ -379,7 +402,7 @@ function UI:createChildren()
 
     local chkAll = ISTickBox:new(0, 0, BUTTON_HGT, BUTTON_HGT, getText("IGUI_PhunZones_AllZones"), self)
     chkAll:addOption(getText("IGUI_PhunZones_AllZones"), nil)
-    chkAll:setSelected(1, true)
+    chkAll:setSelected(1, false)
     chkAll:setWidthToFit()
     chkAll.tooltip = getText("IGUI_PhunZones_AllZones_tooltip")
     chkAll.onMouseUp = function(s, x, y)
@@ -523,6 +546,13 @@ function UI:createChildren()
     local inlineEdit = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + 4)
     inlineEdit:initialise()
     inlineEdit:setVisible(false)
+    inlineEdit.onTextChange = function()
+        -- onTextChange may fire before PZ applies the keystroke to getText(),
+        -- so comparing getText() to _inlineOrigValue can miss single-char edits.
+        -- Use a simple dirty flag: any text-change event marks the field modified.
+        self._inlineDirty = true
+        self:updateSaveDiscardButtons()
+    end
     self:addChild(inlineEdit)
     self.controls.inlineEdit = inlineEdit
 
@@ -1396,6 +1426,11 @@ function UI:refreshProperties()
         for _, f in ipairs(fields) do
             local k, fdef = f.k, f.fdef
             local val = pending[k] ~= nil and pending[k] or merged[k]
+            -- merged may not include a raw override if the zone data wasn't yet
+            -- re-processed (e.g. modsRequired set in base data but not in lookup)
+            if val == nil and raw[k] ~= nil then
+                val = raw[k]
+            end
             local isOver = raw[k] ~= nil or pending[k] ~= nil
             local displayVal = nil
             if fdef.type == "combo" then
@@ -1434,11 +1469,18 @@ function UI:refreshProperties()
     end
     if #extraRows > 0 then
         if #groups > 0 then
-            local otherDef = Core.groups and Core.groups["other"]
-            local otherLabel = otherDef and otherDef.label or "Other"
+            -- If the schema "other" group was already emitted, label these
+            -- unrecognised fields differently to avoid two headers with the same name
+            local extraLabel
+            if groupFields["other"] then
+                extraLabel = "Unknown"
+            else
+                local otherDef = Core.groups and Core.groups["other"]
+                extraLabel = otherDef and otherDef.label or "Other"
+            end
             table.insert(self.propRows, {
                 isGroupHeader = true,
-                label = otherLabel
+                label = extraLabel
             })
         end
         table.sort(extraRows, function(a, b)
@@ -1670,7 +1712,10 @@ function UI:onPropClick(panel, x, y)
     if curVal == nil then
         curVal = sd.merged[row.key]
     end
-    ie:setText(curVal ~= nil and tostring(curVal) or "")
+    local initText = curVal ~= nil and tostring(curVal) or ""
+    ie:setText(initText)
+    self._inlineOrigValue = initText
+    self._inlineDirty = false
     ie:setVisible(true)
     ie:focus()
     ie:selectAll()
@@ -1769,6 +1814,8 @@ function UI:commitInlineEdit()
         return
     end
     ie:setVisible(false)
+    self._inlineOrigValue = nil
+    self._inlineDirty = false
 
     local row = self._editingRow
     self._editingRow = nil
@@ -1795,6 +1842,8 @@ function UI:commitInlineEdit()
 end
 
 function UI:cancelInlineEdit()
+    self._inlineOrigValue = nil
+    self._inlineDirty = false
     local ie = self.controls.inlineEdit
     if ie and ie:isVisible() then
         ie:setVisible(false)
@@ -1940,7 +1989,9 @@ function UI:flushPendingChanges()
 end
 
 function UI:updateSaveDiscardButtons()
-    self.controls.btnSave.enable = self:hasPendingChanges()
+    local ie = self.controls.inlineEdit
+    local inlineDirty = ie and ie:isVisible() and self._inlineDirty
+    self.controls.btnSave.enable = self:hasPendingChanges() or inlineDirty
 end
 
 -- ===========================================================================
