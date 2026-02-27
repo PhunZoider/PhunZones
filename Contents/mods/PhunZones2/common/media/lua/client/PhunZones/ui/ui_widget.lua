@@ -11,8 +11,8 @@ local FONT_HGT_LARGE = getTextManager():getFontHeight(UIFont.Large)
 local FONT_SCALE = FONT_HGT_SMALL / 14
 local HEADER_HGT = FONT_HGT_MEDIUM + 2 * 2
 
-local profielName = "PhunZonesUIWidgety"
-PZ.ui.widget = ISPanel:derive(profielName);
+local profileName = "PhunZonesUIWidgety"
+PZ.ui.widget = ISPanel:derive(profileName);
 PZ.ui.widget.instances = {}
 local UI = PZ.ui.widget
 
@@ -31,7 +31,7 @@ function UI.OnOpenPanel(playerObj, playerIndex)
 
         UI.instances[playerIndex] = UI:new(x, y, width, height, playerObj, playerIndex);
         UI.instances[playerIndex]:initialise();
-        ISLayoutManager.RegisterWindow(profielName, PZ.ui.widget, PZ.ui.widget.instances[playerIndex])
+        ISLayoutManager.RegisterWindow(profileName, PZ.ui.widget, PZ.ui.widget.instances[playerIndex])
     end
 
     UI.instances[playerIndex]:addToUIManager();
@@ -105,8 +105,6 @@ function UI:new(x, y, width, height, player, playerIndex)
     o.zOffsetLargeFont = 25;
     o.zOffsetMediumFont = 20;
     o.zOffsetSmallFont = 6;
-    -- o:setWantKeyEvents(true)
-    o.pvpOnTexture = getTexture("media/ui/pvpicon_on.png")
     return o;
 end
 
@@ -152,8 +150,7 @@ end
 
 function UI:RestoreLayout(name, layout)
 
-    ISLayoutManager.DefaultRestoreWindow(self, layout)
-    if name == profielName then
+    if name == profileName then
         ISLayoutManager.DefaultRestoreWindow(self, layout)
         self.userPosition = layout.userPosition == 'true'
     end
@@ -224,12 +221,6 @@ function UI:setData(data)
             self.data.subtitleHeight = 0
         end
 
-        if data.zone.pvp then
-            self.pvpTexture = getTexture("media/ui/pvpicon_on.png")
-        else
-            self.pvpTexture = nil
-        end
-
         self.data.difficulty = nil
 
         if data.zone.difficulty then
@@ -260,7 +251,7 @@ function UI:prerender()
 
         if not minimap then
             -- player does not minimap
-            local width = getTextManager():MeasureStringX(UIFont.small, self.data.title or "") + x
+            local width = getTextManager():MeasureStringX(UIFont.Small, self.data.title or "") + x
             self.borderColor = self.hoverBorderColor
             self.backgroundColor = self.hoverBackgroundColor
             self:setWidth(self.data.titleWidth + 40)
@@ -313,10 +304,6 @@ function UI:prerender()
         txtColor = self.hoverTextColor
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
-    end
-    if self.data.pvpTexture then
-        self:drawTextureScaledAspect(self.data.pvpTexture, x, y, 30, 30, 1);
-        x = x + 32 + 10
     end
 
     self:drawText(self.data.title or "", x, y, txtColor.r, txtColor.g, txtColor.b, txtColor.a, UIFont.Medium);

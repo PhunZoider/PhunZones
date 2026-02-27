@@ -9,7 +9,8 @@ PhunZones = {
         OnPhunZonesObjectLocationChanged = "PhunZonesOnPhunZonesObjectLocationChanged",
         OnPhunZoneWidgetClicked = "PhunZonesOnPhunZoneWidgetClicked",
         OnZonesUpdated = "PhunZonesOnZonesUpdated",
-        OnZombieRemoved = "PhunZonesOnZombieRemoved"
+        OnZombieRemoved = "PhunZonesOnZombieRemoved",
+        OnDataBuilt = "PhunZonesOnDataBuilt"
     },
     const = {
         modifiedLuaFile = "PhunZones.lua",
@@ -190,15 +191,15 @@ for _, event in pairs(Core.events or {}) do
 end
 
 function Core.debugLn(str)
-    -- if Core.settings.Debug then
-    print("[" .. Core.name .. "] " .. str)
-    -- end
+    if Core.settings.Debug then
+        print("[" .. Core.name .. "] " .. str)
+    end
 end
 
 function Core.debug(...)
-    -- if Core.settings.Debug then
-    Core.tools.debug(Core.name, ...)
-    -- end
+    if Core.settings.Debug then
+        Core.tools.debug(Core.name, ...)
+    end
 end
 
 -- ---------------------------------------------------------------------------
@@ -237,13 +238,7 @@ function Core:ini()
     end
     self.inied = true
 
-    if (Core.tools.isLocal or isServer()) then
-        print("PhunZones: Loading changes as server")
-        self:updateZoneData(true)
-    else
-        print("PhunZones: Loading changes as client")
-        self:updateZoneData(true, ModData.getOrCreate(self.const.modifiedModData))
-    end
+    self:updateZoneData()
 
     triggerEvent(self.events.OnPhunZoneReady)
 end
@@ -466,6 +461,17 @@ function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     return stored
 end
 
+-- Returns the live zone properties table for obj's display zone.
+-- Falls back to getLocation if moddata is not yet initialised.
+function Core.getPhysicalZone(obj)
+    local md = obj and obj.getModData and obj:getModData()
+    local stored = md and md.PhunZones
+    if stored and stored.at and stored.at.zone then
+        return Core.data.lookup[stored.at.zone] or {}
+    end
+    return obj and obj.getX and Core.getLocation(obj:getX(), obj:getY()) or {}
+end
+
 -- ---------------------------------------------------------------------------
 -- Effective zone helpers
 -- ---------------------------------------------------------------------------
@@ -478,7 +484,7 @@ function Core.getEffectiveZone(obj)
     if stored and stored.zone then
         return Core.data.lookup[stored.zone] or {}
     end
-    return Core.getLocation(obj) or {}
+    return obj and obj.getX and Core.getLocation(obj:getX(), obj:getY()) or {}
 end
 
 -- External push: set obj's display zone and fire OnEffectiveZoneChanged.

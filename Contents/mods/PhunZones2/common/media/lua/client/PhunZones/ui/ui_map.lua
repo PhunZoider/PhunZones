@@ -245,7 +245,6 @@ end
 ]] --
 function UI:InitPlayer()
 
-    print("INI PLAYER FOR ZONES")
     if not ISWorldMap_instance then
         ISWorldMap.ShowWorldMap(self.playerIndex)
         ISWorldMap.HideWorldMap(self.playerIndex)

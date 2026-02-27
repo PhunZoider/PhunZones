@@ -134,7 +134,7 @@ Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
     playersInZedZone[playerNum] = isIn or nil
     if isIn and not wasIn then
         zedZonePlayerCount = zedZonePlayerCount + 1
-    elseif not isIn and wasIn then
+    elseif not isIn and wasIn and zedZonePlayerCount > 0 then
         zedZonePlayerCount = zedZonePlayerCount - 1
     end
 
@@ -175,7 +175,7 @@ Events[Core.events.OnPhunZoneReady].Add(function()
 
 end)
 
-Events[Core.events.OnZonesUpdated].Add(function(playerObj, buttonId)
+Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
     playersInZedZone = {}
     zedZonePlayerCount = 0
     zedCheckCooldown = {} -- zone data changed; force fresh zone checks
@@ -223,7 +223,7 @@ end)
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == Core.const.modifiedModData then
         ModData.add(Core.const.modifiedModData, tableData)
-        Core:updateZoneData(true, tableData)
+        Core.updateZoneData()
     end
 end)
 

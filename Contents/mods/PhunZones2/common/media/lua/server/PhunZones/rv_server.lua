@@ -13,42 +13,46 @@ end
 
 require "RVServerMP_V3"
 
-local oldGetInToRV = GetInToRV
-function GetInToRV(player, vehicle)
+if GetInToRV then
+    local oldGetInToRV = GetInToRV
+    function GetInToRV(player, vehicle)
 
-    local result = oldGetInToRV(player, vehicle)
+        local result = oldGetInToRV(player, vehicle)
 
-    local rvPlayerId = player:getModData().projectRV_playerId
-    local modData = ModData.getOrCreate("modPROJECTRVInterior")
+        local rvPlayerId = player:getModData().projectRV_playerId
+        local modData = ModData.getOrCreate("modPROJECTRVInterior")
 
-    local md = ModData.getOrCreate("PhunZonesRVInfo")
+        local md = ModData.getOrCreate("PhunZonesRVInfo")
 
-    md.players = md.players or {}
-    md.players[player:getUsername()] = {}
+        md.players = md.players or {}
+        md.players[player:getUsername()] = {}
 
-    local p = modData.Players and modData.Players[rvPlayerId]
-    if not p then
+        local p = modData.Players and modData.Players[rvPlayerId]
+        if not p then
+            return result
+        end
+        local v = modData.Vehicles[p.VehicleId]
+
+        if v and v.x then
+            md.players[player:getUsername()] = {
+                vid = p.VehicleId,
+                zone = (Core.getLocation(v.x, v.y) or {}).key
+            }
+        end
+
         return result
     end
-    local v = modData.Vehicles[p.VehicleId]
-
-    if v and v.x then
-        md.players[player:getUsername()] = {
-            vid = p.VehicleId,
-            zone = (Core.getLocation(v.x, v.y) or {}).key
-        }
-    end
-
-    return result
 end
 
-local oldRVServerGetOutFromRV = RVServer.GetOutFromRV
-function RVServer.GetOutFromRV(player, vehicle)
-    local result = oldRVServerGetOutFromRV(player, vehicle)
-    local md = ModData.getOrCreate("PhunZonesRVInfo")
-    md.players = md.players or {}
-    md.players[player:getUsername()] = nil
-    return result
+if RVServer and RVServer.GetOutFromRV then
+    local oldRVServerGetOutFromRV = RVServer.GetOutFromRV
+    function RVServer.GetOutFromRV(player, vehicle)
+        local result = oldRVServerGetOutFromRV(player, vehicle)
+        local md = ModData.getOrCreate("PhunZonesRVInfo")
+        md.players = md.players or {}
+        md.players[player:getUsername()] = nil
+        return result
+    end
 end
 
 local function processVehicleZoneChanges()

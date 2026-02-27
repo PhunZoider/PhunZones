@@ -25,6 +25,9 @@ Commands[Core.commands.modifyZone] = function(player, data)
     if not data then
         return
     end
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
     Core.debug("[modifyZone]", data)
     Core.saveChanges(data.changes)
     ModData.transmit(Core.const.modifiedModData)
@@ -32,6 +35,9 @@ Commands[Core.commands.modifyZone] = function(player, data)
 end
 
 Commands[Core.commands.deleteZone] = function(player, data)
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
     Core.addDeletion(data.key)
     ModData.transmit(Core.const.modifiedModData)
 end
@@ -42,29 +48,32 @@ Commands[Core.commands.evictZeds] = function(player, args)
 end
 
 Commands[Core.commands.removeZeds] = function(player, args)
-
-    local ids = {}
-    local passed = type(args.id) == "table" and args.id or {args.id}
-
-    for _, id in ipairs(passed) do
-        ids[id] = true
+    -- Re-derive from server state: only remove zeds that are
+    -- (a) in the player's current cell, AND
+    -- (b) in a zone that actually has zeds==3 action
+    local zone = Core.getLocation(player:getX(), player:getY()) or {}
+    if tonumber(zone.zeds) ~= 3 then
+        return -- player isn't even in a remove-zeds zone; ignore
     end
+
     local removed = {}
     local zombies = player:getCell():getZombieList()
     for i = 0, zombies:size() - 1 do
         local zombie = zombies:get(i)
-        local id = Core.getZId(zombie)
-        if instanceof(zombie, "IsoZombie") and ids[id] then
-            table.insert(removed, tostring(id))
-            zombie:removeFromWorld()
-            zombie:removeFromSquare()
-            break
+        if instanceof(zombie, "IsoZombie") then
+            local zZone = Core.getLocation(zombie:getX(), zombie:getY()) or {}
+            local id = Core.getZId(zombie)
+            if id then
+                table.insert(removed, tostring(id))
+                zombie:removeFromWorld()
+                zombie:removeFromSquare()
+            end
+
         end
     end
     if #removed > 0 then
         triggerEvent(Core.events.OnZombieRemoved, removed)
     end
-
 end
 
 return Commands

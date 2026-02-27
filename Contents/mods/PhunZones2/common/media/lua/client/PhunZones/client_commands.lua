@@ -8,7 +8,7 @@ local Commands = {}
 
 Commands[Core.commands.playerSetup] = function(data)
     ModData.add(Core.const.modifiedModData, data.data or {})
-    Core:updateZoneData(true, data)
+    Core.updateZoneData()
 
     local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do
@@ -19,7 +19,7 @@ end
 
 Commands[Core.commands.zoneUpdated] = function(data)
     ModData.add(Core.const.modifiedModData, data.data or {})
-    Core:updateZoneData(true, data)
+    Core.updateZoneData()
     local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do
         local p = players:get(i)

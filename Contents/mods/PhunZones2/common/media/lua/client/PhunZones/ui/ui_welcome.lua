@@ -61,6 +61,9 @@ function UI.OnOpenPanel(playerObj, zone)
     if not title or title == "" then
         return
     end
+    if zone.noannounce then
+        return
+    end
 
     local playerIndex = playerObj:getPlayerNum()
 
@@ -73,9 +76,7 @@ function UI.OnOpenPanel(playerObj, zone)
         title = title,
         subtitle = subtitle
     }
-    if zone.noannounce then
-        return
-    end
+
     local instance = UI.instances[playerIndex]
     local core = getCore()
 

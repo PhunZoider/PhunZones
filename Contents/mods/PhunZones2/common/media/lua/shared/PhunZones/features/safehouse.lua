@@ -1,6 +1,5 @@
 local Core = PhunZones
 local sh = nil
-local hs = nil
 
 function Core.iniSafehouses()
     if sh == nil then

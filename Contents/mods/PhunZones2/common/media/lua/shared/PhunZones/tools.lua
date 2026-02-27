@@ -65,6 +65,12 @@ function tools.onlinePlayers(all)
     return onlinePlayers;
 end
 
+function tools.isAdmin()
+
+    return (getAccessLevel and (getAccessLevel() == "moderator" or getAccessLevel() == "admin")) or false
+
+end
+
 -- ---------------------------------------------------------------------------
 -- SHALLOW COPY
 -- Returns a shallow copy of a table, optionally excluding specified keys.

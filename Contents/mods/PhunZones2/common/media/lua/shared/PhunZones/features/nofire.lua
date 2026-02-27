@@ -1,6 +1,5 @@
 local Core = PhunZones
 
-local isoBurning = nil
 function Core.checkFire(fire)
 
     local square = fire:getSquare()

@@ -4,7 +4,7 @@ Core.iniBuilding = function()
         local oldTryBuild = ISBuildingObject.tryBuild
         function ISBuildingObject:tryBuild(x, y, z)
             local playerObj = getSpecificPlayer(self.player)
-            local zone = Core.getLocation(square) or {}
+            local zone = Core.getLocation(x, y) or {}
             if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil then
                 playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
                 return false
@@ -39,7 +39,7 @@ Core.iniBuilding = function()
     if ISMoveableCursor then
         local oldISMoveableCursorIsValid = ISMoveableCursor.isValid
         function ISMoveableCursor:isValid(square)
-            if not _square then
+            if not square then
                 return false
             end
             local zone = Core.getLocation(square) or {}
@@ -47,7 +47,7 @@ Core.iniBuilding = function()
                 getSpecificPlayer(0):setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);
                 return false
             end
-            return oldISMoveableCursorIsValid(self, _square)
+            return oldISMoveableCursorIsValid(self, square)
         end
     end
 

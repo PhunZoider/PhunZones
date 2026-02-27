@@ -489,24 +489,24 @@ function Core.addDeletion(key)
     end
 
     ModData.add(Core.const.modifiedModData, custom)
-    Core.updateZoneData(true)
+    Core.updateZoneData()
 end
 
 -- ---------------------------------------------------------------------------
 -- BUILD ZONE DATA
 -- Runs the full processing pipeline and returns the result.
 -- Does not store globally or trigger events.
--- omitMods: when false, skips mod filtering (useful for UI editor which
+-- filter: when false, skips mod filtering (useful for UI editor which
 -- needs to see all zones including those excluded by current modset)
 -- ---------------------------------------------------------------------------
-function Core.buildZoneData(omitMods)
+function Core.buildZoneData(filter)
 
     local custom = Core.loadAdminConfig()
     local flatBase = Core.normaliseFormat(allLocations)
     local flatCustom = Core.normaliseFormat(custom)
     local merged = Core.mergeLayers(flatBase, flatCustom)
 
-    if omitMods then
+    if filter then
         merged = Core.applyModFilter(merged)
     end
 
@@ -529,35 +529,6 @@ end
 function Core.updateZoneData()
     local result = Core.buildZoneData(true) -- always filter mods for live data
     Core.data = result
-    triggerEvent(Core.events.OnZonesUpdated)
+    triggerEvent(Core.events.OnDataBuilt, result)
     return result
-end
-
--- ---------------------------------------------------------------------------
--- POINT LOOKUP (CLIENT-SIDE)
--- Given world coordinates, returns the resolved zone the player is in.
--- Falls back to _default if no zone matches.
--- ---------------------------------------------------------------------------
-function Core.getZoneAt(worldX, worldY)
-    if not Core.data then
-        return nil
-    end
-
-    local cx = math.floor(worldX / CHUNK_SIZE)
-    local cy = math.floor(worldY / CHUNK_SIZE)
-    local ckey = cx .. "_" .. cy
-
-    local candidates = Core.data.cells[ckey]
-    if candidates then
-        -- Candidates are already sorted by descending order (highest priority first)
-        for _, c in ipairs(candidates) do
-            -- c = { zoneKey, x1, y1, x2, y2 }
-            local key, x1, y1, x2, y2 = c[1], c[2], c[3], c[4], c[5]
-            if worldX >= x1 and worldX <= x2 and worldY >= y1 and worldY <= y2 then
-                return Core.data.lookup[key]
-            end
-        end
-    end
-
-    return Core.data.lookup["_default"]
 end
