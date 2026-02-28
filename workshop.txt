@@ -19,7 +19,7 @@ description=[*]Zone detection works inside [url=https://steamcommunity.com/share
 description=[/list]
 description=
 description=[h2]Built for Extendability[/h2]
-description=Other mods can register their own properties directly into the zone editor. Most Phun mods already integrate seamlessly.
+description=Where [b]PhunZones[/b] shines is its ability for other mods to easily hook into it and set their own properties in the Zone editor. Most Phun mods already integrate seamlessly.
 description=
 description=[h2]What’s New in PhunZones 2[/h2]
 description=[list]
@@ -27,7 +27,7 @@ description=[*]No external dependencies (PhunLib no longer required)
 description=[*]Build 42+ focused (B41 support retired)
 description=[*]Major performance improvements
 description=[*]Completely redesigned zone editor UI
-description=[*]True inheritance system — define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
+description=[*]True inheritance system. For example, define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
 description=[/list]
 description=
 description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.
