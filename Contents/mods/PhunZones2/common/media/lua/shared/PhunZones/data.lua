@@ -178,7 +178,7 @@ return {
         points = {{3300, 7800, 3800, 7500}}
     },
     -- to check
-    DawnTown = {
+    DawnTown = { --
         inherits = "Medium",
         title = "Dawn Town",
         modsRequired = "\\dawn_town",
@@ -190,25 +190,25 @@ return {
         modsRequired = "\\dawn_town",
         points = {{3353, 8115, 3580, 8380}}
     },
-    ShamrockFarm = {
+    ShamrockFarm = { --
         inherits = "Medium",
         title = "Shamrock Farm",
         modsRequired = "\\ShamrockFarm",
         points = {{2392, 7194, 2717, 7518}}
     },
-    YanghuTown = {
+    YanghuTown = { --
         inherits = "Medium",
         title = "Yanghu Town",
         modsRequired = "\\Yanghu Town",
         points = {{8698, 8982, 9598, 9609}}
     },
-    LabRoad = {
+    LabRoad = { --
         inherits = "Hard",
         title = "Lab Road",
         modsRequired = "\\LAB Road",
         points = {{5774, 12298, 6315, 12603}}
     },
-    SafeWayHamlet = {
+    SafeWayHamlet = { --
         inherits = "Medium",
         title = "SafeWay Hamlet",
         modsRequired = "\\SafeWayHamlet",
@@ -348,5 +348,38 @@ return {
         inherits = "WestPoint",
         points = {{11786, 6545, 12006, 6595}},
         modsRequired = "\\WMTBoat"
+    },
+    Greenleaf = {
+        title = "Greenleaf",
+        inherits = "Medium",
+        points = {{6297, 10194, 6805, 10826}, {6773, 10487, 6995, 10827}},
+        modsRequired = "\\Greenleaf B42 version"
+    },
+    RavenCreek = {
+        difficulty = 3,
+        inherits = "Very_Hard",
+        title = "Raven Creek",
+        modsRequired = "\\RavenCreekB42",
+        points = {{5109, 17271, 5692, 17731}, {4088, 12855, 4097, 12856}, {5706, 15568, 5916, 16148},
+                  {4191, 15301, 5385., 15601}, {4191, 15598, 5708, 16217}, {4800, 16214, 5703, 16821}}
+    },
+    RavenCreekInfectionControl = {
+        inherits = "RavenCreek",
+        difficulty = 4,
+        modsRequired = "\\RavenCreekB42",
+        points = {{4935, 16910, 5330, 17162}}
+    },
+    RavenCreekExpressway = {
+        inherits = "RavenCreek",
+        difficulty = 4,
+        modsRequired = "\\RavenCreekB42",
+        points = {{5382, 15340, 6398, 15453}}
+    },
+    RavenCreekCityPort = {
+        inherits = "RavenCreek",
+        points = {{4314, 16378, 4767, 17003}},
+        difficulty = 4,
+        modsRequired = "\\RavenCreekB42",
+        subtitle = "City Port"
     }
 }
