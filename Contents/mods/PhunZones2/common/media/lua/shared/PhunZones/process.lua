@@ -19,6 +19,12 @@ local LEGACY_FIELDS = {
 --   modsAllRequired = "mod1;mod2" include if ALL of these mods are active
 --   modsExcluded = "mod1;mod2"   exclude if ANY of these mods are active
 -- ---------------------------------------------------------------------------
+-- Normalise a mod name: ensure it always starts with "\".
+-- Handles data saved before the UI auto-prepend was added.
+local function normMod(m)
+    return (m:sub(1, 1) == "\\" and m) or ("\\" .. m)
+end
+
 local function passesModFilter(zone)
     local activeMods = getActivatedMods()
 
@@ -27,7 +33,7 @@ local function passesModFilter(zone)
         local mods = luautils.split(zone.modsRequired .. ";", ";")
         local found = false
         for _, m in ipairs(mods) do
-            if m ~= "" and activeMods:contains(m) then
+            if m ~= "" and activeMods:contains(normMod(m)) then
                 found = true
                 break
             end
@@ -41,7 +47,7 @@ local function passesModFilter(zone)
     if zone.modsAllRequired then
         local mods = luautils.split(zone.modsAllRequired .. ";", ";")
         for _, m in ipairs(mods) do
-            if m ~= "" and not activeMods:contains(m) then
+            if m ~= "" and not activeMods:contains(normMod(m)) then
                 return false
             end
         end
@@ -51,7 +57,7 @@ local function passesModFilter(zone)
     if zone.modsExcluded then
         local mods = luautils.split(zone.modsExcluded .. ";", ";")
         for _, m in ipairs(mods) do
-            if m ~= "" and activeMods:contains(m) then
+            if m ~= "" and activeMods:contains(normMod(m)) then
                 return false
             end
         end

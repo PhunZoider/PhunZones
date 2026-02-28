@@ -91,7 +91,24 @@ PhunZones = {
             label = "IGUI_PhunZones_ModsRequired",
             type = "string",
             tooltip = "IGUI_PhunZones_ModsRequired_tooltip",
-            group = "mods"
+            group = "mods",
+            -- Ensure every semicolon-separated mod name starts with "\".
+            -- PZ text-entry widgets strip leading backslashes, so we re-add
+            -- them automatically so the user doesn't need to type them.
+            normalize = function(v)
+                if type(v) ~= "string" then return v end
+                local result = {}
+                for entry in (v .. ";"):gmatch("([^;]*);") do
+                    entry = entry:match("^%s*(.-)%s*$")
+                    if entry ~= "" then
+                        if entry:sub(1, 1) ~= "\\" then
+                            entry = "\\" .. entry
+                        end
+                        table.insert(result, entry)
+                    end
+                end
+                return table.concat(result, ";")
+            end
         },
         zeds = {
             label = "IGUI_PhunZones_Zeds",

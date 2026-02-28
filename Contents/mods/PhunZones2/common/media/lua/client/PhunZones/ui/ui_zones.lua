@@ -676,11 +676,23 @@ function UI:dropRectAtViewportCentre()
         return
     end
 
-    -- Both worldToUIX/Y and uiToWorldX/Y work in widget-relative coords
-    local cx = math.floor(map.width / 2)
-    local cy = math.floor(map.height / 2)
-    local wx = math.floor(api:uiToWorldX(cx, cy))
-    local wy = math.floor(api:uiToWorldY(cx, cy))
+    local wx, wy
+
+    -- When the zone has no existing rects, anchor to the player's world
+    -- position so the rect doesn't land in some remote corner of the map.
+    local zone = zones(self)[self.selectedData.key]
+    local hasPoints = zone and zone.points and #zone.points > 0
+    if not hasPoints and self.player then
+        wx = math.floor(self.player:getX())
+        wy = math.floor(self.player:getY())
+    else
+        -- Use the current viewport centre (works well when the map is already
+        -- centred on the zone's existing rects).
+        local cx = math.floor(map.width / 2)
+        local cy = math.floor(map.height / 2)
+        wx = math.floor(api:uiToWorldX(cx, cy))
+        wy = math.floor(api:uiToWorldY(cx, cy))
+    end
 
     local x1 = wx - DEFAULT_RECT_HALF
     local y1 = wy - DEFAULT_RECT_HALF
@@ -1882,6 +1894,9 @@ function UI:saveProp(fieldKey, newValue)
             val = (newValue == true or newValue == "true" or newValue == 1)
         elseif fdef.type == "combo" then
             val = tonumber(newValue) or nil
+        end
+        if fdef.normalize then
+            val = fdef.normalize(val)
         end
     end
 

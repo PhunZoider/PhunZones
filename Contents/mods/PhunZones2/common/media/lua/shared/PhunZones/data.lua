@@ -30,7 +30,7 @@ return {
     WestPoint = {
         inherits = "Medium",
         title = "West Point",
-        points = {{11100, 6580, 13199, 7499}}
+        points = {{10903, 6580, 12282, 7205}}
     },
     EchoPark = {
         inherits = "Medium",
@@ -40,7 +40,7 @@ return {
     Ekron = {
         inherits = "Medium",
         title = "Ekron",
-        points = {{10, 9226, 1101, 9974}}
+        points = {{10, 9299, 1101, 9974}}
     },
     ErikasFurnitureStore = {
         inherits = "Hard",
@@ -57,18 +57,17 @@ return {
     Irvington = {
         inherits = "Medium",
         title = "Irvington",
-        points = {{2155, 13785, 3013, 14245}, {1691, 14246, 3149, 14980}}
+        points = {{2155, 13785, 3013, 14246}, {1691, 14246, 3149, 14980}}
     },
     IrvingtonSpeedway = {
-        inherits = "Medium",
-        title = "Irvington",
+        inherits = "Irvington",
         subtitle = "Speedway",
         points = {{870, 12770, 1234, 13424}}
     },
     MarchRidge = {
         inherits = "Medium",
         title = "March Ridge",
-        points = {{9600, 12600, 10499, 13199}}
+        points = {{9779, 12600, 10499, 12870}, {9780, 12854, 10074, 13163}}
     },
     Muldraugh = {
         inherits = "Easy",
@@ -78,7 +77,7 @@ return {
     Rosewood = {
         inherits = "Very_Easy",
         title = "Rosewood",
-        points = {{7800, 10800, 8699, 12299}}
+        points = {{7800, 11424, 8549, 11902}, {8054, 11216, 8198, 11437}}
     },
     Rosewood_Cabins = {
         points = {{7503, 11402, 7788, 11689}},
@@ -108,7 +107,7 @@ return {
     Riverside = {
         inherits = "Medium",
         title = "Riverside",
-        points = {{5400, 5100, 6899, 5699}}
+        points = {{5400, 5181, 6899, 5699}}
     },
     Louisville = {
         inherits = "Hard",
@@ -160,12 +159,12 @@ return {
     ValleyStation = {
         inherits = "Hard",
         title = "Valley Station",
-        points = {{12397, 4331, 14737, 6477}}
+        points = {{12397, 4556, 14737, 6477}}
     },
     Brandenburg = {
         inherits = "Hard",
         title = "Brandenburg",
-        points = {{814, 5384, 3100, 7066}}
+        points = {{1280, 5687, 2517, 6701}, {2513, 6178, 2894, 6482}, {1457, 5501, 1682, 5709}}
     },
     FallasLake = {
         inherits = "Medium",
@@ -177,5 +176,177 @@ return {
         title = "Frogtown",
         modsRequired = "\\Frogtown",
         points = {{3300, 7800, 3800, 7500}}
+    },
+    -- to check
+    DawnTown = {
+        inherits = "Medium",
+        title = "Dawn Town",
+        modsRequired = "\\dawn_town",
+        points = {{2989, 8096, 3242, 8401}}
+    },
+    CoalField = {
+        title = "Coal Field",
+        inherits = "DawnTown",
+        modsRequired = "\\dawn_town",
+        points = {{3353, 8115, 3580, 8380}}
+    },
+    ShamrockFarm = {
+        inherits = "Medium",
+        title = "Shamrock Farm",
+        modsRequired = "\\ShamrockFarm",
+        points = {{2392, 7194, 2717, 7518}}
+    },
+    YanghuTown = {
+        inherits = "Medium",
+        title = "Yanghu Town",
+        modsRequired = "\\Yanghu Town",
+        points = {{8698, 8982, 9598, 9609}}
+    },
+    LabRoad = {
+        inherits = "Hard",
+        title = "Lab Road",
+        modsRequired = "\\LAB Road",
+        points = {{5774, 12298, 6315, 12603}}
+    },
+    SafeWayHamlet = {
+        inherits = "Medium",
+        title = "SafeWay Hamlet",
+        modsRequired = "\\SafeWayHamlet",
+        points = {{12578, 10801, 12905, 11372}}
+    },
+    beek_muldraugh_firedept = {
+        inherits = "Medium",
+        title = "Muldraugh",
+        modsRequired = "\\beek_muldraugh_firedept",
+        points = {{10500, 9177, 10585, 9234}}
+    },
+    VanilinhaCityB42 = {
+        inherits = "Medium",
+        title = "Vanilinha City",
+        modsRequired = "\\VanilinhaCityB42",
+        points = {{12001, 9609, 13558, 11063}}
+    },
+    Estate39 = {
+        title = "Estate 39",
+        inherits = "Medium",
+        points = {{8396, 10069, 8510, 10180}},
+        modsRequired = "\\Estate 39"
+    },
+    Meiyas = {
+        title = "Meiyas",
+        inherits = "Easy",
+        points = {{8089, 10793, 8419, 11095}},
+        noannounce = false,
+        modsRequired = "\\Meiya'sTown"
+    },
+    QuellasCastle = {
+        title = "Quella's Castle",
+        inherits = "Hard",
+        points = {{5443, 5159, 5633, 5310}},
+        modsRequired = "\\Quella's Castle"
+    },
+    Maplewood = {
+        title = "Maplewood",
+        inherits = "Medium",
+        points = {{8116, 8394, 8608, 8687}},
+        modsRequired = "\\Maplewood"
+    },
+    CathayaValley = {
+        title = "Cathaya Valley",
+        inherits = "Hard",
+        points = {{7206, 12601, 7509, 13192}},
+        modsRequired = "\\Cathaya Valley 2.0 B42 version"
+    },
+    Safeharbor = {
+        title = "Safeharbor",
+        inherits = "Hard",
+        modsRequired = "\\modid",
+        points = {{11658, 10470, 12611, 11028}}
+    },
+    MelsBunker = {
+        title = "Mels Bunker",
+        inherits = "Hard",
+        modsRequired = "\\MelBunker",
+        points = {{597, 8401, 733, 8543}}
+    },
+    Hunters = {
+        title = "Hunters",
+        inherits = "Hard",
+        points = {{6065, 5732, 6088, 5784}},
+        nobuilding = false,
+        modsRequired = "\\Hunter'sBaseB42"
+    },
+    Anruisi = {
+        title = "Anruisi",
+        inherits = "_default",
+        points = {{11996, 11397, 12600, 12000}},
+        modsRequired = "\\AnruisiTown"
+    },
+    Blackstone = {
+        title = "Blackstone",
+        inherits = "Hard",
+        points = {{14946, 6483, 16960, 8505}},
+        modsRequired = "\\BlackstoneMapMod"
+    },
+    Mockingbird = {
+        title = "Mockingbird",
+        inherits = "_default",
+        points = {{10173, 12876, 10506, 13225}},
+        modsRequired = "\\Mockingbird"
+    },
+    DeltaCreek = {
+        title = "Delta Creek",
+        inherits = "Very_Hard",
+        points = {{6190, 8225, 6502, 8638}},
+        modsRequired = "\\Delta-Creek-Munitions"
+    },
+    SerenityCove = {
+        title = "Serenity Cove",
+        inherits = "Medium",
+        points = {{6667, 12111, 6860, 12305}},
+        modsRequired = "\\serenitycove"
+    },
+    YoungerCreek = {
+        title = "Younger Creek",
+        inherits = "Easy",
+        points = {{12602, 11122, 12904, 11364}},
+        modsRequired = "\\YoungerCreekKY"
+    },
+    KiiriEstate = {
+        title = "Kiiri Estate",
+        inherits = "Medium",
+        points = {{11103, 8134, 11279, 8310}},
+        modsRequired = "\\kiiriestate",
+        order = 25
+    },
+    TravelierMotel = {
+        title = "Travelier Motel",
+        inherits = "Medium",
+        points = {{3708, 7990, 3766, 8049}},
+        modsRequired = "\\Motel"
+    },
+    ForgottenFarm = {
+        title = "Forgotten Farm",
+        inherits = "Easy",
+        points = {{8290, 9036, 8365, 9100}},
+        modsRequired = "\\ForgottenFarmBunker"
+    },
+    WestpointFireandMall = {
+        title = "",
+        inherits = "WestPoint",
+        points = {{10998, 6904, 11267, 7200}},
+        modsRequired = "\\Westpoint-Fire"
+    },
+    SerenityBunker = {
+        title = "Serenity Bunker",
+        inherits = "Very_Hard",
+        points = {{4630, 9319, 4740, 9413}},
+        modsRequired = "\\serenitybunker"
+    },
+    WestPointMilitaryBoat = {
+        title = "",
+        inherits = "WestPoint",
+        points = {{11786, 6545, 12006, 6595}},
+        modsRequired = "\\WMTBoat"
     }
 }

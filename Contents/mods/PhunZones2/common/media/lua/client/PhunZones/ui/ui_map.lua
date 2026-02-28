@@ -210,7 +210,17 @@ function UI:setData(data, selectedPoint)
     }
 
     local points = data
-    local selectedPoint = selectedPoint
+
+    if #points == 0 then
+        -- No rects yet — centre on the player so the map view is useful
+        -- and "Add Rect" will drop the new rect near the player.
+        local p = self.player
+        local api = self.map and self.map.mapAPI
+        if p and api then
+            api:centerOn(p:getX(), p:getY())
+        end
+        return
+    end
 
     local minx = 100000
     local miny = 100000
@@ -218,23 +228,13 @@ function UI:setData(data, selectedPoint)
     local maxy = 0
 
     for _, v in ipairs(points) do
-
-        -- local x = math.floor(self.map.mapAPI:worldToUIX(v[1], v[2]))
-        -- local y = math.floor(self.map.mapAPI:worldToUIY(v[1], v[2]))
-        -- local x2 = math.floor(self.map.mapAPI:worldToUIX(v[3], v[4]))
-        -- local y2 = math.floor(self.map.mapAPI:worldToUIY(v[3], v[4]))
-        -- table.insert(self.data.points, {x, y, x2, y2})
         minx = math.min(minx, v[1])
         miny = math.min(miny, v[2])
         maxx = math.max(maxx, v[3])
         maxy = math.max(maxy, v[4])
-        -- self:drawLine(v[1], v[2], v[3], v[4])
     end
 
     self:zoomAndCentreMapToBounds(minx, miny, maxx, maxy)
-    -- self.map.mapAPI:centerOn(math.abs(minx + maxx) / 2, math.abs(miny + maxy) / 2)
-
-    -- remove existing points
 
 end
 
