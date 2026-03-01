@@ -96,7 +96,9 @@ PhunZones = {
             -- PZ text-entry widgets strip leading backslashes, so we re-add
             -- them automatically so the user doesn't need to type them.
             normalize = function(v)
-                if type(v) ~= "string" then return v end
+                if type(v) ~= "string" then
+                    return v
+                end
                 local result = {}
                 for entry in (v .. ";"):gmatch("([^;]*);") do
                     entry = entry:match("^%s*(.-)%s*$")
@@ -107,7 +109,8 @@ PhunZones = {
                         table.insert(result, entry)
                     end
                 end
-                return table.concat(result, ";")
+                local joined = table.concat(result, ";")
+                return joined ~= "" and joined or nil
             end
         },
         zeds = {
@@ -116,7 +119,16 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Zeds_tooltip",
             group = "combat",
             getOptions = function()
-                return {" ", "Move", "Remove"}
+                return {{
+                    label = getText("IGUI_PhunZones_ZedAction_None"),
+                    value = "none"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_Move"),
+                    value = "move"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_Remove"),
+                    value = "remove"
+                }}
             end
         },
         bandits = {
@@ -125,7 +137,16 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_Bandits_tooltip",
             group = "combat",
             getOptions = function()
-                return {" ", "Move", "Remove"}
+                return {{
+                    label = getText("IGUI_PhunZones_ZedAction_None"),
+                    value = "none"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_Move"),
+                    value = "move"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_Remove"),
+                    value = "remove"
+                }}
             end
         },
         noannounce = {

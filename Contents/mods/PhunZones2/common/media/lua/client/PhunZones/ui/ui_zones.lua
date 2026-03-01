@@ -14,13 +14,19 @@ local MapOverlay = require("PhunZones/ui/ui_map_overlay")
 local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 local FONT_HGT_MEDIUM = getTextManager():getFontHeight(UIFont.Medium)
 local FONT_SCALE = FONT_HGT_SMALL / 14
-local BUTTON_HGT = FONT_HGT_SMALL + 6
-local ROW_HGT = FONT_HGT_SMALL + 8
-local PAD = 8
-local LEFT_W = 260 * FONT_SCALE
+local function sc(n)
+    return math.floor(n * FONT_SCALE)
+end
+-- Combo option helpers: entries may be plain strings or {label, value} tables.
+local function optLabel(opt) return type(opt) == "table" and tostring(opt.label) or tostring(opt) end
+local function optValue(opt) return type(opt) == "table" and opt.value or opt end
+local BUTTON_HGT = FONT_HGT_SMALL + sc(6)
+local ROW_HGT = FONT_HGT_SMALL + sc(8)
+local PAD = sc(8)
+local LEFT_W = sc(260)
+local SCROLLBAR_W = sc(5)
 local BOTTOM_BAR_H = BUTTON_HGT + PAD * 2
 local TREE_RATIO = 0.42
-local SCROLLBAR_W = 5
 
 -- ---------------------------------------------------------------------------
 -- Colour palette (B42-ish dark theme)
@@ -344,7 +350,7 @@ function UI:createChildren()
         lbl:instantiate()
         self:addChild(lbl)
 
-        local field = ISTextEntryBox:new("", 0, 0, 60, FONT_HGT_SMALL + 4)
+        local field = ISTextEntryBox:new("", 0, 0, 60, FONT_HGT_SMALL + sc(4))
         field:initialise()
         field._coordName = name
         field.onOtherKey = function(s, key)
@@ -392,7 +398,7 @@ function UI:createChildren()
     self:addChild(lblZones)
     self.controls.lblZones = lblZones
 
-    local treeFilter = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + 4)
+    local treeFilter = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + sc(4))
     treeFilter:initialise();
     treeFilter:instantiate()
     treeFilter.onTextChange = function()
@@ -477,7 +483,7 @@ function UI:createChildren()
     self:addChild(lblProps)
     self.controls.lblProps = lblProps
 
-    local filterBox = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + 2)
+    local filterBox = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + sc(2))
     filterBox:initialise()
     filterBox.tooltip = "Filter properties..."
     filterBox.onTextChange = function()
@@ -543,7 +549,7 @@ function UI:createChildren()
     -- -----------------------------------------------------------------------
     -- Inline property editor
     -- -----------------------------------------------------------------------
-    local inlineEdit = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + 4)
+    local inlineEdit = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + sc(4))
     inlineEdit:initialise()
     inlineEdit:setVisible(false)
     inlineEdit.onTextChange = function()
@@ -560,7 +566,7 @@ function UI:createChildren()
     -- Inherits picker
     -- -----------------------------------------------------------------------
     local inheritsPicker
-    inheritsPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + 4, self, function(owner)
+    inheritsPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + sc(4), self, function(owner)
         local selected = inheritsPicker:getSelectedText()
         if selected and selected ~= "" then
             owner:saveProp("inherits", selected)
@@ -576,18 +582,18 @@ function UI:createChildren()
     -- Generic field combo picker (for fdef.type == "combo" rows)
     -- -----------------------------------------------------------------------
     local fieldPicker
-    fieldPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + 4, self, function(owner)
+    fieldPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + sc(4), self, function(owner)
         if fieldPicker._pendingField and fieldPicker._opts then
             local text = fieldPicker:getSelectedText()
-            local idx = nil
-            for i, opt in ipairs(fieldPicker._opts) do
-                if tostring(opt) == text then
-                    idx = i
+            local chosen = nil
+            for _, opt in ipairs(fieldPicker._opts) do
+                if optLabel(opt) == text then
+                    chosen = optValue(opt)
                     break
                 end
             end
-            if idx then
-                owner:saveProp(fieldPicker._pendingField, idx)
+            if chosen ~= nil then
+                owner:saveProp(fieldPicker._pendingField, chosen)
             end
         end
         fieldPicker._pendingField = nil
@@ -606,7 +612,7 @@ function UI:createChildren()
         local btn = ISButton:new(0, 0, 0, BUTTON_HGT, label, self, cb)
         btn:initialise()
         btn.tooltip = tooltip or ""
-        btn:setWidth(getTextManager():MeasureStringX(UIFont.Small, label) + 20)
+        btn:setWidth(getTextManager():MeasureStringX(UIFont.Small, label) + sc(20))
         self:addChild(btn)
         return btn
     end
@@ -781,9 +787,9 @@ function UI:doLayout()
     local usableH = self.height - th - rh
     local barH = BOTTOM_BAR_H
     local contentH = usableH - barH
-    local headerH = ROW_HGT + 4
+    local headerH = ROW_HGT + sc(4)
     local treeH = math.floor((contentH - headerH) * TREE_RATIO)
-    local propLblH = ROW_HGT + 4
+    local propLblH = ROW_HGT + sc(4)
     local propH = contentH - headerH - treeH - PAD - propLblH
     local barY = usableH - barH
     local btnY = barY + math.floor((barH - BUTTON_HGT) / 2)
@@ -830,35 +836,36 @@ function UI:doLayout()
     tp:setX(PAD);
     tp:setY(th + headerH)
     tp:setWidth(lw - PAD * 2);
-    tp:setHeight(math.max(20, treeH))
+    tp:setHeight(math.max(sc(20), treeH))
 
     -- Props header
     local propLblY = headerH + treeH + PAD
     self.controls.lblProps:setX(PAD);
     self.controls.lblProps:setY(th + propLblY)
-    self.controls.propFilter:setX(PAD + 72);
+    local propsLblW = getTextManager():MeasureStringX(UIFont.Small, "Properties") + sc(6)
+    self.controls.propFilter:setX(PAD + propsLblW);
     self.controls.propFilter:setY(th + propLblY - 1)
-    self.controls.propFilter:setWidth(lw - PAD * 2 - 72)
+    self.controls.propFilter:setWidth(lw - PAD * 2 - propsLblW)
 
     -- Property panel
     local pp = self.controls.propPanel
     pp:setX(PAD);
     pp:setY(th + propLblY + propLblH)
     pp:setWidth(lw - PAD * 2);
-    pp:setHeight(math.max(20, propH))
+    pp:setHeight(math.max(sc(20), propH))
 
     -- Coord bar — in the headerH strip above the map (right side only)
     -- Layout: [ Add Rect ]  X1:[__] Y1:[__] X2:[__] Y2:[__]  W:## H:##  [ Del Rect ]
     local cf = self.controls.coordFields
     if cf then
-        local fieldH = FONT_HGT_SMALL + 4
+        local fieldH = FONT_HGT_SMALL + sc(4)
         local btnH = BUTTON_HGT
         local cy = th + math.floor((headerH - fieldH) / 2)
         local btnCy = th + math.floor((headerH - btnH) / 2)
         local mx2 = lw + PAD
         local mw2 = self.width - mx2 - PAD
-        local fieldW = 62
-        local lblPad = 3
+        local fieldW = sc(62)
+        local lblPad = sc(3)
         local gap = PAD
 
         local cx2 = mx2
@@ -889,13 +896,28 @@ function UI:doLayout()
         addBtn:setX(delBtn.x - gap - addBtn.width);
         addBtn:setY(delBtn.y)
 
-        -- Centre the fields + WH between addBtn right edge and delBtn left edge
-        local available = delX - cx2 - gap
-        local fieldsW = whW
+        -- Centre the fields + WH in the space left of Add Rect
+        local available = addBtn.x - gap - cx2
+        local fieldsOnlyW = 0
         for _, it in ipairs(items) do
-            fieldsW = fieldsW + it.lblW + fieldW + gap
+            fieldsOnlyW = fieldsOnlyW + it.lblW + fieldW + gap
         end
-        local fx = cx2 + math.max(0, math.floor((available - fieldsW) / 2))
+        local showWH = (fieldsOnlyW + whW <= available)
+        local usedFieldW = fieldW
+        local totalW = showWH and (fieldsOnlyW + whW) or fieldsOnlyW
+        if totalW > available then
+            -- Shrink fieldW so coord fields fit
+            local lblTotal = 0
+            for _, it in ipairs(items) do
+                lblTotal = lblTotal + it.lblW + gap
+            end
+            usedFieldW = math.max(sc(40), math.floor((available - lblTotal) / #items))
+            totalW = 0
+            for _, it in ipairs(items) do
+                totalW = totalW + it.lblW + usedFieldW + gap
+            end
+        end
+        local fx = cx2 + math.max(0, math.floor((available - totalW) / 2))
 
         for _, it in ipairs(items) do
             it.lbl:setX(fx);
@@ -903,13 +925,18 @@ function UI:doLayout()
             fx = fx + it.lblW
             it.field:setX(fx);
             it.field:setY(cy)
-            it.field:setWidth(fieldW);
+            it.field:setWidth(usedFieldW);
             it.field:setHeight(fieldH)
-            fx = fx + fieldW + gap
+            fx = fx + usedFieldW + gap
         end
         if self.controls.lblWH then
-            self.controls.lblWH:setX(fx);
-            self.controls.lblWH:setY(cy + 1)
+            if showWH then
+                self.controls.lblWH:setX(fx);
+                self.controls.lblWH:setY(cy + 1)
+                self.controls.lblWH:setVisible(true)
+            else
+                self.controls.lblWH:setVisible(false)
+            end
         end
     end
 
@@ -969,11 +996,11 @@ function UI:prerender()
     if self.overlay and self.overlay:isDrawMode() then
         local mx = L.lw + PAD
         local mw = self.width - mx - PAD
-        local bannerH = FONT_HGT_SMALL + 6
+        local bannerH = FONT_HGT_SMALL + sc(6)
         self:drawRect(mx, th, mw, bannerH, 0.85, 0.20, 0.55, 0.10)
         local msg = "DRAW MODE — drag to define rect, Esc to cancel"
         local tw = getTextManager():MeasureStringX(UIFont.Small, msg)
-        self:drawText(msg, mx + (mw - tw) / 2, th + 3, 0.20, 0.90, 0.40, 1.0, UIFont.Small)
+        self:drawText(msg, mx + (mw - tw) / 2, th + sc(3), 0.20, 0.90, 0.40, 1.0, UIFont.Small)
     end
 
     -- Tree
@@ -1021,19 +1048,19 @@ function UI:render()
     ISCollapsableWindowJoypad.render(self)
     if self._tipText then
         local mx, my = self._tipMX, self._tipMY
-        local tipW = getTextManager():MeasureStringX(UIFont.Small, self._tipText) + 16
-        local tipH = FONT_HGT_SMALL + 8
-        local tx = mx + 12
-        local ty = my - tipH - 4
-        if tx + tipW > self.width - 4 then
-            tx = self.width - tipW - 4
+        local tipW = getTextManager():MeasureStringX(UIFont.Small, self._tipText) + sc(16)
+        local tipH = FONT_HGT_SMALL + sc(8)
+        local tx = mx + sc(12)
+        local ty = my - tipH - sc(4)
+        if tx + tipW > self.width - sc(4) then
+            tx = self.width - tipW - sc(4)
         end
         if ty < 0 then
-            ty = my + 16
+            ty = my + sc(16)
         end
         self:drawRect(tx, ty, tipW, tipH, 0.95, 0.08, 0.08, 0.12)
         self:drawRectBorder(tx, ty, tipW, tipH, 1.0, C.border.r, C.border.g, C.border.b)
-        self:drawText(self._tipText, tx + 8, ty + 2, C.text.r, C.text.g, C.text.b, 1.0, UIFont.Small)
+        self:drawText(self._tipText, tx + sc(8), ty + sc(2), C.text.r, C.text.g, C.text.b, 1.0, UIFont.Small)
     end
 end
 
@@ -1194,20 +1221,20 @@ end
 function UI:renderTree(ox, oy, w, h)
     local nodes = self.treeNodes
     local scroll = self.treeScroll
-    local indent = 14
-    local toggleW = FONT_HGT_SMALL + 2
+    local indent = sc(14)
+    local toggleW = FONT_HGT_SMALL + sc(2)
     local totalH = #nodes * ROW_HGT
     local hasScroll = totalH > h
-    local contentW = hasScroll and (w - SCROLLBAR_W - 2) or w
+    local contentW = hasScroll and (w - SCROLLBAR_W - sc(2)) or w
 
     for i, node in ipairs(nodes) do
         local ry = (i - 1) * ROW_HGT - scroll
         if ry >= h then
             break
         end
-        if ry + ROW_HGT > 0 then
+        if ry >= 0 then
             local ay = oy + ry
-            if ay + ROW_HGT > oy and ay < oy + h then
+            if ay < oy + h then
                 local isSel = self.selectedData and self.selectedData.key == node.key
                 local isHov = self.treeHover == i
 
@@ -1220,18 +1247,19 @@ function UI:renderTree(ox, oy, w, h)
                 end
 
                 if node.depth > 0 then
-                    local cx = ox + node.depth * indent - indent + 6
+                    local cx = ox + node.depth * indent - indent + sc(6)
                     self:drawRect(cx, ay, 1, ROW_HGT / 2, C.treeConn.a, C.treeConn.r, C.treeConn.g, C.treeConn.b)
-                    self:drawRect(cx, ay + ROW_HGT / 2 - 1, indent - 6, 1, C.treeConn.a, C.treeConn.r, C.treeConn.g,
+                    self:drawRect(cx, ay + ROW_HGT / 2 - 1, indent - sc(6), 1, C.treeConn.a, C.treeConn.r, C.treeConn.g,
                         C.treeConn.b)
                 end
 
-                local toggleX = ox + node.depth * indent + 4
+                local toggleX = ox + node.depth * indent + sc(4)
                 local labelX = toggleX + toggleW
 
                 if node.hasKids then
                     local arrow = node.collapsed and "+" or "-"
-                    self:drawText(arrow, toggleX, ay + 2, C.accentDim.r, C.accentDim.g, C.accentDim.b, 1.0, UIFont.Small)
+                    self:drawText(arrow, toggleX, ay + sc(2), C.accentDim.r, C.accentDim.g, C.accentDim.b, 1.0,
+                        UIFont.Small)
                 end
 
                 local tx = labelX
@@ -1240,8 +1268,8 @@ function UI:renderTree(ox, oy, w, h)
                     tr, tg, tb, ta = C.textDim.r, C.textDim.g, C.textDim.b, 0.5
                 end
                 if node.orphan then
-                    self:drawText("!", tx, ay + 2, C.warnBadge.r, C.warnBadge.g, C.warnBadge.b, 1.0, UIFont.Small)
-                    tx = tx + FONT_HGT_SMALL + 2
+                    self:drawText("!", tx, ay + sc(2), C.warnBadge.r, C.warnBadge.g, C.warnBadge.b, 1.0, UIFont.Small)
+                    tx = tx + FONT_HGT_SMALL + sc(2)
                 end
 
                 local label = node.title
@@ -1252,15 +1280,15 @@ function UI:renderTree(ox, oy, w, h)
                 if self._pendingChanges[node.key] then
                     tr, tg, tb, ta = C.accent.r, C.accent.g, C.accent.b, 1.0
                 end
-                self:drawText(label, tx, ay + 2, tr, tg, tb, ta, UIFont.Small)
+                self:drawText(label, tx, ay + sc(2), tr, tg, tb, ta, UIFont.Small)
 
                 local rightKey = (node.key ~= node.title and node.key ~= "_default") and node.key or nil
                 if rightKey then
                     local kw = getTextManager():MeasureStringX(UIFont.Small, rightKey)
                     local lw2 = getTextManager():MeasureStringX(UIFont.Small, label)
-                    if tx + lw2 + 8 < ox + contentW - kw - 4 then
-                        self:drawText(rightKey, ox + contentW - kw - 4, ay + 2, C.textDim.r, C.textDim.g, C.textDim.b,
-                            0.7, UIFont.Small)
+                    if tx + lw2 + sc(8) < ox + contentW - kw - sc(4) then
+                        self:drawText(rightKey, ox + contentW - kw - sc(4), ay + sc(2), C.textDim.r, C.textDim.g,
+                            C.textDim.b, 0.7, UIFont.Small)
                     end
                 end
             end
@@ -1268,7 +1296,7 @@ function UI:renderTree(ox, oy, w, h)
     end
 
     if hasScroll then
-        local sbH = math.max(20, h * (h / totalH))
+        local sbH = math.max(sc(20), h * (h / totalH))
         local sbY = oy + (scroll / math.max(1, totalH - h)) * (h - sbH)
         self:drawRect(ox + w - SCROLLBAR_W, oy, SCROLLBAR_W, h, 0.3, 0.15, 0.15, 0.18)
         self:drawRect(ox + w - SCROLLBAR_W, sbY, SCROLLBAR_W, sbH, C.accentDim.a, C.accentDim.r, C.accentDim.g,
@@ -1289,8 +1317,8 @@ function UI:onTreeClick(panel, x, y)
         return
     end
 
-    local toggleX = node.depth * 14 + 4
-    if node.hasKids and x >= toggleX and x <= toggleX + FONT_HGT_SMALL + 4 then
+    local toggleX = node.depth * sc(14) + sc(4)
+    if node.hasKids and x >= toggleX and x <= toggleX + FONT_HGT_SMALL + sc(4) then
         self._treeCollapsed[node.key] = not self._treeCollapsed[node.key]
         self:buildTree()
         return
@@ -1320,7 +1348,7 @@ function UI:selectZone(key)
 
     local notDefault = key ~= "_default"
 
-    self.controls.btnDeleteRect.enable = notDefault
+    self.controls.btnDeleteZone.enable = notDefault
     self.controls.btnAddRect.enable = notDefault
 
     self.selectedPoint = nil
@@ -1447,8 +1475,12 @@ function UI:refreshProperties()
             local displayVal = nil
             if fdef.type == "combo" then
                 local opts = fdef.options or (fdef.getOptions and fdef.getOptions()) or {}
-                local idx = tonumber(val)
-                displayVal = idx and tostring(opts[idx]) or nil
+                for _, opt in ipairs(opts) do
+                    if optValue(opt) == val then
+                        displayVal = optLabel(opt)
+                        break
+                    end
+                end
             end
             table.insert(self.propRows, {
                 key = k,
@@ -1527,14 +1559,15 @@ function UI:renderProps(ox, oy, w, h)
     if not self.selectedData then
         local msg = "Select a zone to view properties"
         local mw = getTextManager():MeasureStringX(UIFont.Small, msg)
-        self:drawText(msg, ox + (w - mw) / 2, oy + h / 2 - 8, C.textDim.r, C.textDim.g, C.textDim.b, 1.0, UIFont.Small)
+        self:drawText(msg, ox + (w - mw) / 2, oy + h / 2 - sc(8), C.textDim.r, C.textDim.g, C.textDim.b, 1.0,
+            UIFont.Small)
         return
     end
 
     local scroll = self.propScroll
     local totalH = #self.propRows * ROW_HGT
     local hasScroll = totalH > h
-    local contentW = hasScroll and (w - SCROLLBAR_W - 2) or w
+    local contentW = hasScroll and (w - SCROLLBAR_W - sc(2)) or w
     local valX = math.floor(contentW * 0.52)
 
     for i, row in ipairs(self.propRows) do
@@ -1542,16 +1575,17 @@ function UI:renderProps(ox, oy, w, h)
         if ry >= h then
             break
         end
-        if ry + ROW_HGT > 0 then
+        if ry >= 0 then
             local ay = oy + ry
-            if ay + ROW_HGT > oy and ay < oy + h then
+            if ay < oy + h then
                 if row.isGroupHeader then
                     local lineY = ay + math.floor(ROW_HGT / 2)
-                    self:drawRect(ox + 4, lineY, contentW - 8, 1, C.border.a, C.border.r, C.border.g, C.border.b)
+                    self:drawRect(ox + sc(4), lineY, contentW - sc(8), 1, C.border.a, C.border.r, C.border.g, C.border.b)
                     local gw = getTextManager():MeasureStringX(UIFont.Small, row.label)
                     local gx = ox + math.floor((contentW - gw) / 2)
-                    self:drawRect(gx - 4, ay + 2, gw + 8, ROW_HGT - 4, 1, C.panel.r, C.panel.g, C.panel.b)
-                    self:drawText(row.label, gx, ay + 2, C.textDim.r, C.textDim.g, C.textDim.b, 0.8, UIFont.Small)
+                    self:drawRect(gx - sc(4), ay + sc(2), gw + sc(8), ROW_HGT - sc(4), 1, C.panel.r, C.panel.g,
+                        C.panel.b)
+                    self:drawText(row.label, gx, ay + sc(2), C.textDim.r, C.textDim.g, C.textDim.b, 0.8, UIFont.Small)
                 else
                     if i % 2 == 0 then
                         self:drawRect(ox, ay, contentW, ROW_HGT, C.rowAlt.a, C.rowAlt.r, C.rowAlt.g, C.rowAlt.b)
@@ -1566,15 +1600,15 @@ function UI:renderProps(ox, oy, w, h)
 
                     if row.override and not row.special then
                         local cr = row.danger and C.danger or C.accent
-                        self:drawRect(ox, ay + 1, 2, ROW_HGT - 2, cr.a, cr.r, cr.g, cr.b)
+                        self:drawRect(ox, ay + sc(1), sc(2), ROW_HGT - sc(2), cr.a, cr.r, cr.g, cr.b)
                     end
 
                     local badgeW = 0
                     if row.origin then
-                        badgeW = getTextManager():MeasureStringX(UIFont.Small, row.origin) + 6
-                        self:drawRect(ox + contentW - badgeW - 2, ay + 2, badgeW, ROW_HGT - 4, 0.8, C.modBadge.r,
-                            C.modBadge.g, C.modBadge.b)
-                        self:drawText(row.origin, ox + contentW - badgeW + 1, ay + 2, 1, 1, 1, 0.9, UIFont.Small)
+                        badgeW = getTextManager():MeasureStringX(UIFont.Small, row.origin) + sc(6)
+                        self:drawRect(ox + contentW - badgeW - sc(2), ay + sc(2), badgeW, ROW_HGT - sc(4), 0.8,
+                            C.modBadge.r, C.modBadge.g, C.modBadge.b)
+                        self:drawText(row.origin, ox + contentW - badgeW + sc(1), ay + sc(2), 1, 1, 1, 0.9, UIFont.Small)
                     end
 
                     local lr, lg, lb, la
@@ -1594,13 +1628,14 @@ function UI:renderProps(ox, oy, w, h)
 
                     if isButton then
                         -- Label spans the full row; right side shows a clickable hint
-                        self:drawText(row.label, ox + 6, ay + 2, C.accent.r, C.accent.g, C.accent.b, la, UIFont.Small)
+                        self:drawText(row.label, ox + sc(6), ay + sc(2), C.accent.r, C.accent.g, C.accent.b, la,
+                            UIFont.Small)
                         local hint = "[ click ]"
                         local hw = getTextManager():MeasureStringX(UIFont.Small, hint)
-                        self:drawText(hint, ox + contentW - hw - 6, ay + 2, C.accentDim.r, C.accentDim.g, C.accentDim.b,
-                            0.8, UIFont.Small)
+                        self:drawText(hint, ox + contentW - hw - sc(6), ay + sc(2), C.accentDim.r, C.accentDim.g,
+                            C.accentDim.b, 0.8, UIFont.Small)
                     else
-                        self:drawText(row.label, ox + 6, ay + 2, lr, lg, lb, la, UIFont.Small)
+                        self:drawText(row.label, ox + sc(6), ay + sc(2), lr, lg, lb, la, UIFont.Small)
 
                         local valStr
                         if isCombo then
@@ -1619,7 +1654,7 @@ function UI:renderProps(ox, oy, w, h)
                         end
 
                         -- Clip value text to available column width
-                        local valColW = contentW - valX - 6
+                        local valColW = contentW - valX - sc(6)
                         local tm = getTextManager()
                         if tm:MeasureStringX(UIFont.Small, valStr) > valColW then
                             while #valStr > 0 and tm:MeasureStringX(UIFont.Small, valStr .. "...") > valColW do
@@ -1628,7 +1663,7 @@ function UI:renderProps(ox, oy, w, h)
                             valStr = valStr .. "..."
                         end
 
-                        self:drawText(valStr, ox + valX + 4, ay + 2, vr, vg, vb, va, UIFont.Small)
+                        self:drawText(valStr, ox + valX + sc(4), ay + sc(2), vr, vg, vb, va, UIFont.Small)
                     end
                     self:drawRect(ox, ay + ROW_HGT - 1, contentW, 1, C.border.a * 0.4, C.border.r, C.border.g,
                         C.border.b)
@@ -1638,7 +1673,7 @@ function UI:renderProps(ox, oy, w, h)
     end
 
     if hasScroll then
-        local sbH = math.max(20, h * (h / totalH))
+        local sbH = math.max(sc(20), h * (h / totalH))
         local sbY = oy + (scroll / math.max(1, totalH - h)) * (h - sbH)
         self:drawRect(ox + w - SCROLLBAR_W, oy, SCROLLBAR_W, h, 0.3, 0.15, 0.15, 0.18)
         self:drawRect(ox + w - SCROLLBAR_W, sbY, SCROLLBAR_W, sbH, C.accentDim.a, C.accentDim.r, C.accentDim.g,
@@ -1709,15 +1744,15 @@ function UI:onPropClick(panel, x, y)
     -- Inline text editor
     local pp = self.controls.propPanel
     local hasScroll = (#self.propRows * ROW_HGT) > pp.height
-    local contentW = hasScroll and (pp.width - SCROLLBAR_W - 2) or pp.width
+    local contentW = hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
     local valX = math.floor(contentW * 0.52)
     local rowScreenY = pp.y + (i - 1) * ROW_HGT - self.propScroll
 
     local ie = self.controls.inlineEdit
-    local ieH = FONT_HGT_SMALL + 4
+    local ieH = FONT_HGT_SMALL + sc(4)
     ie:setX(pp.x + valX)
     ie:setY(rowScreenY + math.floor((ROW_HGT - ieH) / 2))
-    ie:setWidth(contentW - valX - 4)
+    ie:setWidth(contentW - valX - sc(4))
     ie:setHeight(ieH)
 
     local curVal = sd.raw[row.key]
@@ -1742,14 +1777,14 @@ function UI:showInheritsPicker(row, rowIndex)
 
     local pp = self.controls.propPanel
     local hasScroll = (#self.propRows * ROW_HGT) > pp.height
-    local contentW = hasScroll and (pp.width - SCROLLBAR_W - 2) or pp.width
+    local contentW = hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
     local valX = math.floor(contentW * 0.52)
     local rowScreenY = pp.y + (rowIndex - 1) * ROW_HGT - self.propScroll
 
     local picker = self.controls.inheritsPicker
     picker:setX(pp.x + valX)
     picker:setY(rowScreenY)
-    picker:setWidth(contentW - valX - 4)
+    picker:setWidth(contentW - valX - sc(4))
 
     local selfKey = sd.key
     local descendants = {}
@@ -1800,21 +1835,24 @@ end
 function UI:showFieldPicker(row, rowIndex, opts)
     local pp = self.controls.propPanel
     local hasScroll = (#self.propRows * ROW_HGT) > pp.height
-    local contentW = hasScroll and (pp.width - SCROLLBAR_W - 2) or pp.width
+    local contentW = hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
     local valX = math.floor(contentW * 0.52)
     local rowScreenY = pp.y + (rowIndex - 1) * ROW_HGT - self.propScroll
 
     local picker = self.controls.fieldPicker
     picker:setX(pp.x + valX)
     picker:setY(rowScreenY)
-    picker:setWidth(contentW - valX - 4)
+    picker:setWidth(contentW - valX - sc(4))
     picker:clear()
     picker._opts = opts
     picker._pendingField = row.key
 
-    local currentIdx = tonumber(row.value) or 1
-    for _, opt in ipairs(opts) do
-        picker:addOption(tostring(opt))
+    local currentIdx = 1
+    for i, opt in ipairs(opts) do
+        picker:addOption(optLabel(opt))
+        if optValue(opt) == row.value then
+            currentIdx = i
+        end
     end
     picker:select(math.max(1, math.min(currentIdx, math.max(1, #opts))))
     picker:setVisible(true)
@@ -1893,7 +1931,7 @@ function UI:saveProp(fieldKey, newValue)
         elseif fdef.type == "boolean" then
             val = (newValue == true or newValue == "true" or newValue == 1)
         elseif fdef.type == "combo" then
-            val = tonumber(newValue) or nil
+            val = newValue
         end
         if fdef.normalize then
             val = fdef.normalize(val)
@@ -2152,9 +2190,9 @@ function UI:saveData(data)
     for k, v in pairs(Core.fields) do
         local final
         if v.type == "string" then
-            final = data[k]
+            final = (data[k] ~= nil and data[k] ~= "") and data[k] or nil
         elseif v.type == "combo" then
-            final = data[k] ~= "" and data[k] or nil
+            final = (data[k] ~= nil and data[k] ~= "none") and data[k] or nil
         elseif v.type == "int" then
             final = tonumber(data[k])
         elseif v.type == "boolean" then
@@ -2218,7 +2256,7 @@ end
 function UI:promptNewZone()
     local sw = getCore():getScreenWidth()
     local sh = getCore():getScreenHeight()
-    local w, h = 300, 120
+    local w, h = sc(300), sc(120)
     local entry
     local modal = ISModalDialog:new(sw / 2 - w / 2, sh / 2 - h / 2, w, h, "Enter zone name:", true, self,
         function(owner, button)
@@ -2233,8 +2271,9 @@ function UI:promptNewZone()
             owner:createNewZone(name)
         end)
     modal:initialise()
-    entry = ISTextEntryBox:new("", 10, 60, w - 20, FONT_HGT_SMALL + 6)
+    entry = ISTextEntryBox:new("", sc(10), sc(60), w - sc(20), FONT_HGT_SMALL + sc(6))
     entry:initialise()
+    entry:instantiate()
     modal:addChild(entry)
     modal:addToUIManager()
     entry:focus()
@@ -2279,8 +2318,8 @@ function UI:confirmDelete()
 
     local key = selected.key
     local msg = string.format("Delete '%s' and all its children? This cannot be undone.", key)
-    local w = math.max(300 * FONT_SCALE, getTextManager():MeasureStringX(UIFont.Small, msg) + 40 * FONT_SCALE)
-    local h = 200 * FONT_SCALE
+    local w = math.max(sc(300), getTextManager():MeasureStringX(UIFont.Small, msg) + sc(40))
+    local h = sc(200)
     local modal = ISModalDialog:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2, w,
         h, msg, true, self, function(s, button)
             if button.internal == "YES" then
@@ -2345,7 +2384,7 @@ function UI:close()
         return
     end
     if self:hasPendingChanges() then
-        local modal = ISModalDialog:new(0, 0, 300, 150, getText("IGUI_PhunZones_UnsavedChanges") or
+        local modal = ISModalDialog:new(0, 0, sc(300), sc(150), getText("IGUI_PhunZones_UnsavedChanges") or
             "You have unsaved changes. Save before closing?", true, self, UI.onCloseModalResult)
         modal:initialise()
         modal:addToUIManager()

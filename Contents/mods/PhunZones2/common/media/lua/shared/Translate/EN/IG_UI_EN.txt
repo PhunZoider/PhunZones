@@ -46,6 +46,10 @@ IGUI_EN = {
     IGUI_PhunZones_Zeds = "Zeds",
     IGUI_PhunZones_Zeds_tooltip = "When a zed is in this zone: do nothing, move them out of the zone or remove them from game. Note that removing will include player corpses!",
 
+    IGUI_PhunZones_ZedAction_None = "None",
+    IGUI_PhunZones_ZedAction_Move = "Move Out",
+    IGUI_PhunZones_ZedAction_Remove = "Remove",
+
     IGUI_PhunZones_NoWelcome = "No Announce",
     IGUI_PhunZones_NoWelcome_tooltip = "True prevents the name of the zone on screen when the player enters",
     IGUI_PhunZones_Order = "Order",

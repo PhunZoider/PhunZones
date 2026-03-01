@@ -17,12 +17,24 @@ local zedZonePlayerCount = 0
 local ZED_COOLDOWN = 10 -- seconds
 local zedCheckCooldown = {} -- [zedId] = nextAllowedTimestamp
 
+-- Migrate legacy index-based zed/bandit values (stored as "1"/"2"/"3") to
+-- the current string values ("none"/"move"/"remove"). Zones saved before the
+-- label/value combo change will have numeric strings; new saves will not.
+local ZED_MIGRATE = { ["1"] = "none", ["2"] = "move", ["3"] = "remove" }
+local function migrateZedField(v)
+    return ZED_MIGRATE[tostring(v)] or v
+end
+
 local function zoneHasAction(zone)
-    if (tonumber(zone.zeds) or 0) > 1 then
+    local z = migrateZedField(zone.zeds)
+    if z == "move" or z == "remove" then
         return true
     end
-    if bandits2Active and (tonumber(zone.bandits) or 0) > 1 then
-        return true
+    if bandits2Active then
+        local b = migrateZedField(zone.bandits)
+        if b == "move" or b == "remove" then
+            return true
+        end
     end
     return false
 end
@@ -55,23 +67,24 @@ Events.OnZombieUpdate.Add(function(zed)
         return
     end
 
-    local zedAction = tonumber(zedZone.zeds)
-    local banditAction = bandits2Active and tonumber(zedZone.bandits) or nil
-    if (zedAction or 0) <= 1 and (banditAction or 0) <= 1 then
+    local zedAction = migrateZedField(zedZone.zeds)
+    local banditAction = bandits2Active and migrateZedField(zedZone.bandits) or nil
+    if zedAction ~= "move" and zedAction ~= "remove"
+    and banditAction ~= "move" and banditAction ~= "remove" then
         return
     end
 
     local isBandit = bandits2Active and zed:getModData().brain ~= nil
     local action = isBandit and banditAction or zedAction
 
-    if action == 2 then
+    if action == "move" then
         local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zedZone.key)
         if ex then
             zed:setX(ex + ZombRand(-2, 2))
             zed:setY(ey + ZombRand(-2, 2))
             zed:setZ(ez)
         end
-    elseif action == 3 then
+    elseif action == "remove" then
         sendClientCommand(Core.name, Core.commands.removeZeds, {
             id = {id}
         })
@@ -85,9 +98,10 @@ local function sweepZoneZeds(playerObj, zone)
     if not playerObj or not zone or not zone.key then
         return
     end
-    local zedAction = tonumber(zone.zeds)
-    local banditAction = bandits2Active and tonumber(zone.bandits) or nil
-    if (zedAction or 0) <= 1 and (banditAction or 0) <= 1 then
+    local zedAction = migrateZedField(zone.zeds)
+    local banditAction = bandits2Active and migrateZedField(zone.bandits) or nil
+    if zedAction ~= "move" and zedAction ~= "remove"
+    and banditAction ~= "move" and banditAction ~= "remove" then
         return
     end
 
@@ -102,7 +116,7 @@ local function sweepZoneZeds(playerObj, zone)
                 local isBandit = bandits2Active and zed:getModData().brain ~= nil
                 local action = isBandit and banditAction or zedAction
                 local id = Core.getZId(zed)
-                if action == 2 then
+                if action == "move" then
                     local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zone.key)
                     if ex then
                         zed:setX(ex + ZombRand(-2, 2))
@@ -112,7 +126,7 @@ local function sweepZoneZeds(playerObj, zone)
                     if id then
                         zedCheckCooldown[id] = now + ZED_COOLDOWN
                     end
-                elseif action == 3 and id then
+                elseif action == "remove" and id then
                     table.insert(toRemove, id)
                     zedCheckCooldown[id] = now + ZED_COOLDOWN
                 end
