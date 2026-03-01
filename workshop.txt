@@ -1,4 +1,5 @@
 version=1
+id=3676252660
 title=PhunZones 2
 description=Welcome to [b]PhunZones 2[/b]. A complete rewrite of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450]PhunZones[/url], rebuilt specifically for Build 42+.
 description=
@@ -19,7 +20,7 @@ description=[*]Zone detection works inside [url=https://steamcommunity.com/share
 description=[/list]
 description=
 description=[h2]Built for Extendability[/h2]
-description=Where [b]PhunZones[/b] shines is its ability for other mods to easily hook into it and set their own properties in the Zone editor. Most Phun mods already integrate seamlessly.
+description=Other mods can register their own properties directly into the zone editor. Most Phun mods already integrate seamlessly.
 description=
 description=[h2]What’s New in PhunZones 2[/h2]
 description=[list]
@@ -27,13 +28,14 @@ description=[*]No external dependencies (PhunLib no longer required)
 description=[*]Build 42+ focused (B41 support retired)
 description=[*]Major performance improvements
 description=[*]Completely redesigned zone editor UI
-description=[*]True inheritance system. For example, define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
+description=[*]True inheritance system — define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
 description=[/list]
 description=
 description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.
 description=
 description=[h2]More Phun Mods[/h2]
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450][img]https://i.ibb.co/3mQpB8ST/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3532685233][img]https://i.ibb.co/d4y0BhnF/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3628843367][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252110][img]https://i.ibb.co/d4y0BhnF/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676251425][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] 
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676250472][img]https://i.ibb.co/svW9sVvK/preview.png[/img][/url] 
 description=
 description=Coded with love for the awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]

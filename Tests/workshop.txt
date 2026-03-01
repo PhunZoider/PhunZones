@@ -1,45 +1,6 @@
 version=1
 title=PhunZones 2 [DEV]
 id=3674596146
-description=⚠️ DEV BRANCH — Preview build for testing and feedback. This version may change frequently and could break between updates.
-description=
-description=Welcome to [b]PhunZones 2[/b]. A complete rewrite of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450]PhunZones[/url], rebuilt specifically for Build 42+.
-description=
-description=Create unlimited custom zones across Kentucky, each with unique rules and behaviors to shape your world exactly how you want it.
-description=
-description=[h2]Features[/h2]
-description=[list]
-description=[*]Display custom location names when entering zones
-description=[*]Create zombie-free areas
-description=[*]Block Bandits (requires Bandits 2)
-description=[*]Prevent safehouse creation
-description=[*]Restrict picking up or placing objects
-description=[*]Restrict dismantling and crafting
-description=[*]Block construction
-description=[*]Prevent fire spread
-description=[*]Block player entry to specific zones
-description=[*]Zone detection works inside [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299]Project RV Interior[/url]
-description=[/list]
-description=
-description=[h2]Built for Extendability[/h2]
-description=Other mods can register their own properties directly into the zone editor. Most Phun mods already integrate seamlessly.
-description=
-description=[h2]What’s New in PhunZones 2[/h2]
-description=[list]
-description=[*]No external dependencies (PhunLib no longer required)
-description=[*]Build 42+ focused (B41 support retired)
-description=[*]Major performance improvements
-description=[*]Completely redesigned zone editor UI
-description=[*]True inheritance system — define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
-description=[/list]
-description=
-description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.
-description=
-description=[h2]More Phun Mods[/h2]
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3674596402][img]https://i.ibb.co/d4y0BhnF/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3674595589][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url]
-description=
-description=Coded with love for the awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
-description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]
-
+description=⚠️ DEV BRANCH — Preview build for testing and feedback of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252660]PhunZones 2[/url]. This version may change frequently and could break between updates.
 tags=Build 42;Multiplayer
-visibility=public
+visibility=unlisted
