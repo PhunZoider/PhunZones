@@ -120,7 +120,7 @@ if getActivatedMods():contains("\\phunzones2") or getActivatedMods():contains("\
 
     PZ.fields.minSprinterRisk = {
         label = "IGUI_PhunSprinters_minRisk", -- can also be text
-        type = "string", -- or int or bool or combo (requires a getOptions param) or button (requires an onClick param)
+        type = "string", -- or int or bool or combo (requires a getOptions param that returns array of {lable="text", value = "value"}) or button (requires an onClick param)
         tooltip = "IGUI_PhunSprinters_minRisk_Tooltip", -- could be text
         default = "", -- default value
         group = "mods", -- section of the editor to appear in

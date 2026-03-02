@@ -394,6 +394,52 @@ end
 -- Loads the admin customisation file from disk (server/SP only).
 -- Returns empty table if missing or malformed.
 -- ---------------------------------------------------------------------------
+
+-- Converts a v1 admin config into a v2-compatible flat data table.
+-- v1 stored: deletions (region->zone->true) + nested subzones with many fields.
+-- v2 stores:  flat zone keys, disabled=true tombstones, only points preserved.
+local function migrateV1toV2(d)
+    local result = {}
+
+    -- Convert v1 deletions into disabled tombstones.
+    -- v1 key "main" refers to the parent region zone itself.
+    if d.deletions then
+        for region, zones in pairs(d.deletions) do
+            for zoneName, _ in pairs(zones) do
+                local key = (zoneName == "main") and region or (region .. "_" .. zoneName)
+                result[key] = {
+                    disabled = true
+                }
+            end
+        end
+    end
+
+    -- Flatten data: promote subzones to top level, strip all fields except points.
+    if d.data then
+        for key, zone in pairs(d.data) do
+            local entry = result[key] or {}
+            if zone.points then
+                entry.points = zone.points
+            end
+            entry.inherits = "Medium"
+            result[key] = entry
+
+            if zone.subzones then
+                for subKey, sub in pairs(zone.subzones) do
+                    local subEntry = result[key .. "_" .. subKey] or {}
+                    if sub.points then
+                        subEntry.points = sub.points
+                    end
+                    subEntry.inherits = key
+                    result[key .. "_" .. subKey] = subEntry
+                end
+            end
+        end
+    end
+
+    return result
+end
+
 function Core.loadAdminConfig()
     if isClient() then
         -- Clients receive customisations via ModData, not from disk
@@ -404,19 +450,35 @@ function Core.loadAdminConfig()
     if d == nil then
         print("PhunZones: no customisation file found at ./lua/" .. Core.const.modifiedLuaFile ..
                   " (normal if no zones have been customised)")
+        ModData.add(Core.const.modifiedModData, {})
         return {}
     end
 
     if d.data == nil then
         print("PhunZones: unexpected format in ./lua/" .. Core.const.modifiedLuaFile .. ", skipping")
+        ModData.add(Core.const.modifiedModData, {})
         return {}
     end
 
+    local data = d.data
+
+    if d.version == 1 then
+        print("PhunZones: detected v1 format in admin config, backing up to PhunZones_Old.lua")
+        Core.tools.saveTable("PhunZones_Old.lua", d)
+        print("PhunZones: migrating v1 admin config to v2 format")
+        data = migrateV1toV2(d)
+        d.version = 2
+        Core.tools.saveTable(Core.const.modifiedLuaFile, {
+            version = 2,
+            data = data
+        })
+    end
+
     -- Store in ModData so it survives and is accessible for transmission
-    ModData.add(Core.const.modifiedModData, d.data or {})
+    ModData.add(Core.const.modifiedModData, data)
 
     print("PhunZones: loaded customisations from ./lua/" .. Core.const.modifiedLuaFile)
-    return d.data or {}
+    return data
 end
 
 -- ---------------------------------------------------------------------------
