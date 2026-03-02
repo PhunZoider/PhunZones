@@ -310,6 +310,64 @@ function Core.getLocation(x, y)
     return Core.data and Core.data.lookup and Core.data.lookup._default or nil
 end
 
+-- Returns an array of all resolved zone tables whose rects intersect (rx1,ry1)-(rx2,ry2).
+-- Each zone appears at most once even if multiple rects overlap the query rect.
+function Core.getIntersectingZones(rx1, ry1, rx2, ry2)
+    if not Core.inied then
+        Core:ini()
+    end
+    if not (Core.data and Core.data.cells) then
+        return {}
+    end
+
+    local seen, result = {}, {}
+    local cx1 = math.floor(rx1 / 300)
+    local cy1 = math.floor(ry1 / 300)
+    local cx2 = math.floor(rx2 / 300)
+    local cy2 = math.floor(ry2 / 300)
+
+    for cx = cx1, cx2 do
+        for cy = cy1, cy2 do
+            local entries = Core.data.cells[cx .. "_" .. cy]
+            if entries then
+                for _, v in ipairs(entries) do
+                    -- v[1]=key v[2]=x1 v[3]=y1 v[4]=x2 v[5]=y2
+                    -- standard AABB intersection: neither rect is fully to one side of the other
+                    if not seen[v[1]] and v[4] >= rx1 and v[2] <= rx2 and v[5] >= ry1 and v[3] <= ry2 then
+                        seen[v[1]] = true
+                        table.insert(result, Core.data.lookup[v[1]])
+                    end
+                end
+            end
+        end
+    end
+    return result
+end
+
+-- Returns true if any zone in the array matches the property condition.
+-- value omitted/nil → truthy check (good for boolean props like noplayers)
+-- value provided     → equality check (good for combo props like zeds/bandits)
+function Core.anyZoneHas(zones, prop, value)
+    for _, zone in ipairs(zones) do
+        local v = zone[prop]
+        if value == nil then
+            if v then
+                return true
+            end
+        else
+            if v == value then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function Core.hasProp(x1, y1, x2, y2, prop, value)
+    local zones = Core.getIntersectingZones(x1, y1, x2, y2)
+    return Core.anyZoneHas(zones, prop, value)
+end
+
 -- ---------------------------------------------------------------------------
 -- Zombie / object zone tracking
 -- ---------------------------------------------------------------------------
