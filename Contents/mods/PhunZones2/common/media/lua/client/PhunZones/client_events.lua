@@ -16,11 +16,17 @@ local zedZonePlayerCount = 0
 -- accumulating as zombies despawn.
 local ZED_COOLDOWN = 10 -- seconds
 local zedCheckCooldown = {} -- [zedId] = nextAllowedTimestamp
+local pendingRemove = {} -- zed IDs queued for removal, flushed each tick
+local sentForRemoval = {} -- [zedId] = true; prevents re-queuing until purge
 
 -- Migrate legacy index-based zed/bandit values (stored as "1"/"2"/"3") to
 -- the current string values ("none"/"move"/"remove"). Zones saved before the
 -- label/value combo change will have numeric strings; new saves will not.
-local ZED_MIGRATE = { ["1"] = "none", ["2"] = "move", ["3"] = "remove" }
+local ZED_MIGRATE = {
+    ["1"] = "none",
+    ["2"] = "move",
+    ["3"] = "remove"
+}
 local function migrateZedField(v)
     return ZED_MIGRATE[tostring(v)] or v
 end
@@ -69,8 +75,7 @@ Events.OnZombieUpdate.Add(function(zed)
 
     local zedAction = migrateZedField(zedZone.zeds)
     local banditAction = bandits2Active and migrateZedField(zedZone.bandits) or nil
-    if zedAction ~= "move" and zedAction ~= "remove"
-    and banditAction ~= "move" and banditAction ~= "remove" then
+    if zedAction ~= "move" and zedAction ~= "remove" and banditAction ~= "move" and banditAction ~= "remove" then
         return
     end
 
@@ -85,9 +90,14 @@ Events.OnZombieUpdate.Add(function(zed)
             zed:setZ(ez)
         end
     elseif action == "remove" then
-        sendClientCommand(Core.name, Core.commands.removeZeds, {
-            id = {id}
-        })
+        if not sentForRemoval[id] then
+            pendingRemove[#pendingRemove + 1] = id
+            sentForRemoval[id] = true
+
+            zed:removeFromWorld();
+            zed:removeFromSquare();
+
+        end
     end
 end)
 
@@ -100,8 +110,7 @@ local function sweepZoneZeds(playerObj, zone)
     end
     local zedAction = migrateZedField(zone.zeds)
     local banditAction = bandits2Active and migrateZedField(zone.bandits) or nil
-    if zedAction ~= "move" and zedAction ~= "remove"
-    and banditAction ~= "move" and banditAction ~= "remove" then
+    if zedAction ~= "move" and zedAction ~= "remove" and banditAction ~= "move" and banditAction ~= "remove" then
         return
     end
 
@@ -129,6 +138,8 @@ local function sweepZoneZeds(playerObj, zone)
                 elseif action == "remove" and id then
                     table.insert(toRemove, id)
                     zedCheckCooldown[id] = now + ZED_COOLDOWN
+                    zed:removeFromWorld();
+                    zed:removeFromSquare();
                 end
             end
         end
@@ -178,12 +189,20 @@ Events[Core.events.OnPhunZoneReady].Add(function()
             end
         end
 
+        if #pendingRemove > 0 then
+            sendClientCommand(Core.name, Core.commands.removeZeds, {
+                id = pendingRemove
+            })
+            pendingRemove = {}
+        end
+
         -- Purge stale cooldown entries every 5 minutes. Despawned zombies leave
         -- dead IDs in the table; clearing it is harmless since live zombies
         -- simply get re-checked on their next OnZombieUpdate.
         if now >= nextPurge then
             nextPurge = now + 300
             zedCheckCooldown = {}
+            sentForRemoval = {}
         end
     end)
 
@@ -193,6 +212,8 @@ Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
     playersInZedZone = {}
     zedZonePlayerCount = 0
     zedCheckCooldown = {} -- zone data changed; force fresh zone checks
+    sentForRemoval = {}
+    pendingRemove = {}
     Core:updatePlayers()
     local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do

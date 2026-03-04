@@ -48,22 +48,28 @@ Commands[Core.commands.evictZeds] = function(player, args)
 end
 
 Commands[Core.commands.removeZeds] = function(player, args)
+    Core.debug("Removing zeds in " .. tostring(args and args.zone), args)
     -- Re-derive from server state: only remove zeds that are
     -- (a) in the player's current cell, AND
     -- (b) in a zone that actually has zeds==3 action
     local zone = Core.getLocation(player:getX(), player:getY()) or {}
-    if tonumber(zone.zeds) ~= 3 then
+    if tostring(zone.zeds) ~= "remove" then
         return -- player isn't even in a remove-zeds zone; ignore
     end
 
     local removed = {}
     local zombies = player:getCell():getZombieList()
-    for i = 0, zombies:size() - 1 do
+    for i = zombies:size() - 1, 0, -1 do
         local zombie = zombies:get(i)
         if instanceof(zombie, "IsoZombie") then
             local zZone = Core.getLocation(zombie:getX(), zombie:getY()) or {}
             local id = Core.getZId(zombie)
             if id then
+                if Core.settings.Debug then
+                    Core.debugLn(
+                        "Removing zed " .. id .. " at " .. zombie:getX() .. "," .. zombie:getY() .. " in zone " ..
+                            tostring(zZone.key))
+                end
                 table.insert(removed, tostring(id))
                 zombie:removeFromWorld()
                 zombie:removeFromSquare()
