@@ -64,7 +64,7 @@ Commands[Core.commands.removeZeds] = function(player, args)
         if instanceof(zombie, "IsoZombie") then
             local zZone = Core.getLocation(zombie:getX(), zombie:getY()) or {}
             local id = Core.getZId(zombie)
-            if id then
+            if id and zZone.key == zone.key then
                 if Core.settings.Debug then
                     Core.debugLn(
                         "Removing zed " .. id .. " at " .. zombie:getX() .. "," .. zombie:getY() .. " in zone " ..

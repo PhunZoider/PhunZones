@@ -14,7 +14,8 @@ local zedZonePlayerCount = 0
 -- their location isn't re-queried on every AI update tick.
 -- Purged periodically and on zone data changes to prevent stale entries from
 -- accumulating as zombies despawn.
-local ZED_COOLDOWN = 10 -- seconds
+local ZED_COOLDOWN = 10 -- seconds, for zombies confirmed outside any action zone
+local ZED_RECHECK = 2 -- seconds, re-check interval while players are in action zones
 local zedCheckCooldown = {} -- [zedId] = nextAllowedTimestamp
 local pendingRemove = {} -- zed IDs queued for removal, flushed each tick
 local sentForRemoval = {} -- [zedId] = true; prevents re-queuing until purge
@@ -64,18 +65,18 @@ Events.OnZombieUpdate.Add(function(zed)
         return
     end
 
-    -- Commit cooldown before the zone lookup so it is set even when the
-    -- zombie is outside every zone (avoids re-querying on subsequent ticks).
-    zedCheckCooldown[id] = now + ZED_COOLDOWN
-
     local zedZone = Core.getLocation(zed:getX(), zed:getY())
     if not zedZone then
+        zedCheckCooldown[id] = now + ZED_COOLDOWN
         return
     end
 
     local zedAction = migrateZedField(zedZone.zeds)
     local banditAction = bandits2Active and migrateZedField(zedZone.bandits) or nil
     if zedAction ~= "move" and zedAction ~= "remove" and banditAction ~= "move" and banditAction ~= "remove" then
+        -- Zombie is outside an action zone but a player is in one nearby. Use a
+        -- short recheck interval so a chasing zombie is caught quickly on entry.
+        zedCheckCooldown[id] = now + ZED_RECHECK
         return
     end
 
@@ -89,14 +90,16 @@ Events.OnZombieUpdate.Add(function(zed)
             zed:setY(ey + ZombRand(-2, 2))
             zed:setZ(ez)
         end
+        -- Cooldown after move prevents immediately re-moving the same zombie.
+        zedCheckCooldown[id] = now + ZED_COOLDOWN
     elseif action == "remove" then
         if not sentForRemoval[id] then
             pendingRemove[#pendingRemove + 1] = id
             sentForRemoval[id] = true
-
-            zed:removeFromWorld();
-            zed:removeFromSquare();
-
+            zed:removeFromWorld()
+            zed:removeFromSquare()
+            -- No cooldown: zombie is gone. Omitting the entry means a newly
+            -- wandering-in zombie is caught on its very next update tick.
         end
     end
 end)
@@ -108,6 +111,13 @@ local function sweepZoneZeds(playerObj, zone)
     if not playerObj or not zone or not zone.key then
         return
     end
+    -- _default covers all unzoned world space; sweeping it would remove every
+    -- zombie outside any specific zone. This also fires when the player briefly
+    -- passes through unzoned space en-route to a named zone (double-event).
+    -- Ongoing enforcement via OnZombieUpdate handles the default zone already.
+    if zone.key == "_default" then
+        return
+    end
     local zedAction = migrateZedField(zone.zeds)
     local banditAction = bandits2Active and migrateZedField(zone.bandits) or nil
     if zedAction ~= "move" and zedAction ~= "remove" and banditAction ~= "move" and banditAction ~= "remove" then
@@ -116,6 +126,7 @@ local function sweepZoneZeds(playerObj, zone)
 
     local now = getTimestamp()
     local toRemove = {}
+    local toRemoveObjs = {}
     local zombies = playerObj:getCell():getZombieList()
     for i = 0, zombies:size() - 1 do
         local zed = zombies:get(i)
@@ -138,13 +149,18 @@ local function sweepZoneZeds(playerObj, zone)
                 elseif action == "remove" and id then
                     table.insert(toRemove, id)
                     zedCheckCooldown[id] = now + ZED_COOLDOWN
-                    zed:removeFromWorld();
-                    zed:removeFromSquare();
+                    table.insert(toRemoveObjs, zed)
                 end
             end
         end
     end
-    if #toRemove > 0 then
+    -- Remove after iteration to avoid mutating the zombie list mid-traversal,
+    -- which would cause out-of-bounds get() calls and skip/remove unintended zeds.
+    for _, zed in ipairs(toRemoveObjs) do
+        zed:removeFromWorld()
+        zed:removeFromSquare()
+    end
+    if #toRemove > 0 and isClient() then
         sendClientCommand(Core.name, Core.commands.removeZeds, {
             id = toRemove
         })
@@ -153,9 +169,12 @@ end
 
 Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
     local zone = Core.data.lookup[stored.zone] or {}
+    -- Use the physical zone for the sweep: stored.at.zone is set from the player's
+    -- actual position before any handler can mutate stored.zone for display purposes.
+    local physicalZone = Core.data.lookup[stored.at.zone] or zone
     local playerNum = playerObj:getPlayerNum()
     local wasIn = playersInZedZone[playerNum]
-    local isIn = zoneHasAction(zone)
+    local isIn = zoneHasAction(physicalZone)
     playersInZedZone[playerNum] = isIn or nil
     if isIn and not wasIn then
         zedZonePlayerCount = zedZonePlayerCount + 1
@@ -165,7 +184,7 @@ Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
 
     Core:updatePlayerUI(playerObj, zone)
     if isIn then
-        sweepZoneZeds(playerObj, zone)
+        sweepZoneZeds(playerObj, physicalZone)
     end
 end)
 
@@ -190,9 +209,11 @@ Events[Core.events.OnPhunZoneReady].Add(function()
         end
 
         if #pendingRemove > 0 then
-            sendClientCommand(Core.name, Core.commands.removeZeds, {
-                id = pendingRemove
-            })
+            if isClient() then
+                sendClientCommand(Core.name, Core.commands.removeZeds, {
+                    id = pendingRemove
+                })
+            end
             pendingRemove = {}
         end
 
