@@ -18,8 +18,12 @@ local function sc(n)
     return math.floor(n * FONT_SCALE)
 end
 -- Combo option helpers: entries may be plain strings or {label, value} tables.
-local function optLabel(opt) return type(opt) == "table" and tostring(opt.label) or tostring(opt) end
-local function optValue(opt) return type(opt) == "table" and opt.value or opt end
+local function optLabel(opt)
+    return type(opt) == "table" and tostring(opt.label) or tostring(opt)
+end
+local function optValue(opt)
+    return type(opt) == "table" and opt.value or opt
+end
 local BUTTON_HGT = FONT_HGT_SMALL + sc(6)
 local ROW_HGT = FONT_HGT_SMALL + sc(8)
 local PAD = sc(8)
@@ -1983,23 +1987,16 @@ function UI:flushPendingChanges()
 
     local changes = {}
     for zoneKey, fields in pairs(self._pendingChanges) do
-        local zoneData = zones(self)
-        local raw = zoneData[zoneKey] or {}
-        local inherited = {}
-        if zoneKey ~= "_default" then
-            local parentKey = raw.inherits
-            local lookupData = lookup(self)
-            inherited = lookupData[parentKey or "_default"] or {}
-        end
-
         local zoneChanges = {}
 
-        -- Pending property changes
+        -- Pending property changes — always include explicit user changes.
+        -- Do NOT deduplicate against inherited values here: a user setting
+        -- nobuilding=false must be saved even if the parent also has false,
+        -- because the zone needs its own explicit override to differ from
+        -- whatever the grandparent chain provides.
         for fieldKey, val in pairs(fields) do
             if fieldKey ~= "_points" then
-                if inherited[fieldKey] ~= val then
-                    zoneChanges[fieldKey] = val
-                end
+                zoneChanges[fieldKey] = val
             end
         end
 
