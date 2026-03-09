@@ -4,7 +4,7 @@ end
 local Core = PhunZones
 local Commands = require "PhunZones/client_commands"
 
-local bandits2Active = getActivatedMods():contains("\\Bandits2")
+local bandits2Active = getActivatedMods():contains("Bandits2")
 
 local playersInZedZone = {}
 local zedZonePlayerCount = 0
@@ -279,7 +279,13 @@ end)
 
 Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
     if tableName == Core.const.modifiedModData then
-        ModData.add(Core.const.modifiedModData, tableData)
+        -- B42: tableData may be false; data is already in ModData by the time
+        -- this event fires, so only write it back if we actually received a table.
+        if type(tableData) == "table" then
+            ModData.add(Core.const.modifiedModData, tableData)
+        end
+        local ted = ModData.get(Core.const.modifiedModData) or {}
+        Core.debug("[received modifiedModData]", ted)
         Core.updateZoneData()
     end
 end)

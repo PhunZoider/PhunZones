@@ -4,7 +4,7 @@ end
 local Core = PhunZones
 
 local activeMods = getActivatedMods()
-local bandits2Active = activeMods:contains("\\Bandits2")
+local bandits2Active = activeMods:contains("Bandits2")
 
 -- Evicts (moves) zeds/bandits out of a zone. Called for zones with action=1 (Move).
 -- Removal (action=2) is handled client-side in client_events via sendClientCommand.

@@ -30,6 +30,9 @@ Commands[Core.commands.modifyZone] = function(player, data)
     end
     Core.debug("[modifyZone]", data)
     Core.saveChanges(data.changes)
+
+    Core.debug("[custom]", ModData.get(Core.const.modifiedModData))
+
     ModData.transmit(Core.const.modifiedModData)
 
 end

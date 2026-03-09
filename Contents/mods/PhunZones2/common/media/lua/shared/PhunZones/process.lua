@@ -22,7 +22,7 @@ local LEGACY_FIELDS = {
 -- Normalise a mod name: ensure it always starts with "\".
 -- Handles data saved before the UI auto-prepend was added.
 local function normMod(m)
-    return (m:sub(1, 1) == "\\" and m) or ("\\" .. m)
+    return (m:sub(1, 1) == "\\" and m:sub(2)) or m
 end
 
 local function passesModFilter(zone)

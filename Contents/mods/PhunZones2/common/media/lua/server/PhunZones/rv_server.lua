@@ -4,7 +4,7 @@ end
 local Core = PhunZones
 
 local activeMods = getActivatedMods()
-if not activeMods:contains("\\PROJECTRVInterior42") then
+if not activeMods:contains("PROJECTRVInterior42") then
     print("[PhunZones]PROJECTRVInterior42 not active, skipping integration")
     return
 else

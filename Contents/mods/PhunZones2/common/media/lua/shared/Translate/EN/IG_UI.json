@@ -30,7 +30,7 @@
   "IGUI_PhunZones_Difficulty": "Difficulty",
   "IGUI_PhunZones_Difficulty_tooltip": "Zone difficulty level. Give your players an indication of the areas difficulty. Just a visual cue, not tied to functionality ",
   "IGUI_PhunZones_ModsRequired": "Required Mods",
-  "IGUI_PhunZones_ModsRequired_tooltip": "Mods that are required to be activated for this zone to be active. You can add multiple mods by separating each with a semi-colon. eg \\Bandits2;\\PhunZones",
+  "IGUI_PhunZones_ModsRequired_tooltip": "Mods that are required to be activated for this zone to be active. You can add multiple mods by separating each with a semi-colon. eg Bandits2;PhunZones",
   "IGUI_PhunZones_PvP": "PvP On",
   "IGUI_PhunZones_PvP_tooltip": "Overrides the PvP settings on the server for this zone. This will have no effect if PvP is disabled in your server settings",
   "IGUI_PhunZones_NoZeds": "No Zombies",
