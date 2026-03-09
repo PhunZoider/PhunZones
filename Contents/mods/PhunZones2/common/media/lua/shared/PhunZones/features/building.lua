@@ -5,10 +5,20 @@ Core.iniBuilding = function()
         function ISBuildingObject:tryBuild(x, y, z)
             local playerObj = getSpecificPlayer(self.player)
             local zone = Core.getLocation(x, y) or {}
-            if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil then
-                playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
-                return false
+            if self.selectedSqDrop then
+                -- assert placing an item
+                if zone and zone.noplacing == true then
+                    playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);
+                    return false
+                end
+            else
+                -- assert building an item
+                if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil then
+                    playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
+                    return false
+                end
             end
+
             return oldTryBuild(self, x, y, z)
         end
 
@@ -36,20 +46,25 @@ Core.iniBuilding = function()
         end
     end
 
-    if ISMoveableCursor then
-        local oldISMoveableCursorIsValid = ISMoveableCursor.isValid
-        function ISMoveableCursor:isValid(square)
-            if not square then
-                return false
-            end
-            local zone = Core.getLocation(square) or {}
-            if zone and zone.noplacing == true then
-                getSpecificPlayer(0):setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);
-                return false
-            end
-            return oldISMoveableCursorIsValid(self, square)
-        end
-    end
+    -- if ISMoveableCursor then
+    --     local oldISMoveableCursorIsValid = ISMoveableCursor.isValid
+    --     function ISMoveableCursor:isValid(square)
+    --         if not square then
+    --             return false
+    --         end
+    --         local zone = Core.getLocation(square) or {}
+    --         local mode = self.moveableMode
+    --         print(mode)
+    --         if mode == "pickup" then
+
+    --         end
+    --         if zone and zone.noplacing == true then
+    --             getSpecificPlayer(0):setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);
+    --             return false
+    --         end
+    --         return oldISMoveableCursorIsValid(self, square)
+    --     end
+    -- end
 
     if buildUtil then
         local oldBuildUtilCanBePlace = buildUtil.canBePlace
