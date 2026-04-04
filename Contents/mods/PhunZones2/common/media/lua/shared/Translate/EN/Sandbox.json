@@ -1,13 +1,15 @@
 {
-    "Sandbox_PhunZones": "PhunZones",
-    "Sandbox_PhunZones_Widget": "Show Widget",
-    "Sandbox_PhunZones_Widget_tooltip": "Displays a moveable widget that displays the current zones title and subtitle. It can also show pips that signify the danger level for the current zone",
-    "Sandbox_PhunZones_ShowDifficulty": "Show Difficulty",
-    "Sandbox_PhunZones_ShowDifficulty_tooltip": "Show difficulty level for zone as pips in widget. Requires Show Widget to be ticked.",
-    "Sandbox_PhunZones_MaxDifficulty": "Max Difficulty",
-    "Sandbox_PhunZones_MaxDifficulty_tooltip": "Maximum number of difficulty. This is the max number of pips in your widget (default is 4)",
-    "Sandbox_PhunZones_UpdateInterval": "Zone check",
-    "Sandbox_PhunZones_UpdateInterval_tooltip": "The number of seconds between scanning for zone changes. 1 should be more than fine",
-    "Sandbox_PhunZones_Debug": "Debug",
-    "Sandbox_PhunZones_Debug_tooltip": "Increase verbosity of logging to help diagnose issues. Best to leave off otherwise"
+  "Sandbox_PhunZones": "PhunZones",
+  "Sandbox_PhunZones_Widget": "Show Widget",
+  "Sandbox_PhunZones_Widget_tooltip": "Displays a moveable widget that displays the current zones title and subtitle. It can also show pips that signify the danger level for the current zone",
+  "Sandbox_PhunZones_ShowDifficulty": "Show Difficulty",
+  "Sandbox_PhunZones_ShowDifficulty_tooltip": "Show difficulty level for zone as pips in widget. Requires Show Widget to be ticked.",
+  "Sandbox_PhunZones_MaxDifficulty": "Max Difficulty",
+  "Sandbox_PhunZones_MaxDifficulty_tooltip": "Maximum number of difficulty. This is the max number of pips in your widget (default is 4)",
+  "Sandbox_PhunZones_UpdateInterval": "Zone check",
+  "Sandbox_PhunZones_UpdateInterval_tooltip": "The number of seconds between scanning for zone changes. 1 should be more than fine",
+  "Sandbox_PhunZones_Debug": "Debug",
+  "Sandbox_PhunZones_Debug_tooltip": "Increase verbosity of logging to help diagnose issues. Best to leave off otherwise",
+  "Sandbox_PhunZones_EditorRole": "Editor Role",
+  "Sandbox_PhunZones_EditorRole_tooltip": "If set, only players whose role name matches this value (case-insensitive) can open the zone editor. Leave empty to allow all players (or always allow in singleplayer)."
 }

@@ -38,10 +38,18 @@ option PhunZones.UpdateInterval
 }
 
 option PhunZones.Debug
-{ 
+{
     type = boolean,
     default = false,
-    page = PhunZones, 
+    page = PhunZones,
     translation = PhunZones_Debug,
+}
+
+option PhunZones.EditorRole
+{
+    type = string,
+    default = ,
+    page = PhunZones,
+    translation = PhunZones_EditorRole,
 }
 

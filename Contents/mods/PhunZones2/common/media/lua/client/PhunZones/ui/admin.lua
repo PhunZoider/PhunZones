@@ -5,8 +5,35 @@ end
 require "DebugUIs/DebugMenu/ISDebugMenu"
 local Core = PhunZones
 
+local function playerHasEditorAccess(player)
+    -- Always allow in singleplayer
+    if Core.isLocal then
+        return true
+    end
+    local required = Core.getOption("EditorRole", "")
+    if not required or required == "" then
+        return true
+    end
+    local role = player and player.getRole and player:getRole()
+    local roleName = role and role.getName and role:getName()
+    if not roleName or roleName == "" then
+        return false
+    end
+    return roleName:lower() == required:lower()
+end
+
 local function showPhunZonesConfigs()
-    Core.ui.zones.OnOpenPanel(getPlayer());
+    local player = getPlayer()
+    if not playerHasEditorAccess(player) then
+        local modal = ISModalDialog:new(0, 0, 300, 150, "Insufficient privileges to open the zone editor.", false, nil,
+            nil, nil, nil, nil)
+        modal:initialise()
+        modal:addToUIManager()
+        modal:setX((getCore():getScreenWidth() - modal:getWidth()) / 2)
+        modal:setY((getCore():getScreenHeight() - modal:getHeight()) / 2)
+        return
+    end
+    Core.ui.zones.OnOpenPanel(player)
 end
 
 local ISDebugMenu_setupButtons = ISDebugMenu.setupButtons;
