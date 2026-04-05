@@ -82,6 +82,7 @@ function Core.normaliseFormat(zones, addDefaultInherits)
     for key, zone in pairs(zones) do
         if key == "_default" then
             flat["_default"] = Core.tools.shallowCopy(zone)
+            flat["_default"].inherits = nil -- _default is the root; inheriting from anything would create a cycle
         else
             local entry = {}
             for k, v in pairs(zone) do
