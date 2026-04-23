@@ -634,13 +634,22 @@ end
 -- ---------------------------------------------------------------------------
 -- Zombie ID helper
 -- ---------------------------------------------------------------------------
+-- I suppose getOnlineID is no longer a thing in B42.17
+local testForOnlineId = getCore():getGameVersion():getMajor() == 42 and getCore():getGameVersion():getMinor() < 17 and
+                            (isClient() or isServer() or isCoopHost())
 
-function Core.getZId(zedObj)
-    if zedObj and instanceof(zedObj, "IsoZombie") and zedObj:isZombie() then
-        if isClient() or isServer() then
-            return tostring(zedObj:getOnlineID())
-        else
-            return tostring(zedObj:getID())
+function Core.getZId(zed)
+    if zed then
+        if instanceof(zed, "IsoZombie") then
+            if zed:isZombie() then
+
+                if testForOnlineId then
+                    return tostring(zed:getOnlineID())
+                else
+                    return tostring(zed:getID())
+                end
+
+            end
         end
     end
 end

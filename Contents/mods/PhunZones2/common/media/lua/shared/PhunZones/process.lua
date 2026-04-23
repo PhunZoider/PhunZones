@@ -512,7 +512,7 @@ function Core.saveChanges(changes)
 
     ModData.add(Core.const.modifiedModData, custom)
 
-    if isClient() then
+    if isClient() and not isCoopHost() then
         -- Send the full batch up to server in one command
         sendClientCommand(getPlayer(), Core.name, Core.commands.modifyZone, {
             changes = changes
