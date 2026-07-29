@@ -9,7 +9,7 @@
   "IGUI_PhunZones_AddRect": "Add Rect",
   "IGUI_PhunZones_AddRectTooltip": "Add a new rect at the current map centre for the selected zone",
   "IGUI_PhunZones_File": "File Contents",
-  "IGUI_PhunZones_FileTooltip": "View contents of your lua/PhunZones.lua file",
+  "IGUI_PhunZones_FileTooltip": "View contents of your lua/PhunZones.txt file",
   "IGUI_PhunZones_SavePending": "Save pending property changes",
   "IGUI_PhunZones_UnsavedChanges": "You have unsaved changes. Save them now?",
   "IGUI_PhunZones_SayNoSafeHouse": "You cannot create a safehouse in this area",

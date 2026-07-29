@@ -98,7 +98,7 @@ Note that the \_default zone is the built in, root that all zones ultimately inh
 The order of processing is as follows:
 
 - Load all data points shipped with mod, omitting any which have modsRequired that are not loaded
-- Load any of the customisations users have made from the filesystem located in `<zomboid directory>/lua/PhunZones.lua`
+- Load any of the customisations users have made from the filesystem located in `<zomboid directory>/lua/PhunZones.txt`
 - Build inheritence chain
 - Partition by chunk
 
