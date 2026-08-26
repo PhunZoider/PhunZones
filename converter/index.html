@@ -214,8 +214,7 @@
             <article class="panel">
                 <h2>Convert pasted text</h2>
                 <p class="hint">Paste a complete file beginning with <code>return { ... }</code>.</p>
-                <textarea id="source" spellcheck="false" placeholder="return {\n  ExampleZone = {\n    title = \"
-                    Example\",\n points={{100, 100, 200, 200}}\n }\n}"></textarea>
+                <textarea id="source" spellcheck="false" placeholder="return {&#10;  ExampleZone = {&#10;    title = &quot;Example&quot;,&#10;    points = {{100, 100, 200, 200}}&#10;  }&#10;}"></textarea>
                 <div class="actions">
                     <button id="convertPaste">Convert to JSON</button>
                     <button id="clearPaste" class="secondary">Clear</button>
@@ -291,7 +290,7 @@
                         }
                         if (escaped === "\n") continue;
                         throw new ParseError("Unsupported string escape \\\" + escaped, this.position - 1);
-      }
+                    }
                     throw new ParseError("Unterminated string", start);
                 }
             }
