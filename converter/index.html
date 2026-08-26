@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phun configuration converter</title>
+<style>
+:root {
+  --ink: #17221f;
+  --muted: #60706a;
+  --paper: #f4f0e6;
+  --panel: #fffdf7;
+  --line: #d7d0c2;
+  --green: #1f6b55;
+  --green-dark: #174b3d;
+  --red: #a33f32;
+  --shadow: 0 18px 50px rgba(35, 44, 37, .12);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: radial-gradient(circle at 85% 10%, #dce8d8 0 12%, transparent 32%), var(--paper);
+  font: 16px/1.5 Georgia, "Times New Roman", serif;
+}
+main { max-width: 1080px; margin: 0 auto; padding: 42px 22px 70px; }
+header { max-width: 720px; margin-bottom: 28px; }
+h1 { margin: 0 0 8px; font: 700 clamp(2rem, 5vw, 4.2rem)/.98 Georgia, serif; letter-spacing: 0; }
+.lede { color: var(--muted); font-size: 1.1rem; margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.panel { background: color-mix(in srgb, var(--panel) 94%, transparent); border: 1px solid var(--line); box-shadow: var(--shadow); padding: 22px; }
+h2 { margin: 0 0 5px; font-size: 1.35rem; }
+small, .hint { color: var(--muted); }
+.dropzone { display: block; border: 2px dashed #9caf9f; background: #f0f6ed; padding: 27px 18px; text-align: center; cursor: pointer; margin: 18px 0 12px; }
+.dropzone:hover, .dropzone:focus-within { border-color: var(--green); background: #e6f0e2; }
+.dropzone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.dropzone strong { display: block; color: var(--green-dark); font-size: 1.1rem; }
+textarea { width: 100%; min-height: 300px; resize: vertical; border: 1px solid var(--line); background: #fbfaf5; color: var(--ink); padding: 13px; font: 14px/1.45 Consolas, "Courier New", monospace; }
+button { border: 0; background: var(--green); color: white; padding: 10px 15px; font: 700 15px Georgia, serif; cursor: pointer; }
+button:hover { background: var(--green-dark); }
+button.secondary { background: transparent; color: var(--green-dark); border: 1px solid var(--green); }
+.actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+.status { min-height: 25px; margin-top: 12px; color: var(--green-dark); }
+.status.error { color: var(--red); }
+.results { margin-top: 18px; }
+.result { border-top: 1px solid var(--line); padding: 13px 0; display: flex; justify-content: space-between; gap: 15px; align-items: center; }
+.result.error { color: var(--red); }
+.result-name { overflow-wrap: anywhere; }
+footer { color: var(--muted); margin-top: 24px; font-size: .92rem; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } main { padding-top: 28px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Phun config converter</h1>
+    <p class="lede">Convert old Lua-table configuration files to JSON before the Build 42 migration. Everything runs locally in this page; no files are uploaded.</p>
+  </header>
+
+  <section class="grid">
+    <article class="panel">
+      <h2>Convert files</h2>
+      <p class="hint">Choose one or more old <code>.txt</code> or <code>.lua</code> files. The original files are never changed.</p>
+      <label class="dropzone" id="dropzone">
+        <input id="fileInput" type="file" accept=".txt,.lua,text/plain" multiple>
+        <strong>Choose files or drag them here</strong>
+        <span class="hint">PhunZones.txt and other Phun configuration files</span>
+      </label>
+      <div id="fileResults" class="results" aria-live="polite"></div>
+    </article>
+
+    <article class="panel">
+      <h2>Convert pasted text</h2>
+      <p class="hint">Paste a complete file beginning with <code>return { ... }</code>.</p>
+      <textarea id="source" spellcheck="false" placeholder="return {\n  ExampleZone = {\n    title = \"Example\",\n    points = {{100, 100, 200, 200}}\n  }\n}"></textarea>
+      <div class="actions">
+        <button id="convertPaste">Convert to JSON</button>
+        <button id="clearPaste" class="secondary">Clear</button>
+      </div>
+      <div id="pasteStatus" class="status" role="status"></div>
+      <textarea id="output" spellcheck="false" readonly aria-label="JSON output" placeholder="JSON output will appear here"></textarea>
+      <div class="actions"><button id="downloadPaste" disabled>Download JSON</button></div>
+    </article>
+  </section>
+
+  <footer>This converter accepts data tables only. It intentionally rejects executable Lua such as functions, calls, assignments, and expressions.</footer>
+</main>
+<script>
+(function () {
+  "use strict";
+
+  class ParseError extends Error {
+    constructor(message, position) {
+      super(message + " (character " + position + ")");
+      this.name = "ParseError";
+    }
+  }
+
+  class Lexer {
+    constructor(source) { this.source = source; this.position = 0; this.lookahead = null; }
+    peek() { if (!this.lookahead) this.lookahead = this.read(); return this.lookahead; }
+    take() { var token = this.peek(); this.lookahead = null; return token; }
+    expect(value) {
+      var token = this.take();
+      if (token.value !== value) throw new ParseError("Expected '" + value + "', found '" + token.value + "'", token.position);
+      return token;
+    }
+    read() {
+      var s = this.source;
+      while (this.position < s.length) {
+        if (/\s/.test(s[this.position])) { this.position++; continue; }
+        if (s[this.position] === "-" && s[this.position + 1] === "-") {
+          this.position += 2;
+          while (this.position < s.length && s[this.position] !== "\n") this.position++;
+          continue;
+        }
+        break;
+      }
+      var start = this.position;
+      if (start >= s.length) return { type: "eof", value: "<end>", position: start };
+      var ch = s[start];
+      if ("{}[]=,;".indexOf(ch) >= 0) { this.position++; return { type: "symbol", value: ch, position: start }; }
+      if (ch === "\"" || ch === "'") return this.readString(ch, start);
+      var number = s.slice(start).match(/^-?(?:\d+\.?(?:\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
+      if (number) { this.position += number[0].length; return { type: "number", value: number[0], position: start }; }
+      var identifier = s.slice(start).match(/^[A-Za-z_][A-Za-z0-9_]*/);
+      if (identifier) { this.position += identifier[0].length; return { type: "identifier", value: identifier[0], position: start }; }
+      throw new ParseError("Unexpected character '" + ch + "'", start);
+    }
+    readString(quote, start) {
+      var s = this.source, result = "";
+      this.position++;
+      while (this.position < s.length) {
+        var ch = s[this.position++];
+        if (ch === quote) return { type: "string", value: result, position: start };
+        if (ch !== "\\") { result += ch; continue; }
+        if (this.position >= s.length) break;
+        var escaped = s[this.position++];
+        var simple = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", v: "\v", a: "\x07", "\\": "\\", '"': '"', "'": "'" };
+        if (simple[escaped] !== undefined) { result += simple[escaped]; continue; }
+        if (/\d/.test(escaped)) {
+          var digits = escaped;
+          while (digits.length < 3 && /\d/.test(s[this.position] || "")) digits += s[this.position++];
+          result += String.fromCharCode(Number(digits));
+          continue;
+        }
+        if (escaped === "\n") continue;
+        throw new ParseError("Unsupported string escape \\\" + escaped, this.position - 1);
+      }
+      throw new ParseError("Unterminated string", start);
+    }
+  }
+
+  class LuaDataParser {
+    constructor(source) { this.lexer = new Lexer(source); }
+    parse() {
+      var first = this.lexer.peek();
+      if (first.type === "identifier" && first.value === "return") this.lexer.take();
+      var value = this.value();
+      var end = this.lexer.take();
+      if (end.type !== "eof") throw new ParseError("Unexpected token '" + end.value + "'", end.position);
+      return value;
+    }
+    value() {
+      var token = this.lexer.peek();
+      if (token.value === "{") return this.table();
+      if (token.type === "string") return this.lexer.take().value;
+      if (token.type === "number") return Number(this.lexer.take().value);
+      if (token.type === "identifier") {
+        this.lexer.take();
+        if (token.value === "true") return true;
+        if (token.value === "false") return false;
+        if (token.value === "nil") return null;
+      }
+      throw new ParseError("Expected a data value, found '" + token.value + "'", token.position);
+    }
+    table() {
+      this.lexer.expect("{");
+      var values = [], fields = Object.create(null), hasFields = false;
+      while (this.lexer.peek().value !== "}") {
+        var token = this.lexer.peek();
+        if (token.type === "eof") throw new ParseError("Unclosed table", token.position);
+        var key = null;
+        if (token.type === "identifier") {
+          this.lexer.take();
+          if (this.lexer.peek().value !== "=") throw new ParseError("Bare identifiers are not valid data", token.position);
+          this.lexer.take(); key = token.value;
+        } else if (token.value === "[") {
+          this.lexer.take();
+          var keyValue = this.value();
+          this.lexer.expect("]"); this.lexer.expect("=");
+          if (typeof keyValue !== "string" && typeof keyValue !== "number") throw new ParseError("Table keys must be strings or numbers", token.position);
+          key = String(keyValue);
+        }
+        var item = this.value();
+        if (key === null) values.push(item);
+        else { if (Object.prototype.hasOwnProperty.call(fields, key)) throw new ParseError("Duplicate table key '" + key + "'", token.position); fields[key] = item; hasFields = true; }
+        if (this.lexer.peek().value === "," || this.lexer.peek().value === ";") this.lexer.take();
+        else if (this.lexer.peek().value !== "}") throw new ParseError("Expected ',' or '}'", this.lexer.peek().position);
+      }
+      this.lexer.take();
+      if (!hasFields) return values;
+      var object = Object.create(null);
+      values.forEach(function (item, index) { object[String(index + 1)] = item; });
+      Object.keys(fields).forEach(function (key) { object[key] = fields[key]; });
+      return object;
+    }
+  }
+
+  function convert(source) {
+    var data = new LuaDataParser(source).parse();
+    if (!data || typeof data !== "object" || Array.isArray(data) || data === null) throw new Error("The top-level value must be a table/object");
+    return JSON.stringify(data, null, 2) + "\n";
+  }
+  function jsonName(name) { return (name.replace(/\.[^.]*$/, "") || name) + ".json"; }
+  function download(name, text) {
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    link.download = name; document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+  }
+
+  var input = document.getElementById("fileInput"), fileResults = document.getElementById("fileResults");
+  function renderFiles(files) {
+    fileResults.innerHTML = "";
+    Array.from(files).forEach(function (file) {
+      var row = document.createElement("div"); row.className = "result";
+      var label = document.createElement("span"); label.className = "result-name"; label.textContent = file.name;
+      row.appendChild(label);
+      var button = document.createElement("button"); button.className = "secondary"; button.textContent = "Converting..."; button.disabled = true; row.appendChild(button); fileResults.appendChild(row);
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var json = convert(reader.result); button.textContent = "Download JSON"; button.disabled = false;
+          button.onclick = function () { download(jsonName(file.name), json); };
+        } catch (error) { row.className += " error"; button.remove(); label.textContent = file.name + ": " + error.message; }
+      };
+      reader.onerror = function () { row.className += " error"; button.remove(); label.textContent = file.name + ": could not read file"; };
+      reader.readAsText(file);
+    });
+  }
+  input.addEventListener("change", function () { renderFiles(input.files); });
+  var dropzone = document.getElementById("dropzone");
+  ["dragenter", "dragover"].forEach(function (eventName) { dropzone.addEventListener(eventName, function (event) { event.preventDefault(); dropzone.style.borderColor = "var(--green)"; }); });
+  ["dragleave", "drop"].forEach(function (eventName) { dropzone.addEventListener(eventName, function (event) { event.preventDefault(); dropzone.style.borderColor = ""; }); });
+  dropzone.addEventListener("drop", function (event) { renderFiles(event.dataTransfer.files); });
+
+  var source = document.getElementById("source"), output = document.getElementById("output"), status = document.getElementById("pasteStatus"), downloadButton = document.getElementById("downloadPaste");
+  document.getElementById("convertPaste").addEventListener("click", function () {
+    try { output.value = convert(source.value); status.className = "status"; status.textContent = "Converted successfully."; downloadButton.disabled = false; }
+    catch (error) { output.value = ""; status.className = "status error"; status.textContent = error.message; downloadButton.disabled = true; }
+  });
+  document.getElementById("clearPaste").addEventListener("click", function () { source.value = ""; output.value = ""; status.textContent = ""; downloadButton.disabled = true; });
+  downloadButton.addEventListener("click", function () { download("phun-config.json", output.value); });
+}());
+</script>
+</body>
+</html>
