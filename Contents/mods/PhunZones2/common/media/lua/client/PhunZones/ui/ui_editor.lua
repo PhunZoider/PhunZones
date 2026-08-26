@@ -1,7 +1,7 @@
 -- ui_editor.lua
 -- Standalone data editor window for PhunZones export / import.
 -- Provides a multiline text editor for the custom ModData layer,
--- allowing copy/paste sharing and direct Lua editing.
+-- allowing copy/paste sharing as JSON.
 if isServer() then
     return
 end
@@ -22,23 +22,13 @@ local UI = Core.ui.configEditor
 
 function UI:buildExportString()
     local md = ModData.getOrCreate(Core.const.modifiedModData)
-    return "return " .. Core.tools.tableToString(md) .. "\n"
+    return Core.tools.tableToString(md) .. "\n"
 end
 
 function UI:parseImportString(src)
-    local stripped = src:match("^%s*(.-)%s*$")
-    if not stripped:match("^return%s") then
-        return nil, "Import must start with 'return { ... }'"
-    end
-
-    local fn, err = loadstring(src)
-    if not fn then
-        return nil, "Lua syntax error:\n" .. tostring(err)
-    end
-    setfenv(fn, {})
-    local ok, result = pcall(fn)
-    if not ok then
-        return nil, "Runtime error:\n" .. tostring(result)
+    local result, err = Core.tools.jsonToTable(src)
+    if err then
+        return nil, "JSON syntax error:\n" .. tostring(err)
     end
     if type(result) ~= "table" then
         return nil, "Expected a table, got " .. type(result)

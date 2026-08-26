@@ -1,5 +1,4 @@
-local luautils = luautils
-local loadstring = loadstring
+local json = require("PhunZones/json")
 local tools = {}
 
 tools.isLocal = not isClient() and not isServer() and not isCoopHost()
@@ -129,67 +128,23 @@ end
 
 -- ---------------------------------------------------------------------------
 -- TABLE SERIALISATION
--- Converts a Lua table to a formatted string representation suitable for
--- writing to a file and reloading with loadstring.
--- Handles nested tables, strings, booleans, and numbers.
--- Array parts are serialised before non-array (hash) parts.
+-- Converts a Lua table to JSON for safe storage and import/export.
 -- ---------------------------------------------------------------------------
-function tools.tableToString(tbl, indent)
-    indent = indent or 0
-    local prefix = string.rep("  ", indent + 1)
-    local result = {}
-    local doneKeys = {}
-
-    -- Array part first (sequential numeric keys from 1)
-    for i = 1, #tbl do
-        local value = tbl[i]
-        doneKeys[i] = true
-        local line
-        if type(value) == "table" then
-            line = prefix .. tools.tableToString(value, indent + 1)
-        elseif type(value) == "string" then
-            line = string.format("%s%q", prefix, value)
-        else
-            line = string.format("%s%s", prefix, tostring(value))
-        end
-        table.insert(result, line)
+function tools.tableToString(tbl)
+    local result, err = json.encode(tbl)
+    if not result then
+        error(err)
     end
+    return result
+end
 
-    -- Non-array (hash) part
-    for key, value in pairs(tbl) do
-        if not doneKeys[key] then
-            local keyStr
-            if type(key) == "string" then
-                -- Bare key if valid identifier, bracketed+quoted otherwise
-                if string.match(key, "^[%a_][%w_]*$") then
-                    keyStr = key .. " = "
-                else
-                    keyStr = string.format("[%q] = ", key)
-                end
-            else
-                keyStr = "[" .. tostring(key) .. "] = "
-            end
-
-            local line
-            if type(value) == "table" then
-                line = prefix .. keyStr .. tools.tableToString(value, indent + 1)
-            elseif type(value) == "string" then
-                line = string.format("%s%s%q", prefix, keyStr, value)
-            else
-                line = string.format("%s%s%s", prefix, keyStr, tostring(value))
-            end
-            table.insert(result, line)
-        end
-    end
-
-    return "{\n" .. table.concat(result, ",\n") .. "\n" .. string.rep("  ", indent) .. "}"
+function tools.jsonToTable(src)
+    return json.decode(src)
 end
 
 -- ---------------------------------------------------------------------------
 -- SAVE TABLE
--- Serialises a table and writes it to a file in the server Lua folder.
--- The file is written as a valid Lua module (return { ... }) so it can be
--- loaded directly with loadTable or require.
+-- Serialises a table as JSON and writes it to the server Lua folder.
 --
 -- @param filename  string  path relative to the server Lua folder
 -- @param data      table   the table to serialise and save
@@ -199,53 +154,19 @@ function tools.saveTable(filename, data)
         return
     end
     local fileWriterObj = getFileWriter(filename, true, false)
-    fileWriterObj:write("return " .. tools.tableToString(data))
+    local result, err = json.encode(data)
+    if not result then
+        fileWriterObj:close()
+        error(err)
+    end
+    fileWriterObj:write(result)
     fileWriterObj:close()
 end
 
 -- ---------------------------------------------------------------------------
--- TABLE OF STRINGS TO TABLE
--- Internal helper. Takes an array of strings (lines read from a file),
--- concatenates them, and executes the result as a Lua chunk to produce
--- a table. Handles files that do or do not start with "return".
---
--- @param lines  table<string>  array of file lines
--- @return       table|nil, string|nil  (result, error message)
--- ---------------------------------------------------------------------------
-local function tableOfStringsToTable(lines)
-    if not lines or type(lines) ~= "table" or #lines == 0 then
-        return nil, "invalid input: empty or non-table"
-    end
-
-    local startsWithReturn = luautils.stringStarts(lines[1], "return")
-    local src
-    if startsWithReturn then
-        src = table.concat(lines, "\n")
-    else
-        src = "return {\n" .. table.concat(lines, "\n") .. "\n}"
-    end
-
-    local ok, chunk = pcall(loadstring, src)
-    if not ok then
-        return nil, "loadstring error: " .. tostring(chunk)
-    end
-
-    local ok2, result = pcall(chunk)
-    if not ok2 then
-        return nil, "execution error: " .. tostring(result)
-    end
-
-    return result, nil
-end
-
--- ---------------------------------------------------------------------------
 -- LOAD TABLE
--- Reads a Lua file from the server Lua folder and returns its contents as
--- a table. Returns nil if the file does not exist or cannot be parsed.
---
--- Unlike require, this bypasses Lua's module cache so it always reflects
--- the current state of the file on disk. Use this for mutable config files.
--- Use require for static data files that never change at runtime.
+-- Reads and decodes a JSON file from the server Lua folder.
+-- Returns nil if the file does not exist or cannot be parsed.
 --
 -- @param filename          string   path relative to the server Lua folder
 -- @param createIfNotExists boolean  if true, creates the file if missing
@@ -270,12 +191,7 @@ function tools.loadTable(filename, createIfNotExists)
         return nil
     end
 
-    -- Strip trailing comma from last line (defensive: handles hand-edited files)
-    if lines[#lines]:sub(-1) == "," then
-        lines[#lines] = lines[#lines]:sub(1, -2)
-    end
-
-    local result, err = tableOfStringsToTable(lines)
+    local result, err = json.decode(table.concat(lines, "\n"))
     if err then
         print("PhunZones file_utils: error loading '" .. filename .. "': " .. err)
         return nil

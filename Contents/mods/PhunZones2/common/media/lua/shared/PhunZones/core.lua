@@ -13,7 +13,8 @@ PhunZones = {
         OnDataBuilt = "PhunZonesOnDataBuilt"
     },
     const = {
-        modifiedLuaFile = "PhunZones.txt",
+        modifiedLuaFile = "PhunZones.json",
+        legacyLuaFile = "PhunZones.txt",
         modifiedModData = "PhunZones",
 
         playerData = "PhunZonesPlayers"

@@ -35,6 +35,7 @@ The table for zone definitions are designed for maximum flexibility and ease. By
 
 The following would make a zone for westpoint. When a player entered these coordinates, they would be shown a welcome for "West Point"
 
+{% raw %}
 ```lua
     WestPoint = { -- unique key for region
         difficulty = 2, -- some property
@@ -42,9 +43,11 @@ The following would make a zone for westpoint. When a player entered these coord
         points = {{11100, 6580, 13199, 7499}}
     },
 ```
+{% endraw %}
 
 The next example demonstrates inheritence.
 
+{% raw %}
 ```lua
     medium = {
         difficulty = 3,
@@ -64,6 +67,7 @@ The next example demonstrates inheritence.
 
 
 ```
+{% endraw %}
 
 The above configuration will mean that MarchRidge_Checkpoint get all the properties it doesn't specify from MarchRidge who get all their properties they don't specify from medium which get all their properties they don't specify from \_default. Change mediums minSprinterRisk at runtime and that cascades through MarchRidge to Checkpoint
 
@@ -88,7 +92,9 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | nofire        | bool               | false     | Prevents fire spread in this zone                                                                                                                                                                | `nofire=true`                                         |
 | noplayers     | bool               | false     | Prevents players from entering this zone                                                                                                                                                         | `noplayers=true`                                      |
 | modsRequired  | string             | nil       | semi-colon separated string of one or more modids that need to be active in order to load this zone. Note that B42 requires the \ prefix                                                         | `modsRequired="\phunsprinters2"`                      |
+{% raw %}
 | points        | array              | none      | Array of points. Each point is in the format of `{x, y, x2, y2}`                                                                                                                                 | `points={{100, 100, 200, 200}, {300, 200, 350, 250}}` |
+{% endraw %}
 | inherits      | string             | \_default | the key of the zone to inherit all unspecified properties                                                                                                                                        | `inherits="_default"`                                 |
 
 Note that the \_default zone is the built in, root that all zones ultimately inherit from
@@ -98,7 +104,9 @@ Note that the \_default zone is the built in, root that all zones ultimately inh
 The order of processing is as follows:
 
 - Load all data points shipped with mod, omitting any which have modsRequired that are not loaded
-- Load any of the customisations users have made from the filesystem located in `<zomboid directory>/lua/PhunZones.txt`
+- Load any of the customisations users have made from the JSON file located in `<zomboid directory>/lua/PhunZones.json`
+
+Existing `PhunZones.txt` files must be converted with the Phun configuration converter before updating. The converter is available at `https://phunzoider.github.io/PhunZones/converter/` and processes files locally in the browser.
 - Build inheritence chain
 - Partition by chunk
 

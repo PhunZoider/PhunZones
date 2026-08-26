@@ -449,14 +449,21 @@ function Core.loadAdminConfig()
 
     local d = Core.tools.loadTable(Core.const.modifiedLuaFile)
     if d == nil then
-        print("PhunZones: no customisation file found at ./lua/" .. Core.const.modifiedLuaFile ..
-                  " (normal if no zones have been customised)")
+        local legacy = getFileReader(Core.const.legacyLuaFile, false)
+        if legacy then
+            legacy:close()
+            print("PhunZones: found legacy Lua config at ./lua/" .. Core.const.legacyLuaFile ..
+                      "; convert it to JSON with the Phun config converter")
+        else
+            print("PhunZones: no customisation file found at ./lua/" .. Core.const.modifiedLuaFile ..
+                      " (normal if no zones have been customised)")
+        end
         ModData.add(Core.const.modifiedModData, {})
         return {}
     end
 
     if d.data == nil then
-        print("PhunZones: unexpected format in ./lua/" .. Core.const.modifiedLuaFile .. ", skipping")
+        print("PhunZones: unexpected JSON format in ./lua/" .. Core.const.modifiedLuaFile .. ", skipping")
         ModData.add(Core.const.modifiedModData, {})
         return {}
     end
@@ -464,8 +471,8 @@ function Core.loadAdminConfig()
     local data = d.data
 
     if d.version == 1 then
-        print("PhunZones: detected v1 format in admin config, backing up to PhunZones_Old.lua")
-        Core.tools.saveTable("PhunZones_Old.lua", d)
+        print("PhunZones: detected v1 format in admin config, backing up to PhunZones_Old.json")
+        Core.tools.saveTable("PhunZones_Old.json", d)
         print("PhunZones: migrating v1 admin config to v2 format")
         data = migrateV1toV2(d)
         d.version = 2
