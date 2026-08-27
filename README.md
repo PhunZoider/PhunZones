@@ -106,7 +106,7 @@ The order of processing is as follows:
 - Load all data points shipped with mod, omitting any which have modsRequired that are not loaded
 - Load any of the customisations users have made from the JSON file located in `<zomboid directory>/lua/PhunZones.json`
 
-Existing `PhunZones.txt` files must be converted with the Phun configuration converter before updating. The converter is available at `https://phunzoider.github.io/PhunZones/converter/` and processes files locally in the browser.
+Existing `PhunZones.txt` files must be converted to `PhunZones.json` with the Phun configuration converter before updating. The converter is available at `https://phunzoider.github.io/PhunZones/converter/` and processes files locally in the browser. In single-player, the file is in `<zomboid directory>/lua/`; for multiplayer, use the server's `<zomboid directory>/Server/<server-name>/lua/` directory.
 - Build inheritence chain
 - Partition by chunk
 

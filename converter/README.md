@@ -23,10 +23,11 @@ Open `index.html` directly in a browser, or serve the repository folder with any
 ## User migration instructions
 
 1. Back up the existing `.txt` configuration files.
-2. Open the converter URL.
-3. Select or drag each old configuration file into the **Convert files** area.
-4. Download the resulting `.json` file.
-5. Place the JSON file where the updated mod's instructions specify.
-6. Keep the original `.txt` files until the new configuration has been verified.
+2. Find the old file. In single-player, it is `%UserProfile%\Zomboid\lua\PhunZones.txt`. In multiplayer, it is on the server at `%UserProfile%\Zomboid\Server\<server-name>\lua\PhunZones.txt`; clients do not have this server configuration.
+3. Open the converter URL.
+4. Select or drag each old configuration file into the **Convert files** area.
+5. Download the resulting `.json` file.
+6. Place the JSON file in the same `lua` directory as the old file, replacing only the extension: `PhunZones.json`.
+7. Keep the original `.txt` files until the new configuration has been verified.
 
 The parser intentionally accepts data tables only. It rejects functions, calls, assignments, and expressions. Configurations containing arbitrary Lua logic need to be migrated manually or converted once using the older game/mod version.

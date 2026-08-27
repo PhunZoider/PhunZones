@@ -194,8 +194,13 @@
     <main>
         <header>
             <h1>Phun config converter</h1>
-            <p class="lede">Convert old Lua-table configuration files to JSON before the Build 42 migration. Everything
+            <p class="lede">Convert old Lua-table configuration files to JSON before the Build 42.20.4 migration.
+                Everything
                 runs locally in this page; no files are uploaded.</p>
+            <p class="hint"><strong>Find your old file:</strong> In single-player, look in
+                <code>%UserProfile%\Zomboid\lua\PhunZones.txt</code>. In multiplayer, look on the server in
+                <code>Lua\PhunZones.txt</code>.
+            </p>
         </header>
 
         <section class="grid">
@@ -290,7 +295,7 @@
                             continue;
                         }
                         if (escaped === "\n") continue;
-                        throw new ParseError("Unsupported string escape \\\" + escaped, this.position - 1);
+                        throw new ParseError("Unsupported string escape \\" + escaped, this.position - 1);
                     }
                     throw new ParseError("Unterminated string", start);
                 }
