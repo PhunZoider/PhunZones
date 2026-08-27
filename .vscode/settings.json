@@ -2,85 +2,10 @@
     "emeraldwalk.runonsave": {
         "autoClearConsole": true,
         "commands": [
-            // Delete old local mod folder
             {
                 "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones2 2>nul"
-            },
-            // Copy mod files to local mod folder
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder}\\Contents\\mods ${env.USERPROFILE}\\Zomboid\\mods /Y /I /E /F /EXCLUDE:xclude"
-            },
-			// Delete old local workshop folder
-            {
-                "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2 2>nul"
-            },
-			// Copy contents to local workshop folder
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder} ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2 /Y /I /E /F /EXCLUDE:xclude"
-            },
-            // del Tests folder from local workshop
-            {
-                "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2\\Tests 2>nul"
-            },              
-
-
-            // TESTING VERSION
-
-            // del TEST local mod
-            {
-                "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones2Test 2>nul"
-            },
-
-            // copy TEST from live
-            {
-                "match": ".*",
-                "cmd": "xcopy ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones2 ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones2Test /Y /I /E /F /EXCLUDE:xclude"
-            },            
-
-            // copy TEST overrides
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder}\\Tests\\root ${env.USERPROFILE}\\Zomboid\\mods\\PhunZones2Test /Y /I /E /F /EXCLUDE:xclude"
-            }, 
-
-            // remove TEST workshop
-            {
-                "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test 2>nul"
-            },            
-            // copy src to TEST workshop
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder} ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test /Y /I /E /F /EXCLUDE:xclude"
-            },
-            // del Tests folder from deployment
-            {
-                "match": ".*",
-                "cmd": "rmdir /S /Q ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test\\Tests 2>nul"
-            },
-            // copy TEST mod root overrides (mod.info, icon, poster) into workshop mod subfolder
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder}\\Tests\\root ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test\\Contents\\mods\\PhunZones2 /Y /I /E /F"
-            },
-
-            // copy TEST preview file to workshop version
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder}\\Tests\\preview.png ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test\\preview.png /Y /I /E /F"
-            }, 
-            // Copy TEST workshop file to workshop version
-            {
-                "match": ".*",
-                "cmd": "xcopy ${workspaceFolder}\\Tests\\workshop.txt ${env.USERPROFILE}\\Zomboid\\Workshop\\PhunZones2Test\\workshop.txt /Y /I /E /F"
-            },
-                                              
+                "cmd": "${workspaceFolder}\\deploy.cmd"
+            }
         ]
     },
     "editor.formatOnSave": true,

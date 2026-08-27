@@ -2,9 +2,12 @@ LICENSE
 README.txt
 .vscode
 Docs
+Tests
 xclude
 CLAUDE.md
 .xcf
 .claude
 .gitignore
 .html
+deploy.cmd
+converter
