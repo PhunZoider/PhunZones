@@ -49,7 +49,9 @@ Commands[Core.commands.teleportVehicle] = function(data)
     local vehicle = getVehicleById(data.id)
     local player = Core.tools.getPlayerByUsername(data.username)
     if player and vehicle then
-        Core:portVehicle(player, vehicle, data.x, data.y, data.z)
+        if not Core.teleportVehicleToCoords(player, vehicle, data.x, data.y, data.z) then
+            Core.debugLn("teleportVehicle: could not relocate vehicle " .. tostring(data.id))
+        end
     end
 end
 

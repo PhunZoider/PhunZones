@@ -457,13 +457,54 @@ function Core.findNearestSafePosition(x, y, z, restrictedZoneKey)
     return nil
 end
 
+-- Consecutive denied ticks per player, keyed by username. Resets whenever the
+-- player is allowed through, or moves to a different restricted zone.
+local denialStreak = {}
+
+-- After this many consecutive failed relocations we conclude the vehicle
+-- cannot be moved on this build and switch that player to brake-only mode for
+-- as long as they stay in the zone. Also covers strategies that report success
+-- but get snapped back by the physics step.
+local VEHICLE_ATTEMPTS = 3
+
 -- lastAt is stored.at { zone, x, y, z } from the previous accepted tick —
 -- used as the teleport-back target when access is denied.
 -- If lastAt is itself inside the restricted zone (e.g. login after a
 -- restriction was added), a spiral search finds the nearest safe tile instead.
 function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
+    local who = obj.getUsername and obj:getUsername() or tostring(obj)
+
     if effectiveZone.noplayers ~= true then
+        denialStreak[who] = nil
         return true
+    end
+
+    local function notify()
+        if (isClient() or Core.isLocal) and instanceof(obj, "IsoPlayer") then
+            obj:setHaloNote(getText("IGUI_PhunZones_SayNoPlayers"), 255, 0, 0, 300)
+        end
+    end
+
+    local streak = denialStreak[who]
+    if not streak or streak.zone ~= effectiveZone.key then
+        streak = {
+            zone = effectiveZone.key,
+            count = 0,
+            brakeOnly = false
+        }
+        denialStreak[who] = streak
+    end
+    streak.count = streak.count + 1
+
+    local vehicle = obj.getVehicle and obj:getVehicle() or nil
+
+    -- Vehicle relocation has already proven unavailable for this player in
+    -- this zone. Stall the vehicle and warn, but leave them at the wheel so
+    -- they can drive back out — ejecting them here is what strands the car.
+    if vehicle and streak.brakeOnly then
+        Core.brakeVehicle(vehicle)
+        notify()
+        return false
     end
 
     local tx, ty, tz
@@ -475,20 +516,27 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     end
 
     if not tx then
+        denialStreak[who] = nil
         return true -- zone fills entire search area; let player stay
     end
 
-    local vehicle = obj.getVehicle and obj:getVehicle() or nil
     if vehicle then
-        Core.teleportVehicleToCoords(obj, vehicle, tx, ty, tz)
+        -- Move the vehicle if we can. teleportVehicleToCoords verifies the
+        -- vehicle actually landed near the target, so a silently-unsupported
+        -- engine API reports false rather than looking like a success.
+        if not Core.teleportVehicleToCoords(obj, vehicle, tx, ty, tz) then
+            Core.brakeVehicle(vehicle)
+            if streak.count >= VEHICLE_ATTEMPTS then
+                streak.brakeOnly = true
+                Core.debugLn("enforceZoneAccess: cannot relocate vehicle for " .. who ..
+                                 ", falling back to brake-only")
+            end
+        end
     else
         Core.portPlayer(obj, tx, ty, tz)
     end
 
-    if (isClient() or Core.isLocal) and instanceof(obj, "IsoPlayer") then
-        obj:setHaloNote(getText("IGUI_PhunZones_SayNoPlayers"), 255, 0, 0, 300)
-    end
-
+    notify()
     return false
 end
 
