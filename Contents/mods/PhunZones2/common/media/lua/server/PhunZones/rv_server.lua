@@ -58,7 +58,9 @@ end
 local function processVehicleZoneChanges()
     local md = ModData.getOrCreate("PhunZonesRVInfo")
     local rvData = ModData.getOrCreate("modPROJECTRVInterior")
-
+    if not rvData or not rvData.Vehicles then
+        rvData.Vehicles = {}
+    end
     for k, v in pairs(md.players or {}) do
         local vehicleData = rvData.Vehicles[v.vid]
         if vehicleData then
