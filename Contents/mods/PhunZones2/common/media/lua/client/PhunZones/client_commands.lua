@@ -38,6 +38,14 @@ Commands[Core.commands.zoneUpdated] = function(data)
     end
 end
 
+-- The server owns the non-pvp zone list; we only mirror what it sends. That
+-- matters because a client add or remove broadcasts to everyone, so a client
+-- working from stale zone data could otherwise strip protection off a zone for
+-- the whole server.
+Commands[Core.commands.syncNoPvp] = function(data)
+    Core.applyNoPvpZones(data and data.rects or {})
+end
+
 Commands[Core.commands.updateEffectiveZone] = function(data)
     local player = Core.tools.getPlayerByUsername(data.player)
     if player then

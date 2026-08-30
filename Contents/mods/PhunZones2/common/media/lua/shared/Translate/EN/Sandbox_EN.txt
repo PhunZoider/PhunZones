@@ -14,7 +14,9 @@ Sandbox_EN
     Sandbox_PhunZones_EditorRole = "Editor Role",
     Sandbox_PhunZones_EditorRole_tooltip = "If set, only players whose role name matches this value (case-insensitive) can open the zone editor. Leave empty to allow all players  that have access to admin/debug menu (or always allow in singleplayer).",
     Sandbox_PhunZones_StaffExempt = "Staff ignore zone restrictions",
-    Sandbox_PhunZones_StaffExempt_tooltip = "When on, staff are not blocked by a zone's No Building, No Placing, No Pickup, No Scrapping, No Destruction, No Safehouse or No Players settings. By itself this covers the Admin role only - tick 'Include Moderator and GM' to widen it. No Fire is never exempted: fire has no owner to check.",
+    Sandbox_PhunZones_StaffExempt_tooltip = "When on, staff are not blocked by a zone's No Building, No Placing, No Pickup, No Scrapping, No Destruction, No Safehouse or No Players settings. By itself this covers the Admin role only - tick 'Include Moderator and GM' to widen it. No Fire and safe zones are never exempted: neither check has a player to let through.",
     Sandbox_PhunZones_ExemptModGM = "Include Moderator and GM",
     Sandbox_PhunZones_ExemptModGM_tooltip = "Extends 'Staff ignore zone restrictions' to the Moderator, GM and Overseer roles as well as Admin. Has no effect unless that option is on.",
+    Sandbox_PhunZones_ManageNoPvpZones = "Manage no-pvp zones",
+    Sandbox_PhunZones_ManageNoPvpZones_tooltip = "When on, safe zones are registered with the games own non-pvp zone list. Turn it off to manage that list by hand through the admin panel instead - PhunZones will then remove the zones it created.",
 }

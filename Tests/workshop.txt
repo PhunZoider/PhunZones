@@ -1,6 +1,6 @@
 version=1
 title=PhunZones 2 [DEV]
 id=3674596146
-description=⚠️ DEV BRANCH — Preview build for testing and feedback of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252660]PhunZones 2[/url]. This version may change frequently and could break between updates.
+description=⚠️ DEV BRANCH: preview build for testing and feedback of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252660]PhunZones 2[/url]. This version may change frequently and could break between updates.
 tags=Build 42;Multiplayer
 visibility=unlisted

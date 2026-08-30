@@ -38,7 +38,8 @@ PhunZones = {
         setProfile = "PhunZonesSetProfile",
         modifyProfile = "PhunZonesModifyProfile",
         createProfile = "PhunZonesCreateProfile",
-        removeProfile = "PhunZonesRemoveProfile"
+        removeProfile = "PhunZonesRemoveProfile",
+        syncNoPvp = "PhunZonesSyncNoPvp"
     },
     tools = require("PhunZones/tools"),
     groups = {
@@ -206,6 +207,12 @@ PhunZones = {
             type = "boolean",
             tooltip = "IGUI_PhunZones_NoFire_tooltip",
             group = "functionality"
+        },
+        pvp = {
+            label = "IGUI_PhunZones_Pvp",
+            type = "boolean",
+            tooltip = "IGUI_PhunZones_Pvp_tooltip",
+            group = "combat"
         },
         noplayers = {
             label = "IGUI_PhunZones_NoPlayers",

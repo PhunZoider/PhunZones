@@ -265,6 +265,16 @@ Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
 
 end)
 
+-- On a dedicated server the server reconciles the engine non-pvp zone list and
+-- pushes it to us. A co-op host has no such server: server_events never loads
+-- there because isClient() is true, so the host does its own reconcile. That
+-- reaches the guests for free, since adding a zone from a client broadcasts.
+Events[Core.events.OnDataBuilt].Add(function()
+    if isCoopHost() then
+        Core.refreshNoPvpZones()
+    end
+end)
+
 Events.OnCreatePlayer.Add(function(id)
     local playerObj = getSpecificPlayer(id)
     if playerObj then

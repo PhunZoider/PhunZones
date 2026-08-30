@@ -329,7 +329,20 @@ end
 -- ---------------------------------------------------------------------------
 local CHUNK_SIZE = 300
 
-function Core.buildChunkMap(zones)
+-- ---------------------------------------------------------------------------
+-- FLATTEN ZONE RECTS
+-- Explodes every zone into its individual rects and sorts them by precedence,
+-- highest first, which is what decides who wins where two zones overlap.
+--
+-- Anything that needs to reason about overlap has to consume this same list
+-- rather than build its own. A zone with no explicit order gets one derived
+-- from its position in pairs() iteration, and that is not stable between
+-- calls, so two callers flattening separately would disagree about who is on
+-- top of whom.
+--
+-- Each entry: {key, order, x1, y1, x2, y2}
+-- ---------------------------------------------------------------------------
+function Core.flattenZoneRects(zones)
     -- Flatten all zone rects into a sortable array
     local flattened = {}
     local maxExplicitOrder = 0
@@ -365,6 +378,14 @@ function Core.buildChunkMap(zones)
     table.sort(flattened, function(a, b)
         return a[2] ~= b[2] and a[2] > b[2]
     end)
+
+    return flattened
+end
+
+-- flattened is optional. Pass the array from Core.flattenZoneRects when the
+-- caller needs it too, so every view of precedence comes from one sort.
+function Core.buildChunkMap(zones, flattened)
+    flattened = flattened or Core.flattenZoneRects(zones)
 
     -- Build chunk map
     local cells = {}
@@ -960,12 +981,16 @@ function Core.buildZoneData(filter, profileOverride)
 
     local ordered = Core.assignOrders(merged)
     local lookup = Core.resolveInheritance(ordered)
-    local cells = Core.buildChunkMap(ordered)
+    local flat = Core.flattenZoneRects(ordered)
+    local cells = Core.buildChunkMap(ordered, flat)
 
     return {
         cells = cells,
         zones = ordered,
         lookup = lookup,
+        -- Every zone rect in precedence order. Kept alongside the chunk map so
+        -- callers that need to reason about overlap agree with getLocation.
+        flat = flat,
         -- Which profile shaped this build, and its raw sparse layer, so an
         -- editor can tell a profile's own overrides apart from the ones
         -- underneath it.

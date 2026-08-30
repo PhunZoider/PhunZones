@@ -15,6 +15,7 @@ A Project Zomboid mod for changing game behaviours depending on where the player
 - Restrict dismantling and crafting
 - Block construction
 - Prevent fire spread
+- Restrict PVP to chosen zones, or make chosen zones safe
 - Block player entry to specific zones
 - Zone detection works inside [Project RV Interior](https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299)
 - Designed to be an extensive tool that can be used stand alone and/or by other mods
@@ -95,6 +96,7 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | nodestruction | bool               | false   | Prevents the sledgehammer from being used here                                                                                                                                                   | `nodestruction=true`             |
 | nofire        | bool               | false   | Prevents fire spread in this zone                                                                                                                                                                | `nofire=true`                    |
 | noplayers     | bool               | false   | Prevents players from entering this zone                                                                                                                                                         | `noplayers=true`                 |
+| pvp           | bool               | unset   | Whether players can hurt each other here. `false` makes a safe zone. Setting `true` anywhere makes the rest of the map safe; see [PVP zones](#pvp-zones)                                                        | `pvp=true`                       |
 | modsRequired  | string             | nil     | semi-colon separated string of one or more modids that need to be active in order to load this zone. Note that B42 requires the \ prefix                                                         | `modsRequired="\phunsprinters2"` |
 
 {% raw %}
@@ -114,7 +116,7 @@ being blocked by them:
 | Staff ignore zone restrictions | off     | Staff are not blocked by `nobuilding`, `noplacing`, `nopickup`, `noscrap`, `nodestruction`, `nosafehouse` or `noplayers` |
 | Include Moderator and GM       | off     | Widens the above from Admin only to also cover the Moderator, GM and Overseer roles                                      |
 
-The second option does nothing on its own — the first has to be on as well.
+The second option does nothing on its own; the first has to be on as well.
 
 Matching is on the role's name, case-insensitively, the same way the Editor Role
 option works, so a server using custom roles can line one up by naming it after
@@ -127,6 +129,138 @@ there is no way to tell who started it. Exempting on "an exempt player is
 standing there" would suppress fire inconsistently tile by tile as it spread,
 and exempting the whole zone whenever staff are inside it would give any player
 who followed them in a free burn. A `nofire` zone applies to everyone.
+
+Safe zones are not exempted either, for a different reason: the engine decides them
+from the tile the hit came from and the tile it landed on, never from who
+threw it. There is no player in that check to let through.
+
+## PVP zones
+
+`pvp` decides whether players can hurt each other in a zone. It has three
+states, and the third one matters:
+
+| Value | Meaning |
+| ----- | --------- |
+| unset | nobody has said. Inherits from the parent zone |
+| `true` | pvp happens here |
+| `false` | this is a safe zone |
+
+PhunZones does not enforce any of this itself. The game has its own non-pvp
+zone list, and a safe zone is registered there, which puts the restriction
+somewhere Lua cannot reach:
+
+- the attacker's client refuses the swing before it happens
+- nobody can turn their safety off while stood inside one
+- the server rejects player-hit-player and vehicle-hit-player packets
+
+### Marking a pvp zone makes the rest of the map safe
+
+Saying "pvp happens **here**" only means something if it does not happen
+elsewhere, so as soon as any zone is set to `pvp=true`, the rest of the map is
+asserted safe for you and that zone is cut out of it. One setting is enough:
+
+```lua
+    Arena = {
+        title = "The Arena",
+        pvp = true,
+        points = {{640, 640, 659, 659}}
+    },
+```
+
+That is the whole configuration for a safe server with one arena in it.
+
+Set nothing at all and nothing happens: no rectangles are registered and your
+server's own `PVP` option is left in charge, which is why installing the mod
+changes nothing on its own.
+
+`_default` overrides the assertion in either direction, for a server that wants
+to be explicit:
+
+| `_default.pvp` | Any zone `pvp=true`? | Whole map safe |
+| -------------- | -------------------- | ---------------- |
+| unset | no | no, your server config governs |
+| unset | yes | yes, asserted for you |
+| `false` | either | yes, you asked |
+| `true` | either | no, you asked |
+
+So `pvp=false` on a single zone, with no pvp zone anywhere, makes just that one
+zone safe and leaves the rest of the map alone.
+
+### Server settings
+
+All of this **subtracts** pvp. It cannot add it, so:
+
+| Setting           | Needs to be           | Why                                                                                                                                              |
+| ----------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PVP`             | `true`                | The game checks this before it looks at zones. With it off, pvp is off everywhere and none of this has anything to do                              |
+| `AntiCheatSafety` | `3`, `2` or `1`       | Ban, Kick or Log. The shipped default of `4` disables it, which leaves nothing checking hits server-side if somebody is running a modified client |
+
+There is no way to run `PVP=false` and open pvp up in one zone. Run `PVP=true`
+and mark the arena instead.
+
+If you are turning an existing PVE server into one with an arena, set the zone
+up first and flip `PVP=true` last. The rectangles register happily while `PVP`
+is still off (they are simply inert), so you can check them under Admin Panel
+before anything changes for players.
+
+### Multiplayer only
+
+The game only consults these zones on a multiplayer client, so they do nothing
+in singleplayer. PhunZones skips the whole thing there rather than pay for a
+list it cannot use.
+
+### Overlapping zones
+
+Precedence works the way it does everywhere else, and nests as deep as you like:
+a `pvp=false` vault inside a `pvp=true` arena is safe again, as long as it has
+the higher precedence. The mod cuts those holes out of the rectangles it hands
+the game, since the game itself has no notion of one zone overriding another.
+
+Holes cost rectangles: one region can become up to four. The list is capped,
+and a warning naming the areas left unprotected is printed to the server log if
+a layout needs more than the cap. If you hit it, the fix is fewer zones
+overlapping your safe zones.
+
+Rectangles covered entirely by a wider one are dropped rather than registered,
+so a map-wide safe area does not also register every zone sitting inside it.
+
+### When the rectangles are built
+
+Only on the server, and only when the zone data is rebuilt: at server start, and
+whenever something triggers a rebuild: saving in the zone editor, activating or
+editing a profile, or a scheduled profile swap. There is no per-tick work.
+
+Rebuilds are reconciled rather than reapplied. Each rectangle is named after its
+zone and its bounds, so a rebuild that did not move a safe zone produces the
+same names, the comparison comes out empty, and nothing is added, removed or
+sent to clients.
+
+The rectangles themselves are saved in the world (`map_meta.bin`), the same as
+any non-pvp zone made through the admin panel, so they survive a restart on
+their own. The reconcile at server start compares against what the save
+contained, which is how a zone deleted while the server was down gets cleaned
+up.
+
+### Removing the mod
+
+Because the rectangles live in the world save, **uninstalling PhunZones leaves
+them behind**. Nothing runs to clean them up, and the areas stay non-pvp with
+no visible cause.
+
+To clear them, either turn off the **Manage no-pvp zones** sandbox option before
+uninstalling (PhunZones withdraws its own zones when it stops managing them),
+or delete them afterwards under **Admin Panel → Non PVP Zone**, where they are
+the entries titled `PhunZones_...`.
+
+### Zones made by hand
+
+PhunZones only touches zones it created, which are the ones titled
+`PhunZones_...` in the admin panel. Anything an admin adds through
+**Admin Panel → Non PVP Zone** is left alone.
+
+Turning off the **Manage no-pvp zones** sandbox option hands the list back
+entirely: PhunZones removes its own zones and stops managing them, leaving the
+admin panel as the only thing writing to it.
 
 ## Processing
 
@@ -183,7 +317,7 @@ nil-valued key is not in the table at all, so the overlay ends up saying nothing
 about that field and the underlying value stands. `false` is a real value and
 does override.
 
-Only one profile is active at a time. Reverting is activating nothing — the
+Only one profile is active at a time. Reverting is activating nothing: the
 overlay is dropped and every value recomputes from the layers underneath, so no
 previous value is ever stored and later edits are never clobbered.
 
@@ -196,7 +330,7 @@ Editing: [ default ▾ ]  [Activate]  [New Profile]  [Del Profile]   Live: none
 ```
 
 **Editing** is the layer your property edits are written to. `default` is the
-base configuration — the `data` block, which is what the editor has always
+base configuration, the `data` block, which is what the editor has always
 edited. Pick a profile and the same property rows now write into that profile
 instead.
 
@@ -214,8 +348,8 @@ While you are editing a profile, the property rows are marked in three ways:
 | No bar, dimmed value       | Not set anywhere                                       |
 
 Add Zone and Delete Zone are disabled while editing a profile. Both are
-structural edits to the base configuration — a profile can only override fields
-on zones that already exist — so rather than quietly writing them to the wrong
+structural edits to the base configuration (a profile can only override fields
+on zones that already exist), so rather than quietly writing them to the wrong
 layer the editor turns them off.
 
 Note that a profile cannot currently _remove_ an override once saved, only

@@ -37,6 +37,14 @@ option PhunZones.UpdateInterval
     translation = PhunZones_UpdateInterval,
 }
 
+option PhunZones.ManageNoPvpZones
+{
+    type = boolean,
+    default = true,
+    page = PhunZones,
+    translation = PhunZones_ManageNoPvpZones,
+}
+
 option PhunZones.Debug
 {
     type = boolean,

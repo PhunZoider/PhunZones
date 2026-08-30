@@ -1775,7 +1775,13 @@ function UI:refreshProperties()
         end)
         for _, f in ipairs(fields) do
             local k, fdef = f.k, f.fdef
-            local val = pending[k] ~= nil and pending[k] or merged[k]
+            -- x ~= nil and x or y collapses when x is false, which matters for
+            -- the boolean fields: an override that switches an inherited true
+            -- back off is a real value, not an absent one.
+            local val = merged[k]
+            if pending[k] ~= nil then
+                val = pending[k]
+            end
             -- merged may not include a raw override if the zone data wasn't yet
             -- re-processed (e.g. modsRequired set in base data but not in lookup)
             if val == nil and raw[k] ~= nil then
@@ -1958,11 +1964,16 @@ function UI:renderProps(ox, oy, w, h)
                     else
                         self:drawText(row.label, ox + sc(6), ay + sc(2), lr, lg, lb, la, UIFont.Small)
 
+                        -- Same trap as above: a value of false is set, and has
+                        -- to read as false rather than as the dash that means
+                        -- nothing is set here.
                         local valStr
-                        if isCombo then
-                            valStr = row.displayVal or tostring(row.value ~= nil and row.value or "--")
+                        if row.value == nil then
+                            valStr = "--"
+                        elseif isCombo then
+                            valStr = row.displayVal or tostring(row.value)
                         else
-                            valStr = tostring(row.value ~= nil and row.value or "--")
+                            valStr = tostring(row.value)
                         end
                         local vr, vg, vb, va
                         if row.override then
