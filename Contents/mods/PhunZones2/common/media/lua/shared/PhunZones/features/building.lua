@@ -7,13 +7,14 @@ Core.iniBuilding = function()
             local zone = Core.getLocation(x, y) or {}
             if self.selectedSqDrop then
                 -- assert placing an item
-                if zone and zone.noplacing == true then
+                if zone and zone.noplacing == true and not Core.isExempt(playerObj) then
                     playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);
                     return false
                 end
             else
                 -- assert building an item
-                if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil then
+                if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil and
+                    not Core.isExempt(playerObj) then
                     playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
                     return false
                 end
@@ -26,7 +27,8 @@ Core.iniBuilding = function()
         function ISBuildingObject:isValid(square)
             local playerObj = getSpecificPlayer(self.player)
             local zone = Core.getLocation(square) or {}
-            if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil then
+            if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil and
+                not Core.isExempt(playerObj) then
                 playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
                 return false
             end
@@ -38,7 +40,8 @@ Core.iniBuilding = function()
         function ISBuildIsoEntity:isValid(square)
             local playerObj = getSpecificPlayer(self.player)
             local zone = Core.getLocation(square) or {}
-            if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil then
+            if zone and zone.nobuilding == true and self.sledgehammer == nil and self.cacheObject == nil and
+                not Core.isExempt(playerObj) then
                 playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
                 return false
             end
@@ -71,7 +74,7 @@ Core.iniBuilding = function()
         function buildUtil.canBePlace(...)
             local playerObj = getSpecificPlayer(0)
             local zone = Core.getEffectiveZone(playerObj)
-            if zone and zone.nobuilding == true then
+            if zone and zone.nobuilding == true and not Core.isExempt(playerObj) then
                 playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoBuild"), 255, 255, 0, 300);
                 return false
             end

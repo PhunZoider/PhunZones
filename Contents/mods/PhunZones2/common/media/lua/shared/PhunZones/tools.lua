@@ -71,6 +71,22 @@ function tools.isAdmin()
 end
 
 -- ---------------------------------------------------------------------------
+-- IS EMPTY
+-- True when the table holds no entries.
+-- B42.20.4 does not expose `next` to mod code, so the usual `next(t) == nil`
+-- is not available. pairs reaches next below the C boundary and still works.
+-- ---------------------------------------------------------------------------
+function tools.isEmpty(t)
+    if type(t) ~= "table" then
+        return true
+    end
+    for _ in pairs(t) do
+        return false
+    end
+    return true
+end
+
+-- ---------------------------------------------------------------------------
 -- SHALLOW COPY
 -- Returns a shallow copy of a table, optionally excluding specified keys.
 -- Nested tables are not copied — they remain as shared references.

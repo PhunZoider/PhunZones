@@ -17,7 +17,10 @@ Commands[Core.commands.playerSetup] = function(player)
     end
     Core.updateModData(player, true, true)
     sendServerCommand(player, Core.name, Core.commands.playerSetup, {
-        data = ModData.get(Core.const.modifiedModData) or {}
+        data = ModData.get(Core.const.modifiedModData) or {},
+        -- ModData.transmit only reaches clients already connected, so a joining
+        -- client gets the profile state as part of the handshake instead.
+        runtime = ModData.get(Core.const.runtimeModData) or {}
     })
 end
 
@@ -32,9 +35,50 @@ Commands[Core.commands.modifyZone] = function(player, data)
     Core.saveChanges(data.changes)
 
     Core.debug("[custom]", ModData.get(Core.const.modifiedModData))
+    -- saveChanges transmits on the server branch; no second transmit needed.
+end
 
-    ModData.transmit(Core.const.modifiedModData)
+Commands[Core.commands.setProfile] = function(player, data)
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
+    local ok, err = Core.setActiveProfile(data and data.profile)
+    if not ok then
+        print("PhunZones: " .. player:getUsername() .. " could not activate profile '" ..
+                  tostring(data and data.profile) .. "': " .. tostring(err))
+    end
+end
 
+-- Profile definition edits. All three re-check the capability rather than
+-- trusting the editor to have hidden the buttons.
+local function profileLog(player, what, ok, err)
+    if not ok then
+        print("PhunZones: " .. player:getUsername() .. " could not " .. what .. ": " .. tostring(err))
+    end
+end
+
+Commands[Core.commands.modifyProfile] = function(player, data)
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
+    local ok, err = Core.saveProfileChanges(data and data.profile, data and data.changes)
+    profileLog(player, "save profile '" .. tostring(data and data.profile) .. "'", ok, err)
+end
+
+Commands[Core.commands.createProfile] = function(player, data)
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
+    local ok, err = Core.createProfile(data and data.profile)
+    profileLog(player, "create profile '" .. tostring(data and data.profile) .. "'", ok, err)
+end
+
+Commands[Core.commands.removeProfile] = function(player, data)
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
+    local ok, err = Core.deleteProfile(data and data.profile)
+    profileLog(player, "delete profile '" .. tostring(data and data.profile) .. "'", ok, err)
 end
 
 Commands[Core.commands.deleteZone] = function(player, data)

@@ -16,6 +16,10 @@ PhunZones = {
         modifiedLuaFile = "PhunZones.json",
         legacyLuaFile = "PhunZones.txt",
         modifiedModData = "PhunZones",
+        -- Runtime (non-authored) state: the authored profile definitions plus
+        -- which one is currently active. Lives in global ModData rather than the
+        -- admin JSON file so scheduled profile swaps never rewrite their config.
+        runtimeModData = "PhunZonesRuntime",
 
         playerData = "PhunZonesPlayers"
     },
@@ -29,7 +33,12 @@ PhunZones = {
         deleteZone = "PhunZonesDeleteZone",
         updateEffectiveZone = "PhunZonesUpdateEffectiveZone",
         evictZeds = "PhunZonesEvictZeds",
-        removeZeds = "PhunZonesRemoveZeds"
+        removeZeds = "PhunZonesRemoveZeds",
+        zoneUpdated = "PhunZonesZoneUpdated",
+        setProfile = "PhunZonesSetProfile",
+        modifyProfile = "PhunZonesModifyProfile",
+        createProfile = "PhunZonesCreateProfile",
+        removeProfile = "PhunZonesRemoveProfile"
     },
     tools = require("PhunZones/tools"),
     groups = {
@@ -268,6 +277,62 @@ function Core.refreshSettings()
 end
 
 -- ---------------------------------------------------------------------------
+-- Staff exemption
+--
+-- When StaffExempt is on, staff walk through the "No ..." restrictions instead
+-- of being blocked by them, so an admin can build, scrap or enter a zone they
+-- have closed to players. The second option decides whether that reaches past
+-- Admin to the lesser staff roles.
+--
+-- Matching is on the role's name, case-insensitively, which is the same thing
+-- the EditorRole option does. A server with custom roles can therefore still
+-- line up with these by naming a role after one of them.
+-- ---------------------------------------------------------------------------
+local EXEMPT_ADMIN = {
+    admin = true
+}
+local EXEMPT_STAFF = {
+    moderator = true,
+    gm = true,
+    overseer = true
+}
+
+local function roleNameOf(player)
+    local role = player and player.getRole and player:getRole()
+    local name = role and role.getName and role:getName()
+    if type(name) == "string" and name ~= "" then
+        return name:lower()
+    end
+    -- No role object. In singleplayer or on a co-op host there is one local
+    -- player, so the global access level is the right answer for them; in
+    -- multiplayer it would be the *viewer's* level, which is not, so it is only
+    -- consulted where there is nobody else it could mean.
+    if (Core.isLocal or isCoopHost()) and getAccessLevel then
+        local level = getAccessLevel()
+        if type(level) == "string" and level ~= "" then
+            return level:lower()
+        end
+    end
+    return nil
+end
+
+-- True when this player should be let through a zone's "No ..." restrictions.
+function Core.isExempt(player)
+    if not player or Core.settings.StaffExempt ~= true then
+        return false
+    end
+
+    local name = roleNameOf(player)
+    if not name then
+        return false
+    end
+    if EXEMPT_ADMIN[name] then
+        return true
+    end
+    return EXEMPT_STAFF[name] == true and Core.settings.ExemptModGM == true
+end
+
+-- ---------------------------------------------------------------------------
 -- Initialisation
 -- ---------------------------------------------------------------------------
 
@@ -474,7 +539,7 @@ local VEHICLE_ATTEMPTS = 3
 function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     local who = obj.getUsername and obj:getUsername() or tostring(obj)
 
-    if effectiveZone.noplayers ~= true then
+    if effectiveZone.noplayers ~= true or Core.isExempt(obj) then
         denialStreak[who] = nil
         return true
     end
@@ -528,8 +593,7 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
             Core.brakeVehicle(vehicle)
             if streak.count >= VEHICLE_ATTEMPTS then
                 streak.brakeOnly = true
-                Core.debugLn("enforceZoneAccess: cannot relocate vehicle for " .. who ..
-                                 ", falling back to brake-only")
+                Core.debugLn("enforceZoneAccess: cannot relocate vehicle for " .. who .. ", falling back to brake-only")
             end
         end
     else

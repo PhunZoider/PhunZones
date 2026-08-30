@@ -235,6 +235,9 @@ function UI:new(x, y, width, height, player, key)
     o.propRows = {}
     o.propFilter = ""
     o.treeFilter = ""
+    -- Which layer property edits go to. nil = the base customisation layer,
+    -- shown as "default". Independent of which profile is live for players.
+    o.editProfile = nil
     o._pendingChanges = {}
     o.overlay = nil -- created in createChildren after mapui is ready
 
@@ -418,7 +421,7 @@ function UI:createChildren()
     chkAll.onMouseUp = function(s, x, y)
         ISTickBox.onMouseUp(s, x, y)
         self._filterActive = not s:isSelected(1)
-        self.data = Core.buildZoneData(self._filterActive)
+        self.data = Core.buildZoneData(self._filterActive, self.editProfile or false)
         self:rebuildUI()
     end
     self:addChild(chkAll)
@@ -666,7 +669,253 @@ function UI:createChildren()
         self:close()
     end)
 
+    -- -----------------------------------------------------------------------
+    -- Profile bar
+    --
+    -- Two separate pieces of state, deliberately shown side by side: which
+    -- layer property edits are written to (the combo), and which profile is
+    -- live for players right now (the label). Selecting a profile here only
+    -- changes what you are editing — Activate is what makes it live.
+    -- -----------------------------------------------------------------------
+    local lblProfile = ISLabel:new(0, 0, BUTTON_HGT, getText("IGUI_PhunZones_Profile_Editing"), 1, 1, 1, 1,
+        UIFont.Small, true)
+    lblProfile:initialise();
+    lblProfile:instantiate()
+    self:addChild(lblProfile)
+    self.controls.lblProfile = lblProfile
+
+    local cmbProfile
+    cmbProfile = ISComboBox:new(0, 0, sc(140), BUTTON_HGT, self, function(owner)
+        owner:onProfileComboChanged(cmbProfile:getOptionData(cmbProfile:getSelected()))
+    end)
+    cmbProfile:initialise()
+    cmbProfile.tooltip = getText("IGUI_PhunZones_Profile_Editing_tooltip")
+    self:addChild(cmbProfile)
+    self.controls.cmbProfile = cmbProfile
+
+    self.controls.btnActivate = mkBtn(getText("IGUI_PhunZones_Profile_Activate"),
+        getText("IGUI_PhunZones_Profile_Activate_tooltip"), function()
+            self:activateSelectedProfile()
+        end)
+
+    self.controls.btnNewProfile = mkBtn(getText("IGUI_PhunZones_Profile_New"),
+        getText("IGUI_PhunZones_Profile_New_tooltip"), function()
+            self:promptNewProfile()
+        end)
+
+    self.controls.btnDelProfile = mkBtn(getText("IGUI_PhunZones_Profile_Delete"),
+        getText("IGUI_PhunZones_Profile_Delete_tooltip"), function()
+            self:confirmDeleteProfile()
+        end)
+    if self.controls.btnDelProfile.enableCancelColor then
+        self.controls.btnDelProfile:enableCancelColor()
+    end
+
+    local lblLive = ISLabel:new(0, 0, BUTTON_HGT, "", 1, 1, 1, 1, UIFont.Small, true)
+    lblLive:initialise();
+    lblLive:instantiate()
+    self:addChild(lblLive)
+    self.controls.lblLive = lblLive
+
+    self:refreshProfileBar()
+
     self:doLayout()
+end
+
+-- ===========================================================================
+-- PROFILES
+--
+-- self.editProfile is the layer edits are written to: nil means the base
+-- customisation layer, shown in the combo as "default". It is independent of
+-- Core.getActiveProfile(), which is what players are actually experiencing.
+-- ===========================================================================
+local DEFAULT_LAYER = "default"
+
+function UI:editingProfileLabel()
+    return self.editProfile or DEFAULT_LAYER
+end
+
+-- One-button dialog. _tipText is cleared every render frame (it is the property
+-- hover tooltip), so it cannot carry an error the user needs to read.
+function UI:notify(msg)
+    local w = math.max(sc(300), getTextManager():MeasureStringX(UIFont.Small, msg) + sc(40))
+    local h = sc(160)
+    local modal = ISModalDialog:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2, w,
+        h, msg, false, self, nil)
+    modal:initialise()
+    modal:addToUIManager()
+end
+
+function UI:refreshProfileBar()
+    local cmb = self.controls.cmbProfile
+    if not cmb then
+        return
+    end
+
+    -- clear() also replaces .tooltip with an empty per-option map, which would
+    -- drop the combo's own tooltip string, so put that back afterwards.
+    cmb:clear()
+    cmb.tooltip = getText("IGUI_PhunZones_Profile_Editing_tooltip")
+    cmb.selected = 1
+    cmb:addOptionWithData(DEFAULT_LAYER, false)
+
+    local selectedIdx = 1
+    for i, name in ipairs(Core.getProfileNames()) do
+        cmb:addOptionWithData(name, name)
+        if name == self.editProfile then
+            selectedIdx = i + 1
+        end
+    end
+
+    -- The profile being edited may have been deleted by another admin.
+    if self.editProfile and selectedIdx == 1 then
+        self.editProfile = nil
+    end
+    cmb.selected = selectedIdx
+
+    local active = Core.getActiveProfile()
+    self.controls.lblLive.name = getText("IGUI_PhunZones_Profile_Live") .. " " .. (active or DEFAULT_LAYER)
+
+    -- Activate is pointless when what you are editing is already live.
+    local wouldActivate = self.editProfile or ""
+    self.controls.btnActivate.enable = ((active or "") ~= wouldActivate)
+    self.controls.btnDelProfile.enable = (self.editProfile ~= nil)
+
+    -- Adding and deleting zones are structural edits to the base config; a
+    -- profile can only override fields on zones that already exist. Rather
+    -- than silently writing them to the wrong layer, they are disabled here.
+    local base = (self.editProfile == nil)
+    self.controls.btnNewRegion.enable = base
+    self.controls.btnNewRegion.tooltip = base and getText("IGUI_PhunZones_AddZoneTooltip") or
+                                             getText("IGUI_PhunZones_Profile_BaseOnly")
+    if self.controls.btnDeleteZone.enable and not base then
+        self.controls.btnDeleteZone.enable = false
+    end
+    self.controls.btnDeleteZone.tooltip = base and getText("IGUI_PhunZones_DelZoneTooltip") or
+                                              getText("IGUI_PhunZones_Profile_BaseOnly")
+
+    -- The live label's width feeds the bar's centring, so re-lay it out.
+    self:doLayout()
+end
+
+-- Combo callback. Switching layers mid-edit would write pending changes into
+-- whichever layer happened to be selected at save time, so the switch is gated
+-- on those being resolved first.
+function UI:onProfileComboChanged(data)
+    local target = (type(data) == "string") and data or nil
+    if target == self.editProfile then
+        return
+    end
+
+    if self:hasPendingChanges() then
+        self._pendingProfileSwitch = target
+        local modal = ISModalDialog:new(0, 0, sc(320), sc(150), getText("IGUI_PhunZones_Profile_SwitchUnsaved"), true,
+            self, UI.onProfileSwitchModalResult)
+        modal:initialise()
+        modal:addToUIManager()
+        -- Put the combo back until the answer comes in, so what it shows and
+        -- what is being edited never disagree.
+        self:refreshProfileBar()
+        return
+    end
+
+    self:setEditProfile(target)
+end
+
+function UI:onProfileSwitchModalResult(button)
+    local target = self._pendingProfileSwitch
+    self._pendingProfileSwitch = nil
+    if button.internal == "YES" then
+        -- Flush against the layer they were made on, before switching.
+        self:flushPendingChanges()
+    else
+        self._pendingChanges = {}
+        self:updateSaveDiscardButtons()
+    end
+    self:setEditProfile(target)
+end
+
+function UI:setEditProfile(name)
+    self.editProfile = name
+    self._pendingChanges = {}
+    self:updateSaveDiscardButtons()
+    local currentKey = self.selectedData and self.selectedData.key
+    self:refreshData(currentKey and {
+        key = currentKey
+    } or nil)
+end
+
+function UI:activateSelectedProfile()
+    local target = self.editProfile or DEFAULT_LAYER
+    local ok, err = Core.requestSetProfile(target)
+    if not ok then
+        self:notify(tostring(err))
+        return
+    end
+    -- On a client the change comes back via ModData; locally it has already
+    -- applied. Either way the bar is repainted from Core on the next refresh.
+    self:refreshProfileBar()
+end
+
+function UI:promptNewProfile()
+    local sw = getCore():getScreenWidth()
+    local sh = getCore():getScreenHeight()
+    local w, h = sc(320), sc(120)
+    local entry
+    local modal = ISModalDialog:new(sw / 2 - w / 2, sh / 2 - h / 2, w, h, getText("IGUI_PhunZones_Profile_NewPrompt"),
+        true, self, function(owner, button)
+            if button.internal ~= "YES" then
+                return
+            end
+            local name = entry and entry:getText() or ""
+            name = name:match("^%s*(.-)%s*$")
+            if name == "" then
+                return
+            end
+            local ok, err = Core.requestCreateProfile(name)
+            if not ok then
+                owner:notify(tostring(err))
+                return
+            end
+            -- Optimistic: switch to editing the new profile straight away. If
+            -- the server refuses, the next transmit drops it from the combo
+            -- and refreshProfileBar falls back to the base layer.
+            owner:setEditProfile(name)
+        end)
+    modal:initialise()
+    entry = ISTextEntryBox:new("", sc(10), sc(60), w - sc(20), FONT_HGT_SMALL + sc(6))
+    entry:initialise()
+    entry:instantiate()
+    modal:addChild(entry)
+    modal:addToUIManager()
+    entry:focus()
+end
+
+function UI:confirmDeleteProfile()
+    local name = self.editProfile
+    if not name then
+        return
+    end
+
+    local msg = string.format(getText("IGUI_PhunZones_Profile_DeleteConfirm"), name)
+    if Core.getActiveProfile() == name then
+        -- ISModalDialog splits on a literal backslash-n, not a real newline:
+        -- CalcSize measures the pieces before the constructor converts them.
+        msg = msg .. "\\n" .. getText("IGUI_PhunZones_Profile_DeleteActive")
+    end
+
+    local w = math.max(sc(320), getTextManager():MeasureStringX(UIFont.Small, msg) + sc(40))
+    local h = sc(200)
+    local modal = ISModalDialog:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2, w,
+        h, msg, true, self, function(owner, button)
+            if button.internal ~= "YES" then
+                return
+            end
+            Core.requestDeleteProfile(name)
+            owner:setEditProfile(nil)
+        end, nil)
+    modal:initialise()
+    modal:addToUIManager()
 end
 
 -- ===========================================================================
@@ -960,6 +1209,51 @@ function UI:doLayout()
         btn:setX(rx);
         btn:setY(th + btnY)
         rx = rx - PAD / 2
+    end
+
+    -- Profile bar — fills the gap between the zone buttons and the right side.
+    -- Hidden entirely when the window is too narrow to hold it, rather than
+    -- letting it overlap the buttons on either side.
+    local pb = {self.controls.lblProfile, self.controls.cmbProfile, self.controls.btnActivate,
+                self.controls.btnNewProfile, self.controls.btnDelProfile, self.controls.lblLive}
+    if pb[1] then
+        local gap = math.floor(PAD / 2)
+        local lblW = getTextManager():MeasureStringX(UIFont.Small, self.controls.lblProfile.name) + gap
+        local liveW = getTextManager():MeasureStringX(UIFont.Small, self.controls.lblLive.name or "") + gap
+        local cmbW = sc(130)
+        local needed = lblW + cmbW + gap + self.controls.btnActivate.width + gap +
+                           self.controls.btnNewProfile.width + gap + self.controls.btnDelProfile.width + gap + liveW
+
+        local available = rx - lx - PAD
+        local show = needed <= available
+        for _, c in ipairs(pb) do
+            c:setVisible(show)
+        end
+
+        if show then
+            local px = lx + math.max(0, math.floor((available - needed) / 2))
+            local cy = th + btnY
+            local lblY = cy + math.floor((BUTTON_HGT - FONT_HGT_SMALL) / 2)
+
+            self.controls.lblProfile:setX(px);
+            self.controls.lblProfile:setY(lblY)
+            px = px + lblW
+
+            self.controls.cmbProfile:setX(px);
+            self.controls.cmbProfile:setY(cy)
+            self.controls.cmbProfile:setWidth(cmbW)
+            self.controls.cmbProfile:setHeight(BUTTON_HGT)
+            px = px + cmbW + gap
+
+            for _, btn in ipairs({self.controls.btnActivate, self.controls.btnNewProfile, self.controls.btnDelProfile}) do
+                btn:setX(px);
+                btn:setY(cy)
+                px = px + btn.width + gap
+            end
+
+            self.controls.lblLive:setX(px);
+            self.controls.lblLive:setY(lblY)
+        end
     end
 end
 
@@ -1352,7 +1646,9 @@ function UI:selectZone(key)
 
     local notDefault = key ~= "_default"
 
-    self.controls.btnDeleteZone.enable = notDefault
+    -- Deleting a zone is a base-layer edit (it tombstones the zone in the
+    -- customisation file), so it stays off while a profile is being edited.
+    self.controls.btnDeleteZone.enable = notDefault and (self.editProfile == nil)
     self.controls.btnAddRect.enable = notDefault
 
     self.selectedPoint = nil
@@ -1409,6 +1705,16 @@ function UI:refreshProperties()
 
     local filter = self.propFilter
     local pending = self._pendingChanges[key] or {}
+
+    -- layerRaw is what the layer currently being edited sets on this zone. For
+    -- the base layer that is the zone's raw entry; for a profile it is only the
+    -- profile's own sparse entry, so the override markers answer "does the thing
+    -- I am editing set this?" rather than "does anything set this?".
+    local layerRaw = raw
+    if self.editProfile then
+        layerRaw = ((self.data and self.data.profileLayer) or {})[key] or {}
+    end
+
     local seen = {}
     local groups = {}
     local groupFields = {}
@@ -1475,7 +1781,10 @@ function UI:refreshProperties()
             if val == nil and raw[k] ~= nil then
                 val = raw[k]
             end
-            local isOver = raw[k] ~= nil or pending[k] ~= nil
+            local isOver = layerRaw[k] ~= nil or pending[k] ~= nil
+            -- Set by a layer below the one being edited: shown, but clearly not
+            -- this profile's doing.
+            local fromBase = (not isOver) and raw[k] ~= nil
             local displayVal = nil
             if fdef.type == "combo" then
                 local opts = fdef.options or (fdef.getOptions and fdef.getOptions()) or {}
@@ -1492,6 +1801,7 @@ function UI:refreshProperties()
                 value = val,
                 displayVal = displayVal,
                 override = isOver,
+                baseSet = fromBase,
                 origin = fdef.mod or nil,
                 fdef = fdef
             })
@@ -1508,7 +1818,8 @@ function UI:refreshProperties()
                     key = k,
                     label = k,
                     value = displayVal,
-                    override = true,
+                    override = layerRaw[k] ~= nil,
+                    baseSet = layerRaw[k] == nil,
                     fdef = nil,
                     extra = true
                 })
@@ -1543,7 +1854,8 @@ function UI:refreshProperties()
         key = "disabled",
         label = "Disabled",
         value = raw.disabled == true,
-        override = raw.disabled ~= nil,
+        override = layerRaw.disabled ~= nil,
+        baseSet = layerRaw.disabled == nil and raw.disabled ~= nil,
         special = true,
         danger = raw.disabled == true
     })
@@ -1605,6 +1917,11 @@ function UI:renderProps(ox, oy, w, h)
                     if row.override and not row.special then
                         local cr = row.danger and C.danger or C.accent
                         self:drawRect(ox, ay + sc(1), sc(2), ROW_HGT - sc(2), cr.a, cr.r, cr.g, cr.b)
+                    elseif row.baseSet and not row.special then
+                        -- Set by a layer under the profile being edited. A muted
+                        -- bar so it reads as "comes from below", not "mine".
+                        self:drawRect(ox, ay + sc(1), sc(2), ROW_HGT - sc(2), 0.7, C.textInherit.r, C.textInherit.g,
+                            C.textInherit.b)
                     end
 
                     local badgeW = 0
@@ -1618,7 +1935,7 @@ function UI:renderProps(ox, oy, w, h)
                     local lr, lg, lb, la
                     if row.special then
                         lr, lg, lb, la = C.textDim.r, C.textDim.g, C.textDim.b, 1.0
-                    elseif row.override then
+                    elseif row.override or row.baseSet then
                         lr, lg, lb, la = C.text.r, C.text.g, C.text.b, 1.0
                     else
                         lr, lg, lb, la = C.textInherit.r, C.textInherit.g, C.textInherit.b, 1.0
@@ -1650,6 +1967,9 @@ function UI:renderProps(ox, oy, w, h)
                         local vr, vg, vb, va
                         if row.override then
                             vr, vg, vb, va = C.accent.r, C.accent.g, C.accent.b, 1.0
+                        elseif row.baseSet then
+                            -- A real value, just not one this profile owns.
+                            vr, vg, vb, va = C.text.r, C.text.g, C.text.b, 1.0
                         else
                             vr, vg, vb, va = C.textDim.r, C.textDim.g, C.textDim.b, 0.9
                         end
@@ -1961,6 +2281,14 @@ function UI:saveProp(fieldKey, newValue)
     sd.raw[fieldKey] = val
     sd.merged[fieldKey] = val
 
+    -- Keep the edited profile's own layer in step too, or the override marker
+    -- would go dark between flushing the change and the server's copy arriving.
+    if self.editProfile and self.data and self.data.profileLayer then
+        local pl = self.data.profileLayer
+        pl[key] = pl[key] or {}
+        pl[key][fieldKey] = val
+    end
+
     if fieldKey == "title" then
         self:buildTree()
     end
@@ -2000,14 +2328,18 @@ function UI:flushPendingChanges()
             end
         end
 
-        -- Pending geometry — write via ModData (same path as the old savePoint)
+        -- Pending geometry — write via ModData (same path as the old savePoint).
+        -- Only for the base layer: a profile's geometry belongs in the profile,
+        -- and it travels in the change payload alone.
         if fields._points then
-            local md = ModData.getOrCreate(Core.const.modifiedModData)
-            if not md[zoneKey] then
-                md[zoneKey] = {}
+            if not self.editProfile then
+                local md = ModData.getOrCreate(Core.const.modifiedModData)
+                if not md[zoneKey] then
+                    md[zoneKey] = {}
+                end
+                md[zoneKey].points = fields._points
             end
-            md[zoneKey].points = fields._points
-            -- Include points in the change payload so Core.saveChanges persists them
+            -- Include points in the change payload so the save path persists them
             zoneChanges.points = fields._points
         end
 
@@ -2030,7 +2362,11 @@ function UI:flushPendingChanges()
         break
     end
     if hasChanges then
-        Core.saveChanges(changes)
+        if self.editProfile then
+            Core.requestProfileChanges(self.editProfile, changes)
+        else
+            Core.saveChanges(changes)
+        end
         local currentKey = self.selectedData and self.selectedData.key
         self:rebuildUI(currentKey and {
             key = currentKey
@@ -2120,9 +2456,11 @@ end
 -- DATA
 -- ===========================================================================
 function UI:refreshData(zone)
-    -- Always re-build self.data from scratch, respecting the current filter state.
-    -- This keeps Core.data untouched.
-    self.data = Core.buildZoneData(self._filterActive or false)
+    -- Always re-build self.data from scratch, respecting the current filter state
+    -- and the layer being edited. This keeps Core.data untouched: the editor can
+    -- show a profile that is not live without changing anything for players.
+    self.data = Core.buildZoneData(self._filterActive or false, self.editProfile or false)
+    self:refreshProfileBar()
     self:rebuildUI(zone)
 end
 

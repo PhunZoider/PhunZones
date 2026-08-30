@@ -10,4 +10,5 @@ CLAUDE.md
 .gitignore
 .html
 deploy.cmd
+run.cmd
 converter

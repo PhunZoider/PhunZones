@@ -11,5 +11,9 @@
   "Sandbox_PhunZones_Debug": "Debug",
   "Sandbox_PhunZones_Debug_tooltip": "Increase verbosity of logging to help diagnose issues. Best to leave off otherwise",
   "Sandbox_PhunZones_EditorRole": "Editor Role",
-  "Sandbox_PhunZones_EditorRole_tooltip": "If set, only players whose role name matches this value (case-insensitive) can open the zone editor. Leave empty to allow all players that have access to admin/debug menu (or always allow in singleplayer)."
+  "Sandbox_PhunZones_EditorRole_tooltip": "If set, only players whose role name matches this value (case-insensitive) can open the zone editor. Leave empty to allow all players that have access to admin/debug menu (or always allow in singleplayer).",
+  "Sandbox_PhunZones_StaffExempt": "Staff ignore zone restrictions",
+  "Sandbox_PhunZones_StaffExempt_tooltip": "When on, staff are not blocked by a zone's No Building, No Placing, No Pickup, No Scrapping, No Destruction, No Safehouse or No Players settings. By itself this covers the Admin role only - tick 'Include Moderator and GM' to widen it. No Fire is never exempted: fire has no owner to check.",
+  "Sandbox_PhunZones_ExemptModGM": "Include Moderator and GM",
+  "Sandbox_PhunZones_ExemptModGM_tooltip": "Extends 'Staff ignore zone restrictions' to the Moderator, GM and Overseer roles as well as Admin. Has no effect unless that option is on."
 }

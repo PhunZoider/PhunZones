@@ -9,7 +9,7 @@ function Core.iniSafehouses()
         ISWorldObjectContextMenu.onTakeSafeHouse = function(worldobjects, square, player)
             local playerObj = getSpecificPlayer(player)
             local md = Core.getLocation(square) or {}
-            if md.nosafehouse == true then
+            if md.nosafehouse == true and not Core.isExempt(playerObj) then
                 playerObj:setHaloNote(getText("IGUI_PhunZones_SayNoSafeHouse"), 255, 255, 0, 300);
                 return false
             end

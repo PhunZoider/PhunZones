@@ -9,6 +9,12 @@ if ISMoveablesAction then
         if not square then
             return false
         end
+        -- Exempt staff skip all three checks below in one go, rather than
+        -- repeating the test on each branch of the chain.
+        if Core.isExempt(self.character) then
+            return oldISMoveablesAction(self, square)
+        end
+
         local zone = Core.getEffectiveZone(self.character)
         if zone and zone.noplacing == true and self.mode == "place" then
             self.character:setHaloNote(getText("IGUI_PhunZones_SayNoPlacing"), 255, 255, 0, 300);

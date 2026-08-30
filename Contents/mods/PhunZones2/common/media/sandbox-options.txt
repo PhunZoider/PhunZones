@@ -53,3 +53,19 @@ option PhunZones.EditorRole
     translation = PhunZones_EditorRole,
 }
 
+option PhunZones.StaffExempt
+{
+    type = boolean,
+    default = false,
+    page = PhunZones,
+    translation = PhunZones_StaffExempt,
+}
+
+option PhunZones.ExemptModGM
+{
+    type = boolean,
+    default = false,
+    page = PhunZones,
+    translation = PhunZones_ExemptModGM,
+}
+

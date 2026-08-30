@@ -459,12 +459,14 @@ function Core.loadAdminConfig()
                       " (normal if no zones have been customised)")
         end
         ModData.add(Core.const.modifiedModData, {})
+        Core.storeProfiles({})
         return {}
     end
 
     if d.data == nil then
         print("PhunZones: unexpected JSON format in ./lua/" .. Core.const.modifiedLuaFile .. ", skipping")
         ModData.add(Core.const.modifiedModData, {})
+        Core.storeProfiles({})
         return {}
     end
 
@@ -485,7 +487,19 @@ function Core.loadAdminConfig()
     -- Store in ModData so it survives and is accessible for transmission
     ModData.add(Core.const.modifiedModData, data)
 
+    -- v3 adds `profiles` alongside `data`. Absent in v1/v2 files, which load
+    -- unchanged and simply have no profiles defined.
+    local profiles = Core.storeProfiles(d.profiles)
+
     print("PhunZones: loaded customisations from ./lua/" .. Core.const.modifiedLuaFile)
+    local count = 0
+    for _ in pairs(profiles) do
+        count = count + 1
+    end
+    if count > 0 then
+        print("PhunZones: " .. count .. " profile(s) defined; active: " ..
+                  (Core.getActiveProfile() or "none"))
+    end
     return data
 end
 
@@ -526,16 +540,16 @@ function Core.saveChanges(changes)
         })
     else
         -- Persist full custom layer to disk
-        Core.tools.saveTable(Core.const.modifiedLuaFile, {
-            version = 2,
-            data = custom
-        })
-        -- Broadcast the batch to all clients in one command
-        sendServerCommand(Core.name, Core.commands.zoneUpdated, {
-            changes = changes
-        })
+        Core.saveAdminConfig(custom)
+        -- Sync clients. ModData.transmit is the only path that actually carries
+        -- the data: clients rebuild from the full custom layer when it lands in
+        -- OnReceiveGlobalModData. Sending zoneUpdated alongside it would race a
+        -- second rebuild against the transmit, and a rebuild that ran on the
+        -- pre-transmit data could evict a player from a zone that was just
+        -- reopened. One path only.
+        ModData.transmit(Core.const.modifiedModData)
         -- Reprocess locally once for the entire batch
-        Core.updateZoneData(true)
+        Core.updateZoneData()
     end
 end
 
@@ -563,14 +577,346 @@ function Core.addDeletion(key)
     custom[key].disabled = true
 
     if not isClient() then
-        Core.tools.saveTable(Core.const.modifiedLuaFile, {
-            version = 2,
-            data = custom
-        })
+        Core.saveAdminConfig(custom)
     end
 
     ModData.add(Core.const.modifiedModData, custom)
     Core.updateZoneData()
+end
+
+-- ---------------------------------------------------------------------------
+-- PROFILES
+--
+-- A profile is a named, sparse overlay applied on top of base+custom. It stores
+-- only the fields it changes, so zones added to the shipped data and later edits
+-- to the admin config both stay visible while a profile is active.
+--
+-- Definitions are authored in the `profiles` block of PhunZones.json. Which
+-- profile is live is runtime state and lives in global ModData instead, so a
+-- scheduled swap never rewrites the admin's file and the choice survives a
+-- restart. Reverting is just activating nothing: the overlay is dropped and
+-- every value recomputes from base+custom, so no prior value is ever captured.
+-- ---------------------------------------------------------------------------
+
+-- True on a dedicated server, a co-op host, or in singleplayer: anywhere that
+-- is allowed to decide which profile is live. Pure clients are told.
+local function isProfileAuthority()
+    return not isClient() or isCoopHost()
+end
+
+function Core.getRuntime()
+    local rt
+    if isProfileAuthority() then
+        -- getOrCreate registers the table as a global, which is what makes the
+        -- active profile survive a restart.
+        rt = ModData.getOrCreate(Core.const.runtimeModData)
+    else
+        rt = ModData.get(Core.const.runtimeModData)
+        if type(rt) ~= "table" then
+            rt = {}
+            ModData.add(Core.const.runtimeModData, rt)
+        end
+    end
+    if type(rt.profiles) ~= "table" then
+        rt.profiles = {}
+    end
+    return rt
+end
+
+-- Replaces the authored profile definitions. Server side only; called as part
+-- of reading the admin config.
+function Core.storeProfiles(profiles)
+    local rt = Core.getRuntime()
+    rt.profiles = type(profiles) == "table" and profiles or {}
+
+    -- An active profile renamed or deleted in the file since it was activated
+    -- would otherwise stay active while applying nothing, which looks exactly
+    -- like a broken overlay. Clear it loudly instead.
+    if rt.profile and rt.profile ~= "" and not rt.profiles[rt.profile] then
+        print("PhunZones: active profile '" .. tostring(rt.profile) ..
+                  "' is no longer defined in the config, clearing it")
+        rt.profile = ""
+    end
+
+    ModData.add(Core.const.runtimeModData, rt)
+    return rt.profiles
+end
+
+-- Writes the admin config back to disk, carrying the authored profiles block
+-- through untouched. Every writer must go through this: emitting a bare
+-- { version, data } would silently delete every profile the admin has defined
+-- the next time anyone edited a zone in the UI.
+function Core.saveAdminConfig(data)
+    local out = {
+        version = 3,
+        data = data
+    }
+    local profiles = Core.getRuntime().profiles
+    if not Core.tools.isEmpty(profiles) then
+        out.profiles = profiles
+    end
+    Core.tools.saveTable(Core.const.modifiedLuaFile, out)
+end
+
+-- Writes the current custom layer back out, picking up whatever the profiles
+-- block now holds. Used by the profile mutators, which change the file's
+-- profiles without touching its data.
+function Core.persistAdminConfig()
+    Core.saveAdminConfig(ModData.get(Core.const.modifiedModData) or {})
+end
+
+-- A profile name becomes a JSON object key and a /zoneprofile argument, and
+-- PhunServer2's chat hook splits arguments on whitespace. Keep names to what
+-- survives both.
+function Core.isValidProfileName(name)
+    return type(name) == "string" and name ~= "" and name:match("^[%w_%-]+$") ~= nil
+end
+
+-- Sorted list of defined profile names.
+function Core.getProfileNames()
+    local names = {}
+    for name in pairs(Core.getRuntime().profiles) do
+        table.insert(names, name)
+    end
+    table.sort(names)
+    return names
+end
+
+-- Name of the active profile, or nil when none is active.
+function Core.getActiveProfile()
+    local name = Core.getRuntime().profile
+    if type(name) == "string" and name ~= "" then
+        return name
+    end
+    return nil
+end
+
+-- The active profile's sparse overlay table, or nil when none is active.
+function Core.getActiveProfileData()
+    local name = Core.getActiveProfile()
+    if not name then
+        return nil
+    end
+    return Core.getRuntime().profiles[name]
+end
+
+-- Names that mean "no profile" when typed or scheduled. Case-insensitive.
+local CLEAR_ALIASES = {
+    none = true,
+    default = true
+}
+
+function Core.isProfileClearAlias(name)
+    return type(name) == "string" and CLEAR_ALIASES[name:lower()] == true
+end
+
+-- Activates a profile by name. nil, "", "none" or "default" clears it. Returns
+-- true, or false plus a reason. Server/singleplayer only — clients ask via the
+-- setProfile command.
+function Core.setActiveProfile(name)
+    if not isProfileAuthority() then
+        return false, "setActiveProfile can only run on the server"
+    end
+
+    if name == nil then
+        name = ""
+    end
+    if type(name) ~= "string" then
+        return false, "profile name must be a string"
+    end
+    name = name:match("^%s*(.-)%s*$")
+
+    local rt = Core.getRuntime()
+
+    -- A defined profile always wins over the clearing aliases, so an admin who
+    -- names one of theirs "default" can still reach it. Without this guard the
+    -- alias would make that profile permanently unreachable.
+    if name ~= "" and not rt.profiles[name] and Core.isProfileClearAlias(name) then
+        name = ""
+    end
+
+    if name ~= "" and not rt.profiles[name] then
+        return false, "no such profile '" .. name .. "'"
+    end
+
+    if (rt.profile or "") == name then
+        return true
+    end
+
+    rt.profile = name
+    ModData.add(Core.const.runtimeModData, rt)
+    ModData.transmit(Core.const.runtimeModData)
+
+    print("PhunZones: active profile is now " .. (name ~= "" and ("'" .. name .. "'") or "none"))
+
+    -- Rebuild locally; clients rebuild when the transmitted table lands.
+    Core.updateZoneData()
+    return true
+end
+
+-- Creates an empty profile. Returns true, or false plus a reason.
+function Core.createProfile(name)
+    if not isProfileAuthority() then
+        return false, "profiles can only be changed on the server"
+    end
+    if not Core.isValidProfileName(name) then
+        return false, "profile names may use only letters, numbers, underscore and hyphen"
+    end
+
+    local rt = Core.getRuntime()
+    if rt.profiles[name] then
+        return false, "profile '" .. name .. "' already exists"
+    end
+
+    rt.profiles[name] = {}
+    ModData.add(Core.const.runtimeModData, rt)
+    Core.persistAdminConfig()
+    ModData.transmit(Core.const.runtimeModData)
+    return true
+end
+
+-- Deletes a profile. If it was the live one, that is cleared and the zone data
+-- rebuilt, since the overlay it was applying has just gone away.
+function Core.deleteProfile(name)
+    if not isProfileAuthority() then
+        return false, "profiles can only be changed on the server"
+    end
+
+    local rt = Core.getRuntime()
+    if type(name) ~= "string" or not rt.profiles[name] then
+        return false, "no such profile '" .. tostring(name) .. "'"
+    end
+
+    local wasActive = (rt.profile == name)
+    rt.profiles[name] = nil
+    if wasActive then
+        rt.profile = ""
+    end
+
+    ModData.add(Core.const.runtimeModData, rt)
+    Core.persistAdminConfig()
+    ModData.transmit(Core.const.runtimeModData)
+
+    if wasActive then
+        Core.updateZoneData()
+    end
+    return true
+end
+
+-- Merges a change payload into rt.profiles[name], creating it if absent.
+-- Shared by the authoritative save and the client's optimistic local copy.
+function Core.applyProfileChanges(rt, name, changes)
+    if not rt.profiles[name] then
+        rt.profiles[name] = {}
+    end
+    local profile = rt.profiles[name]
+    for zoneKey, fields in pairs(changes or {}) do
+        profile[zoneKey] = profile[zoneKey] or {}
+        for field, val in pairs(fields) do
+            profile[zoneKey][field] = val
+        end
+    end
+    return profile
+end
+
+-- Merges field changes into a profile, keyed by zone, creating the profile if
+-- it does not exist. Same shape of payload as Core.saveChanges.
+function Core.saveProfileChanges(name, changes)
+    if not isProfileAuthority() then
+        return false, "profiles can only be changed on the server"
+    end
+    if not Core.isValidProfileName(name) then
+        return false, "invalid profile name '" .. tostring(name) .. "'"
+    end
+    if type(changes) ~= "table" or Core.tools.isEmpty(changes) then
+        return true
+    end
+
+    local rt = Core.getRuntime()
+    Core.applyProfileChanges(rt, name, changes)
+    ModData.add(Core.const.runtimeModData, rt)
+    Core.persistAdminConfig()
+    ModData.transmit(Core.const.runtimeModData)
+
+    -- Editing a profile that is not live must not change what players are
+    -- currently experiencing, so only rebuild when this one is the active
+    -- overlay. Editors pick the new definition up from the transmit either way.
+    if Core.getActiveProfile() == name then
+        Core.updateZoneData()
+    end
+    return true
+end
+
+-- ---------------------------------------------------------------------------
+-- Client-safe entry points. On a pure client these ask the server; everywhere
+-- else they apply directly. Callers (the editor, the chat command) use these so
+-- they never have to branch on where they are running.
+-- The server re-checks permissions, so a client request is a request, not a
+-- decision. Returning true here means "sent", not "applied".
+-- ---------------------------------------------------------------------------
+local function isPureClient()
+    return isClient() and not isCoopHost()
+end
+
+-- The client applies the change to its own copy before sending, the way
+-- saveChanges already does for the custom layer. Without that, an editor that
+-- creates a profile and switches to it finds nothing there until the server
+-- replies. The server's transmit is still authoritative and overwrites this; if
+-- the request is refused, the local copy is corrected when that lands.
+function Core.requestProfileChanges(name, changes)
+    if isPureClient() then
+        local rt = Core.getRuntime()
+        Core.applyProfileChanges(rt, name, changes)
+        ModData.add(Core.const.runtimeModData, rt)
+        sendClientCommand(getPlayer(), Core.name, Core.commands.modifyProfile, {
+            profile = name,
+            changes = changes
+        })
+        return true
+    end
+    return Core.saveProfileChanges(name, changes)
+end
+
+function Core.requestCreateProfile(name)
+    if not Core.isValidProfileName(name) then
+        return false, "profile names may use only letters, numbers, underscore and hyphen"
+    end
+    if Core.getRuntime().profiles[name] then
+        return false, "profile '" .. name .. "' already exists"
+    end
+    if isPureClient() then
+        local rt = Core.getRuntime()
+        rt.profiles[name] = rt.profiles[name] or {}
+        ModData.add(Core.const.runtimeModData, rt)
+        sendClientCommand(getPlayer(), Core.name, Core.commands.createProfile, {
+            profile = name
+        })
+        return true
+    end
+    return Core.createProfile(name)
+end
+
+function Core.requestDeleteProfile(name)
+    if isPureClient() then
+        local rt = Core.getRuntime()
+        rt.profiles[name] = nil
+        ModData.add(Core.const.runtimeModData, rt)
+        sendClientCommand(getPlayer(), Core.name, Core.commands.removeProfile, {
+            profile = name
+        })
+        return true
+    end
+    return Core.deleteProfile(name)
+end
+
+function Core.requestSetProfile(name)
+    if isPureClient() then
+        sendClientCommand(getPlayer(), Core.name, Core.commands.setProfile, {
+            profile = name
+        })
+        return true
+    end
+    return Core.setActiveProfile(name)
 end
 
 -- ---------------------------------------------------------------------------
@@ -579,8 +925,13 @@ end
 -- Does not store globally or trigger events.
 -- filter: when false, skips mod filtering (useful for UI editor which
 -- needs to see all zones including those excluded by current modset)
+-- profileOverride: which profile to overlay.
+--   nil    whatever is currently active — the live data
+--   false  none, i.e. base+custom only
+--   string that profile, whether or not it is active, so the editor can show
+--          and mark up a profile it is editing without making it live
 -- ---------------------------------------------------------------------------
-function Core.buildZoneData(filter)
+function Core.buildZoneData(filter, profileOverride)
 
     local custom = Core.loadAdminConfig()
     local flatBase = Core.normaliseFormat(allLocations, true)
@@ -588,6 +939,20 @@ function Core.buildZoneData(filter)
     -- "keep whatever the base layer says", not "override parent to _default".
     local flatCustom = Core.normaliseFormat(custom, false)
     local merged = Core.mergeLayers(flatBase, flatCustom)
+
+    local profileName
+    if profileOverride == nil then
+        profileName = Core.getActiveProfile()
+    elseif type(profileOverride) == "string" and profileOverride ~= "" then
+        profileName = profileOverride
+    end
+
+    -- The profile overlays base+custom with the same sparse-merge semantics as
+    -- the custom layer, so it only changes the fields it actually names.
+    local profile = profileName and Core.getRuntime().profiles[profileName] or nil
+    if profile then
+        merged = Core.mergeLayers(merged, Core.normaliseFormat(profile, false))
+    end
 
     if filter then
         merged = Core.applyModFilter(merged)
@@ -600,7 +965,12 @@ function Core.buildZoneData(filter)
     return {
         cells = cells,
         zones = ordered,
-        lookup = lookup
+        lookup = lookup,
+        -- Which profile shaped this build, and its raw sparse layer, so an
+        -- editor can tell a profile's own overrides apart from the ones
+        -- underneath it.
+        profile = profileName,
+        profileLayer = profile
     }
 end
 

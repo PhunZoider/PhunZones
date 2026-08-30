@@ -9,7 +9,7 @@ ISDestroyStuffAction["isValid"] = function(self)
         local p = self.character
         local md = Core.getEffectiveZone(p)
 
-        if md.nodestruction == true then
+        if md.nodestruction == true and not Core.isExempt(p) then
             p:setHaloNote(getText("IGUI_PhunZones_SayNoDestruction"), 255, 255, 0, 300);
             return false
         end
@@ -26,7 +26,7 @@ if ISDestroyCursor then
             return false
         end
         local noDestroy = Core.getLocation(square).nodestruction == true
-        if noDestroy then
+        if noDestroy and not Core.isExempt(self.character) then
             self.character:setHaloNote(getText("IGUI_PhunZones_SayNoDestruction"), 255, 255, 0, 300);
             return false
         end

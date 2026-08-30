@@ -235,7 +235,11 @@ Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
     zedCheckCooldown = {} -- zone data changed; force fresh zone checks
     sentForRemoval = {}
     pendingRemove = {}
-    Core:updatePlayers()
+    -- force: the zone data itself changed, so a player who has not moved may
+    -- now be standing in a zone that just became restricted. Without forcing,
+    -- updatePlayerZoneData short-circuits on an unchanged physical zone and
+    -- nobody is evicted until they next cross a boundary.
+    Core:updatePlayers(true)
     local players = Core.tools.onlinePlayers()
     for i = 0, players:size() - 1 do
         local p = players:get(i)
@@ -286,6 +290,15 @@ Events.OnReceiveGlobalModData.Add(function(tableName, tableData)
         end
         local ted = ModData.get(Core.const.modifiedModData) or {}
         Core.debug("[received modifiedModData]", ted)
+        Core.updateZoneData()
+    elseif tableName == Core.const.runtimeModData then
+        -- Profile definitions plus which one is active. Same B42 caveat as above.
+        if type(tableData) == "table" then
+            ModData.add(Core.const.runtimeModData, tableData)
+        end
+        Core.debug("[received runtimeModData]", ModData.get(Core.const.runtimeModData) or {})
+        -- The rebuild re-runs the merge with the new overlay, and OnDataBuilt
+        -- forces re-enforcement so anyone standing in a newly closed zone moves.
         Core.updateZoneData()
     end
 end)

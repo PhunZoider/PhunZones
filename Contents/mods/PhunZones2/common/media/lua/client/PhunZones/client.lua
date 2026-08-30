@@ -4,17 +4,19 @@ end
 
 local Core = PhunZones
 
-function Core:updatePlayers()
+-- force: re-evaluate even when the player's physical zone has not changed.
+-- Needed whenever the zone data itself changed underneath a stationary player.
+function Core:updatePlayers(force)
 
     local players = self.tools.onlinePlayers(not self.settings.ProcessOnClient)
     for i = 0, players:size() - 1, 1 do
         local p = players:get(i)
-        self:updatePlayer(p)
+        self:updatePlayer(p, force)
     end
 end
 
-function Core:updatePlayer(playerObj)
-    self.updateModData(playerObj, true)
+function Core:updatePlayer(playerObj, force)
+    self.updateModData(playerObj, true, force)
 end
 
 function Core:updatePlayerUI(playerObj, zone)

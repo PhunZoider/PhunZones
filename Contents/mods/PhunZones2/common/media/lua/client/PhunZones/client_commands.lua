@@ -8,6 +8,9 @@ local Commands = {}
 
 Commands[Core.commands.playerSetup] = function(data)
     ModData.add(Core.const.modifiedModData, data.data or {})
+    if type(data.runtime) == "table" then
+        ModData.add(Core.const.runtimeModData, data.runtime)
+    end
     Core.updateZoneData()
 
     local players = Core.tools.onlinePlayers()
@@ -23,7 +26,8 @@ Commands[Core.commands.zoneUpdated] = function(data)
     -- so only update ModData when the server actually provides a full dataset.
     -- OnReceiveGlobalModData (triggered by ModData.transmit on the server) handles
     -- the authoritative full-data sync for all clients.
-    if data.data and next(data.data) then
+    -- next() is not exposed to mod code in B42.20.4; isEmpty uses pairs instead.
+    if data.data and not Core.tools.isEmpty(data.data) then
         ModData.add(Core.const.modifiedModData, data.data)
     end
     Core.updateZoneData()

@@ -1,8 +1,6 @@
 version=1
 id=3676252660
 title=PhunZones 2
-description=Welcome to [b]PhunZones 2[/b]. A complete rewrite of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3388867450]PhunZones[/url], rebuilt specifically for Build 42+.
-description=
 description=Create unlimited custom zones across Kentucky, each with unique rules and behaviors to shape your world exactly how you want it.
 description=
 description=[h2]Features[/h2]
@@ -19,43 +17,13 @@ description=[*]Block player entry to specific zones
 description=[*]Zone detection works inside [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299]Project RV Interior[/url]
 description=[/list]
 description=
-description=[h2]Built for Extendability[/h2]
-description=Other mods can register their own properties directly into the zone editor. Most Phun mods already integrate seamlessly.
-description=
-description=[h2]What’s New in PhunZones 2[/h2]
-description=[list]
-description=[*]No external dependencies (PhunLib no longer required)
-description=[*]Build 42+ focused (B41 support retired)
-description=[*]Major performance improvements
-description=[*]Completely redesigned zone editor UI
-description=[*]True inheritance system — define base zones (Easy / Medium / Hard, etc.) and let other zones inherit their settings. Change it once, update everywhere.
-description=[/list]
-description=
-description=[h2]B42.20.4: Migrating customisations[/h2]
-description=
-description=Build 42.20.4 removed the functions used to read and write configuration files. Any existing PhunZones.txt customisations you have will need to be re-created or converted to JSON.
-description=
-description=[b]Single-player[/b]
-description=1. Find your customisations at %UserProfile%/zomboid/Lua/PhunZones.txt.
-description=2. Open the [url=https://phunzoider.github.io/PhunZones/converter/]Phun configuration converter[/url].
-description=3. Select or drag PhunZones.txt into the converter and download the resulting PhunZones.json file.
-description=4. Place PhunZones.json in the same %UserProfile%/zomboid/Lua folder.
-description=
-description=[b]Multiplayer[/b]
-description=Find your customisations at <game dir>Lua/PhunZones.txt. Note that Clients do not have the server's configuration file so they do not need to do anything. Convert it with the same tool and place PhunZones.json beside the old file.
-description=
-description=The converter runs locally in your browser; configuration files are not uploaded.
-description=
-description=If a v1 customisation is migrated by the mod, its JSON backup is written to <game dir>/lua/PhunZones_Old.json.
-description=[hr]
-description=
 description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.
 description=
 description=[img]https://i.ibb.co/DZ7Vffn/Thumbs-Up.png[/img]
 description=
 description=[h2]More Phun Mods[/h2]
 description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3689006725][img]https://i.ibb.co/4ZLgMZ4m/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252110][img]https://i.ibb.co/d4y0BhnF/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676251425][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] 
-description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3623897097][img]https://i.ibb.co/mCv5kDgy/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676250472][img]https://i.ibb.co/svW9sVvK/preview.png[/img][/url] 
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3792193021][img]https://i.ibb.co/vCBcKtp8/preview.png[/img][/url][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676250472][img]https://i.ibb.co/svW9sVvK/preview.png[/img][/url] 
 description=
 description=Coded with love for the awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 description=[url=https://github.com/PhunZoider/PhunZones]Repository, documentation, and extension guides[/url]
