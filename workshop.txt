@@ -7,18 +7,18 @@ description=[h2]Features[/h2]
 description=[list]
 description=[*]Display custom location names when entering zones
 description=[*]Create zombie-free areas
-description=[*]Block Bandits (requires Bandits 2)
+description=[*]Block Bandits ([url=https://steamcommunity.com/sharedfiles/filedetails/?id=3268487204]requires Bandits[/url])
 description=[*]Prevent safehouse creation
 description=[*]Restrict picking up or placing objects
 description=[*]Restrict dismantling and crafting
 description=[*]Block construction
 description=[*]Prevent fire spread
 description=[*]Block sledgehammer demolition
-description=[*]Restrict PVP to chosen zones, or make chosen zones safe
+description=[*][url=https://github.com/PhunZoider/PhunZones#pvp-zones]Restrict PVP to chosen zones, or make chosen zones safe[/url]
 description=[*]Block player and vehicle entry to specific zones
 description=[*]Zone detection works inside [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299]Project RV Interior[/url]
-description=[*]Named zone profiles that swap a set of rules on demand, or on a schedule
-description=[*]Optional staff exemptions, so admins can still work inside their own restricted zones
+description=[*][url=https://github.com/PhunZoider/PhunZones#profiles]Named zone profiles that swap a set of rules on demand, or on a schedule[/url]
+description=[*][url=https://github.com/PhunZoider/PhunZones#staff-exemptions]Optional staff exemptions, so admins can still work inside their own restricted zones[/url]
 description=[/list]
 description=
 description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.
