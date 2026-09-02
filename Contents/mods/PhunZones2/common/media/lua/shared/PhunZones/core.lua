@@ -340,6 +340,51 @@ function Core.isExempt(player)
 end
 
 -- ---------------------------------------------------------------------------
+-- Zed / bandit actions
+-- ---------------------------------------------------------------------------
+
+-- Zones authored before the zeds/bandits combos moved from index values to
+-- string values store "1"/"2"/"3". Both formats are read here so a config
+-- saved by an older build keeps working without a migration pass.
+local ZED_ACTION_MIGRATE = {
+    ["1"] = "none",
+    ["2"] = "move",
+    ["3"] = "remove"
+}
+
+-- The action a zone asks for, as one of "none", "move" or "remove".
+-- field is "zeds" or "bandits". Anything unset or unrecognised reads as "none",
+-- so callers only ever have to test the two values that mean something.
+function Core.zedAction(zone, field)
+    if not zone then
+        return "none"
+    end
+    local v = zone[field]
+    if v == nil then
+        return "none"
+    end
+    local action = ZED_ACTION_MIGRATE[tostring(v)] or v
+    if action == "move" or action == "remove" then
+        return action
+    end
+    return "none"
+end
+
+-- The action that applies to a bandit in this zone. A zone that says nothing at
+-- all about bandits has no bandit rule of its own, so a bandit is treated as
+-- the zombie it is and follows the zone's zeds setting. An explicit "none" is a
+-- rule in its own right: it exempts bandits from that setting.
+--
+-- Note this reads the resolved zone, so a bandit value inherited from _default
+-- counts as set. Only a chain that mentions bandits nowhere falls back.
+function Core.banditAction(zone)
+    if zone and zone.bandits ~= nil then
+        return Core.zedAction(zone, "bandits")
+    end
+    return Core.zedAction(zone, "zeds")
+end
+
+-- ---------------------------------------------------------------------------
 -- Initialisation
 -- ---------------------------------------------------------------------------
 

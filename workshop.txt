@@ -13,8 +13,12 @@ description=[*]Restrict picking up or placing objects
 description=[*]Restrict dismantling and crafting
 description=[*]Block construction
 description=[*]Prevent fire spread
-description=[*]Block player entry to specific zones
+description=[*]Block sledgehammer demolition
+description=[*]Restrict PVP to chosen zones, or make chosen zones safe
+description=[*]Block player and vehicle entry to specific zones
 description=[*]Zone detection works inside [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299]Project RV Interior[/url]
+description=[*]Named zone profiles that swap a set of rules on demand, or on a schedule
+description=[*]Optional staff exemptions, so admins can still work inside their own restricted zones
 description=[/list]
 description=
 description=If you run a serious multiplayer server and want precise control over your world’s rules, this is the evolution of PhunZones.

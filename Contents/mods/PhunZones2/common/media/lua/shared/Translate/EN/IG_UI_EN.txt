@@ -39,7 +39,7 @@ IG_UI_EN
     IGUI_PhunZones_NoBandits = "No Bandits",
     IGUI_PhunZones_NoBandits_tooltip = "Do not allow bandits here",
     IGUI_PhunZones_Bandits = "Bandits",
-    IGUI_PhunZones_Bandits_tooltip = "If Bandits2 mod is installed and there are bandits in this zone, do nothing, move them out of the zone or remove them from game",
+    IGUI_PhunZones_Bandits_tooltip = "Requires the Bandits2 mod. Move or Remove also stops bandits spawning in this zone at all. Left unset, bandits follow the Zeds setting; set it to None to let bandits in where zeds are moved or removed",
     IGUI_PhunZones_Zeds = "Zeds",
     IGUI_PhunZones_Zeds_tooltip = "When a zed is in this zone: do nothing, move them out of the zone or remove them from game. Note that removing will include player corpses!",
     IGUI_PhunZones_ZedAction_None = "None",

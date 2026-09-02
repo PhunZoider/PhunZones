@@ -15,15 +15,18 @@ A Project Zomboid mod for changing game behaviours depending on where the player
 - Restrict dismantling and crafting
 - Block construction
 - Prevent fire spread
+- Block sledgehammer demolition
 - Restrict PVP to chosen zones, or make chosen zones safe
-- Block player entry to specific zones
+- Block player and vehicle entry to specific zones
 - Zone detection works inside [Project RV Interior](https://steamcommunity.com/sharedfiles/filedetails/?id=3543229299)
+- Named zone profiles that swap a set of rules on demand, or on a schedule
+- Optional staff exemptions, so admins can still work inside their own restricted zones
 - Designed to be an extensive tool that can be used stand alone and/or by other mods
 - Friendly widget that helps players identify what area they are in (eg Louisville - Mall)
 - Comes pre-configured with a large selection of existng maps, along with tools to modify and/or create more
 - Designed for max performance
 
-[Steam Workshop Page](https://steamcommunity.com/sharedfiles/filedetails/?id=3674596146)
+[Steam Workshop Page](https://steamcommunity.com/sharedfiles/filedetails/?id=3676252660)
 
 ## Editing Zones
 
@@ -36,8 +39,6 @@ The table for zone definitions are designed for maximum flexibility and ease. By
 
 The following would make a zone for westpoint. When a player entered these coordinates, they would be shown a welcome for "West Point"
 
-{% raw %}
-
 ```lua
     WestPoint = { -- unique key for region
         difficulty = 2, -- some property
@@ -46,11 +47,7 @@ The following would make a zone for westpoint. When a player entered these coord
     },
 ```
 
-{% endraw %}
-
 The next example demonstrates inheritence.
-
-{% raw %}
 
 ```lua
     medium = {
@@ -72,8 +69,6 @@ The next example demonstrates inheritence.
 
 ```
 
-{% endraw %}
-
 The above configuration will mean that MarchRidge_Checkpoint get all the properties it doesn't specify from MarchRidge who get all their properties they don't specify from medium which get all their properties they don't specify from \_default. Change mediums minSprinterRisk at runtime and that cascades through MarchRidge to Checkpoint
 
 ## Built in Fields
@@ -86,7 +81,7 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | enabled       | bool               | true    | set to false to disable loading of this zone                                                                                                                                                     | `enabled=false`                  |
 | difficulty    | number             | nil     | An optional number to signify difficulty level to the user                                                                                                                                       | `difficulty=4`                   |
 | zeds          | `Move` \| `Remove` | none    | `Move` teleport zeds away while `Remove` despawns them. The latter is more performant but can remove player corpses                                                                              | `zeds=move`                      |
-| bandits       | `Move` \| `Remove` | none    | Same as zeds option but for bandits created via the Bandits2 mod                                                                                                                                 | `bandits=remove`                 |
+| bandits       | `None` \| `Move` \| `Remove` | zeds | Requires the Bandits2 mod. `Move` and `Remove` act as they do for zeds, and also stop bandits spawning in the zone at all. Left unset, a zone follows its own `zeds` setting; set `None` to let bandits in where zeds are moved or removed. Note this reads the inherited value, so a `bandits` set on an ancestor counts as set | `bandits=remove`                 |
 | noannounce    | bool               | false   | Do not show the title of this location to the player when they first enter                                                                                                                       | `noannounce=true`                |
 | nosafehouse   | bool               | false   | prevent safehouses from being created in this zone                                                                                                                                               | `nosafehouse=true`               |
 | nobuilding    | bool               | false   | prevent construction here                                                                                                                                                                        | `nobuilding=true`                |
@@ -95,13 +90,10 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | noscrap       | bool               | false   | Prevent items from being dissasembled here                                                                                                                                                       | `noscrap=true`                   |
 | nodestruction | bool               | false   | Prevents the sledgehammer from being used here                                                                                                                                                   | `nodestruction=true`             |
 | nofire        | bool               | false   | Prevents fire spread in this zone                                                                                                                                                                | `nofire=true`                    |
-| noplayers     | bool               | false   | Prevents players from entering this zone                                                                                                                                                         | `noplayers=true`                 |
+| noplayers     | bool               | false   | Prevents players from entering this zone. Vehicles are turned back too; one that cannot be relocated is braked in place instead                                                                    | `noplayers=true`                 |
 | pvp           | bool               | unset   | Whether players can hurt each other here. `false` makes a safe zone. Setting `true` anywhere makes the rest of the map safe; see [PVP zones](#pvp-zones)                                                        | `pvp=true`                       |
 | modsRequired  | string             | nil     | semi-colon separated string of one or more modids that need to be active in order to load this zone. Note that B42 requires the \ prefix                                                         | `modsRequired="\phunsprinters2"` |
-
-{% raw %}
 | points | array | none | Array of points. Each point is in the format of `{x, y, x2, y2}` | `points={{100, 100, 200, 200}, {300, 200, 350, 250}}` |
-{% endraw %}
 | inherits | string | \_default | the key of the zone to inherit all unspecified properties | `inherits="_default"` |
 
 Note that the \_default zone is the built in, root that all zones ultimately inherit from

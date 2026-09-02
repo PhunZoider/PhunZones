@@ -984,10 +984,27 @@ function Core.buildZoneData(filter, profileOverride)
     local flat = Core.flattenZoneRects(ordered)
     local cells = Core.buildChunkMap(ordered, flat)
 
+    -- Does any zone at all ask for zed or bandit enforcement? Client-side
+    -- enforcement gates the per-zombie check on this. It used to gate on the
+    -- local player standing in an action zone, which silently skipped every
+    -- zombie whenever the player was somewhere unrestricted -- exactly the case
+    -- where a bandit spawns just over the boundary of the zone the player is
+    -- standing in and is never touched.
+    local banditsActive = getActivatedMods():contains("Bandits2")
+    local hasZedAction = false
+    for _, zone in pairs(lookup) do
+        if Core.zedAction(zone, "zeds") ~= "none" or
+            (banditsActive and Core.banditAction(zone) ~= "none") then
+            hasZedAction = true
+            break
+        end
+    end
+
     return {
         cells = cells,
         zones = ordered,
         lookup = lookup,
+        hasZedAction = hasZedAction,
         -- Every zone rect in precedence order. Kept alongside the chunk map so
         -- callers that need to reason about overlap agree with getLocation.
         flat = flat,

@@ -8,6 +8,12 @@ local bandits2Active = getActivatedMods():contains("Bandits2")
 
 local playersInZedZone = {}
 local zedZonePlayerCount = 0
+-- True when any zone at all asks for zed/bandit enforcement. This is what gates
+-- the per-zombie check, not whether a player is standing in an action zone: a
+-- zombie's zone and the player's zone are frequently not the same one, and
+-- gating on the player meant a zed sitting in a restricted zone was ignored
+-- whenever every player happened to be somewhere unrestricted.
+local zoneActionsExist = false
 
 -- Per-zombie cooldown. Each zombie self-tests its zone location at most once
 -- every ZED_COOLDOWN seconds. Out-of-zone zombies get the same cooldown so
@@ -20,38 +26,33 @@ local zedCheckCooldown = {} -- [zedId] = nextAllowedTimestamp
 local pendingRemove = {} -- zed IDs queued for removal, flushed each tick
 local sentForRemoval = {} -- [zedId] = true; prevents re-queuing until purge
 
--- Migrate legacy index-based zed/bandit values (stored as "1"/"2"/"3") to
--- the current string values ("none"/"move"/"remove"). Zones saved before the
--- label/value combo change will have numeric strings; new saves will not.
-local ZED_MIGRATE = {
-    ["1"] = "none",
-    ["2"] = "move",
-    ["3"] = "remove"
-}
-local function migrateZedField(v)
-    return ZED_MIGRATE[tostring(v)] or v
+-- The action a zone asks for, as "none"/"move"/"remove". Legacy index values are
+-- migrated by Core.zedAction. Core.banditAction only matters when Bandits2 is
+-- loaded, so a config carried in from a server that ran it does nothing here.
+local function zedActionOf(zone)
+    return Core.zedAction(zone, "zeds")
+end
+
+local function actionFor(zone, isBandit)
+    if isBandit then
+        return Core.banditAction(zone)
+    end
+    return zedActionOf(zone)
 end
 
 local function zoneHasAction(zone)
-    local z = migrateZedField(zone.zeds)
-    if z == "move" or z == "remove" then
+    if zedActionOf(zone) ~= "none" then
         return true
     end
-    if bandits2Active then
-        local b = migrateZedField(zone.bandits)
-        if b == "move" or b == "remove" then
-            return true
-        end
-    end
-    return false
+    return bandits2Active and Core.banditAction(zone) ~= "none"
 end
 
 -- Per-zombie ongoing enforcement. Fires every AI update for each nearby zombie.
--- When no player is in a zed-action zone the entire handler is a single boolean
--- check. Otherwise each zombie pays for Core.getLocation at most once per
--- ZED_COOLDOWN seconds; all other updates are a cheap table-lookup + return.
+-- When no zone anywhere asks for enforcement the entire handler is a single
+-- boolean check. Otherwise each zombie pays for Core.getLocation at most once
+-- per cooldown; all other updates are a cheap table-lookup + return.
 Events.OnZombieUpdate.Add(function(zed)
-    if zedZonePlayerCount == 0 then
+    if not zoneActionsExist then
         return
     end
 
@@ -71,17 +72,16 @@ Events.OnZombieUpdate.Add(function(zed)
         return
     end
 
-    local zedAction = migrateZedField(zedZone.zeds)
-    local banditAction = bandits2Active and migrateZedField(zedZone.bandits) or nil
-    if zedAction ~= "move" and zedAction ~= "remove" and banditAction ~= "move" and banditAction ~= "remove" then
-        -- Zombie is outside an action zone but a player is in one nearby. Use a
-        -- short recheck interval so a chasing zombie is caught quickly on entry.
-        zedCheckCooldown[id] = now + ZED_RECHECK
+    if not zoneHasAction(zedZone) then
+        -- Zombie is outside an action zone. Recheck quickly while a player is
+        -- in one nearby, so a chasing zombie is caught as it crosses in;
+        -- otherwise back off, since nothing is watching that boundary.
+        zedCheckCooldown[id] = now + (zedZonePlayerCount > 0 and ZED_RECHECK or ZED_COOLDOWN)
         return
     end
 
     local isBandit = bandits2Active and zed:getModData().brain ~= nil
-    local action = isBandit and banditAction or zedAction
+    local action = actionFor(zedZone, isBandit)
 
     if action == "move" then
         local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zedZone.key)
@@ -118,9 +118,7 @@ local function sweepZoneZeds(playerObj, zone)
     if zone.key == "_default" then
         return
     end
-    local zedAction = migrateZedField(zone.zeds)
-    local banditAction = bandits2Active and migrateZedField(zone.bandits) or nil
-    if zedAction ~= "move" and zedAction ~= "remove" and banditAction ~= "move" and banditAction ~= "remove" then
+    if not zoneHasAction(zone) then
         return
     end
 
@@ -134,7 +132,7 @@ local function sweepZoneZeds(playerObj, zone)
             local zedZone = Core.getLocation(zed:getX(), zed:getY())
             if zedZone and zedZone.key == zone.key then
                 local isBandit = bandits2Active and zed:getModData().brain ~= nil
-                local action = isBandit and banditAction or zedAction
+                local action = actionFor(zone, isBandit)
                 local id = Core.getZId(zed)
                 if action == "move" then
                     local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zone.key)
@@ -230,6 +228,10 @@ Events[Core.events.OnPhunZoneReady].Add(function()
 end)
 
 Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
+    -- Recomputed per build: an admin turning the last action off should cost
+    -- nothing per zombie afterwards, and turning one on must take effect
+    -- without waiting for anyone to walk into it.
+    zoneActionsExist = (Core.data and Core.data.hasZedAction) == true
     playersInZedZone = {}
     zedZonePlayerCount = 0
     zedCheckCooldown = {} -- zone data changed; force fresh zone checks
