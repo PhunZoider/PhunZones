@@ -90,7 +90,7 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | noscrap       | bool               | false   | Prevent items from being dissasembled here                                                                                                                                                       | `noscrap=true`                   |
 | nodestruction | bool               | false   | Prevents the sledgehammer from being used here                                                                                                                                                   | `nodestruction=true`             |
 | nofire        | bool               | false   | Prevents fire spread in this zone                                                                                                                                                                | `nofire=true`                    |
-| noplayers     | bool               | false   | Prevents players from entering this zone. Vehicles are turned back too; one that cannot be relocated is braked in place instead                                                                    | `noplayers=true`                 |
+| noplayers     | bool               | false   | Prevents players from entering this zone. Vehicles are turned back too; one that cannot be relocated is braked in place instead. A player the engine will not move (see [Being turned back](#being-turned-back)) is warned and left where they are                                                                    | `noplayers=true`                 |
 | pvp           | bool               | unset   | Whether players can hurt each other here. `false` makes a safe zone. Setting `true` anywhere makes the rest of the map safe; see [PVP zones](#pvp-zones)                                                        | `pvp=true`                       |
 | modsRequired  | string             | nil     | semi-colon separated string of one or more modids that need to be active in order to load this zone. Note that B42 requires the \ prefix                                                         | `modsRequired="\phunsprinters2"` |
 | points | array | none | Array of points. Each point is in the format of `{x, y, x2, y2}` | `points={{100, 100, 200, 200}, {300, 200, 350, 250}}` |
@@ -125,6 +125,38 @@ who followed them in a free burn. A `nofire` zone applies to everyone.
 Safe zones are not exempted either, for a different reason: the engine decides them
 from the tile the hit came from and the tile it landed on, never from who
 threw it. There is no player in that check to let through.
+
+## Being turned back
+
+Somebody who walks, drives or is teleported into a `noplayers` zone is put back
+where they came from. That sounds simpler than it is, because the ground they
+are being sent to is not necessarily loaded at the moment we ask for the move.
+
+The engine restores anyone standing on a square that does not exist, so a
+single teleport can look like it worked and then undo itself a frame later.
+This matters most for an admin teleporting in from the other side of the map:
+the destination chunks are still streaming in and the ones they came from are
+being dropped, and asking for a long move right then is asking for one the
+engine cannot service.
+
+So the move is made with the vanilla teleport and then re-asserted every frame
+until the destination square actually exists, which is also what keeps the
+chunk map centred there and makes it stream in. While that is in flight nothing
+else judges where the player is standing, so a second move is never stacked on
+an unfinished one.
+
+Two things are given up on rather than retried forever:
+
+- A destination that has not loaded after about three seconds. Logged as
+  `port: gave up moving <player> to <x>,<y>,<z>`.
+- A player still in the zone after five consecutive attempts to move them out.
+  They are warned and left where they are, and the zone goes unenforced for
+  that one player until they move somewhere else. Logged as
+  `enforceZoneAccess: could not move <player> out of <zone>`.
+
+Both lines are printed whether or not Debug is on, because both mean a zone is
+not doing what its author asked. Neither should happen in ordinary play; if you
+see one, the log line has the coordinates involved.
 
 ## PVP zones
 

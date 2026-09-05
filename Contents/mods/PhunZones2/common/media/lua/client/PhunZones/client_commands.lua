@@ -53,8 +53,23 @@ Commands[Core.commands.updateEffectiveZone] = function(data)
     end
 end
 
+-- Sent by the server when a player standing in a noplayers zone has to be
+-- moved. The move is made here rather than there because only this side has
+-- the cell to wait on while the destination chunk streams in.
 Commands[Core.commands.playerTeleport] = function(data)
-    Core.portPlayer(Core.tools.getPlayerByUsername(data.username), data.x, data.y, data.z)
+    if not data then
+        return
+    end
+    -- onlinePlayers filters to this client's own players, so the lookup
+    -- resolves to us (or, split-screen, to whichever of us was named) and
+    -- comes back nil for anyone else's. Worth a line either way: the server
+    -- addressed this command to somebody.
+    local player = Core.tools.getPlayerByUsername(data.username)
+    if not player then
+        Core.debugLn("playerTeleport: no local player named " .. tostring(data.username))
+        return
+    end
+    Core.portPlayer(player, data.x, data.y, data.z)
 end
 
 Commands[Core.commands.teleportVehicle] = function(data)

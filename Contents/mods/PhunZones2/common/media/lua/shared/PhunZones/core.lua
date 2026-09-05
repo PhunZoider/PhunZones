@@ -257,6 +257,12 @@ function Core.debug(...)
     end
 end
 
+-- Always printed. For the cases an admin needs to find in the log without
+-- having had Debug on beforehand: something we tried to do and could not.
+function Core.logLn(str)
+    print("[" .. Core.name .. "] " .. str)
+end
+
 -- ---------------------------------------------------------------------------
 -- Cached module-level locals
 -- ---------------------------------------------------------------------------
@@ -584,12 +590,32 @@ local denialStreak = {}
 -- but get snapped back by the physics step.
 local VEHICLE_ATTEMPTS = 3
 
+-- The same idea for a player on foot, which previously had no limit at all:
+-- streak.count was counted but only ever read on the vehicle branch, so a move
+-- that would not stick was retried every tick for as long as they stood there.
+-- A move the engine cannot service does not become serviceable by repetition,
+-- and repeating it is how a client ends up being thrown back and forth while
+-- its chunks are still streaming.
+local PLAYER_ATTEMPTS = 5
+
 -- lastAt is stored.at { zone, x, y, z } from the previous accepted tick —
 -- used as the teleport-back target when access is denied.
 -- If lastAt is itself inside the restricted zone (e.g. login after a
--- restriction was added), a spiral search finds the nearest safe tile instead.
+-- restriction was added), or is not somewhere the engine can put anybody, a
+-- spiral search finds the nearest safe tile instead.
+-- Returns false when the player was moved (or could not be), true when they
+-- are allowed to stay and the caller should record their position.
 function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     local who = obj.getUsername and obj:getUsername() or tostring(obj)
+
+    -- A port we issued for this player has not landed yet. Its hold loop owns
+    -- their position until the destination chunk exists, and stacking a second
+    -- move on an unfinished one is precisely what that loop exists to prevent.
+    -- Mid-flight their coordinates are the destination while the square under
+    -- them is still the origin, so there is nothing worth recording either.
+    if Core.isPortPending(obj) then
+        return false
+    end
 
     if effectiveZone.noplayers ~= true or Core.isExempt(obj) then
         denialStreak[who] = nil
@@ -607,7 +633,8 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
         streak = {
             zone = effectiveZone.key,
             count = 0,
-            brakeOnly = false
+            brakeOnly = false,
+            stalled = false
         }
         denialStreak[who] = streak
     end
@@ -624,8 +651,29 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
         return false
     end
 
+    -- On foot, and repeated moves have not got them out of this zone. Warn but
+    -- stop teleporting: the zone going unenforced for one player is a smaller
+    -- problem than a client being moved every tick indefinitely. Resets the
+    -- moment they change zone or are let through.
+    if not vehicle and streak.stalled then
+        notify()
+        return false
+    end
+    if not vehicle and streak.count > PLAYER_ATTEMPTS then
+        streak.stalled = true
+        Core.logLn("enforceZoneAccess: could not move " .. who .. " out of " .. tostring(effectiveZone.key) ..
+                       " in " .. PLAYER_ATTEMPTS .. " attempts; leaving them where they are")
+        notify()
+        return false
+    end
+
     local tx, ty, tz
-    local lastZone = lastAt and lastAt.x and Core.getLocation(lastAt.x, lastAt.y)
+    -- Recall them to where they came from, but only somewhere the engine can
+    -- actually put them: an off-world target moves them for a frame and is
+    -- then undone, which reads here as another failed attempt. The nearest
+    -- edge of the zone is a few tiles away and is always real ground.
+    local lastZone = lastAt and lastAt.x and Core.isValidWorldPosition(lastAt.x, lastAt.y) and
+                         Core.getLocation(lastAt.x, lastAt.y)
     if lastZone and lastZone.key ~= effectiveZone.key then
         tx, ty, tz = lastAt.x, lastAt.y, lastAt.z
     else
@@ -788,12 +836,169 @@ end
 
 -- ---------------------------------------------------------------------------
 -- Player teleport
+--
+-- setX/setY/setZ move the player immediately, but the destination chunk is not
+-- loaded yet and the engine restores anyone standing on a square that does not
+-- exist. A single call therefore looks like it worked and then undoes itself a
+-- frame later. Worse, the bare setters skip the bookkeeping teleportTo does
+-- (last position, square rebinding), so a long move leaves the character
+-- interpolating from wherever it used to be.
+--
+-- Both matter most in exactly the case that bites: someone is teleported into
+-- a noplayers zone, and a tick later we throw them back the way they came,
+-- across chunks the engine is still streaming in one direction and dropping in
+-- the other.
+--
+-- So: use the vanilla teleport, then re-assert the position every tick until
+-- the destination square actually exists. Re-teleporting is also what keeps
+-- the chunk map centred on the destination, which is what makes it stream in.
+-- This is the same approach PhunInteriors uses to move players across the map.
 -- ---------------------------------------------------------------------------
 
-function Core.portPlayer(player, x, y, z)
-    player:setX(x)
-    player:setY(y)
+-- Frames to keep re-asserting before concluding the destination is never going
+-- to load. Roughly three seconds; a chunk that has not arrived by then is not
+-- coming, and holding a player in limbo indefinitely is worse than giving up.
+local PORT_HOLD_TICKS = 180
+
+-- [username] = { player, x, y, z, ticks }. Keyed rather than singular so
+-- split-screen holds each local player's port independently.
+local portPending = {}
+local portHolding = false
+local holdPorts
+
+local function portKey(player)
+    return (player.getUsername and player:getUsername()) or tostring(player)
+end
+
+-- True while a port issued for this player has not landed yet. Callers must
+-- not issue another move for them while this holds: the hold loop owns their
+-- position until the destination chunk exists or it gives up.
+function Core.isPortPending(player)
+    return player ~= nil and portPending[portKey(player)] ~= nil
+end
+
+local function clearPort(key)
+    portPending[key] = nil
+    if portHolding and Core.tools.isEmpty(portPending) then
+        portHolding = false
+        Events.OnTick.Remove(holdPorts)
+    end
+end
+
+local function squareLoaded(x, y, z)
+    local cell = getCell()
+    return cell ~= nil and cell:getGridSquare(x, y, z) ~= nil
+end
+
+-- Refuses coordinates that are not part of this world. The meta grid is
+-- written when the world is created, so a map added to an existing save is in
+-- the mod list but not in the world. Teleporting there moves the player for a
+-- frame and the engine then restores them, which is indistinguishable from a
+-- port that never landed and would burn the whole hold window every time.
+function Core.isValidWorldPosition(x, y)
+    local world = getWorld and getWorld()
+    local grid = world and world.getMetaGrid and world:getMetaGrid()
+    if not grid or not grid.isValidSquare then
+        return true -- cannot tell on this build; let it through
+    end
+    -- Callers pass live player coordinates as often as tile indices, and the
+    -- grid is indexed in whole squares.
+    return grid:isValidSquare(math.floor(x), math.floor(y)) == true
+end
+
+-- The move itself. teleportTo is the vanilla path and does the bookkeeping the
+-- bare setters skip. The half tile centres the player on the square rather
+-- than dropping them on its corner, where they can read as being on either of
+-- two tiles -- and therefore, on a zone boundary, in either of two zones.
+local function place(player, x, y, z)
+    if player.teleportTo then
+        player:teleportTo(x + 0.5, y + 0.5, z)
+        return
+    end
+    -- Builds without teleportTo. setLx/Ly/Lz are the part that matters here:
+    -- left pointing at the old position, the character interpolates towards
+    -- the new one from wherever it was, across the whole map if need be.
+    player:setX(x + 0.5)
+    player:setY(y + 0.5)
     player:setZ(z)
+    if player.setLx then
+        player:setLx(x + 0.5)
+        player:setLy(y + 0.5)
+        player:setLz(z)
+    end
+end
+
+function holdPorts()
+    for key, port in pairs(portPending) do
+        local player = port.player
+        if not player then
+            clearPort(key)
+        else
+            port.ticks = port.ticks + 1
+            local landed = squareLoaded(port.x, port.y, port.z) and math.floor(player:getX()) == port.x and
+                               math.floor(player:getY()) == port.y
+
+            if landed then
+                Core.debugLn(string.format("port: %s landed at %d,%d,%d after %d tick(s)", key, port.x, port.y,
+                    port.z, port.ticks))
+                clearPort(key)
+            elseif port.ticks >= PORT_HOLD_TICKS then
+                Core.logLn(string.format(
+                    "port: gave up moving %s to %d,%d,%d after %d ticks; the square %s and they are at %s,%s", key,
+                    port.x, port.y, port.z, port.ticks,
+                    squareLoaded(port.x, port.y, port.z) and "loaded but they never arrived" or "never loaded",
+                    tostring(player:getX()), tostring(player:getY())))
+                clearPort(key)
+            else
+                place(player, port.x, port.y, port.z)
+            end
+        end
+    end
+end
+
+-- Returns true if a move was issued (or handed to the owning client).
+function Core.portPlayer(player, x, y, z)
+    if not player or not x or not y then
+        return false
+    end
+
+    local tx, ty, tz = math.floor(x), math.floor(y), math.floor(z or 0)
+
+    if not Core.isValidWorldPosition(tx, ty) then
+        Core.logLn(string.format("port: refusing to move %s to %d,%d, which is outside this world", portKey(player),
+            tx, ty))
+        return false
+    end
+
+    -- On a dedicated server this is a remote player: moving them from here
+    -- fights the position their own client is authoritative for, and there is
+    -- no local cell to wait on either. The client owns the move, so ask it to
+    -- make one and let its hold loop see it through.
+    if isServer() then
+        sendServerCommand(player, Core.name, Core.commands.playerTeleport, {
+            username = player:getUsername(),
+            x = tx,
+            y = ty,
+            z = tz
+        })
+        return true
+    end
+
+    place(player, tx, ty, tz)
+
+    portPending[portKey(player)] = {
+        player = player,
+        x = tx,
+        y = ty,
+        z = tz,
+        ticks = 0
+    }
+    if not portHolding then
+        portHolding = true
+        Events.OnTick.Add(holdPorts)
+    end
+
+    return true
 end
 
 -- ---------------------------------------------------------------------------
