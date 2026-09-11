@@ -661,8 +661,8 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     end
     if not vehicle and streak.count > PLAYER_ATTEMPTS then
         streak.stalled = true
-        Core.logLn("enforceZoneAccess: could not move " .. who .. " out of " .. tostring(effectiveZone.key) ..
-                       " in " .. PLAYER_ATTEMPTS .. " attempts; leaving them where they are")
+        Core.logLn("enforceZoneAccess: could not move " .. who .. " out of " .. tostring(effectiveZone.key) .. " in " ..
+                       PLAYER_ATTEMPTS .. " attempts; leaving them where they are")
         notify()
         return false
     end
@@ -762,7 +762,12 @@ function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
         triggerEvent(Core.events.OnPhysicalZoneChanged, obj, stored)
         -- ^ handlers (e.g. RV mod) may mutate stored.zone in-place
 
-        if stored.zone ~= oldZone then
+        -- force means something other than the player's position changed:
+        -- fresh zone data, or a login where the stored zone key already matches
+        -- where the player stands. Comparing keys skips the event in exactly
+        -- those cases, which leaves the UI showing whatever it was last given
+        -- (nothing, on a relog) until the player next crosses a boundary.
+        if force or stored.zone ~= oldZone then
             triggerEvent(Core.events.OnEffectiveZoneChanged, obj, stored)
         end
     end
@@ -939,8 +944,8 @@ function holdPorts()
                                math.floor(player:getY()) == port.y
 
             if landed then
-                Core.debugLn(string.format("port: %s landed at %d,%d,%d after %d tick(s)", key, port.x, port.y,
-                    port.z, port.ticks))
+                Core.debugLn(string.format("port: %s landed at %d,%d,%d after %d tick(s)", key, port.x, port.y, port.z,
+                    port.ticks))
                 clearPort(key)
             elseif port.ticks >= PORT_HOLD_TICKS then
                 Core.logLn(string.format(
@@ -965,8 +970,8 @@ function Core.portPlayer(player, x, y, z)
     local tx, ty, tz = math.floor(x), math.floor(y), math.floor(z or 0)
 
     if not Core.isValidWorldPosition(tx, ty) then
-        Core.logLn(string.format("port: refusing to move %s to %d,%d, which is outside this world", portKey(player),
-            tx, ty))
+        Core.logLn(string.format("port: refusing to move %s to %d,%d, which is outside this world", portKey(player), tx,
+            ty))
         return false
     end
 
