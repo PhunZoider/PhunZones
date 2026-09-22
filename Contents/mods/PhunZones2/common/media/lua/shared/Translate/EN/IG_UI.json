@@ -84,5 +84,5 @@
   "IGUI_PhunZones_Profile_BaseOnly": "Only available on the base configuration. Switch Editing back to 'default'.",
   "IGUI_PhunZones_Profile_SwitchUnsaved": "You have unsaved changes to this layer. Save them before switching?",
   "IGUI_PhunZones_Pvp": "PVP",
-  "IGUI_PhunZones_Pvp_tooltip": "Whether players can hurt each other here. Off makes this a safe zone. Leave it unset unless you mean it - as soon as any zone is set to on, everywhere else on the map becomes safe. Needs the server option PVP to be on, and applies to staff too: the check is on the tile, not the player"
+  "IGUI_PhunZones_Pvp_tooltip": "Whether players can hurt each other here. Off makes this a safe zone. Leave it unset unless you mean it - as soon as any zone is set to on, everywhere else on the map becomes safe. Needs the server option PVP to be on, and applies to staff too: the check is on the tile, not the player. Off also stops explosives and fire working here, on zombies as well as players - that is the game's own rule for safe zones, not ours"
 }

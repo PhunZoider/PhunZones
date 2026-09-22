@@ -34,7 +34,7 @@ return {
     },
     EchoPark = {
         inherits = "Medium",
-        title = "Echo Park",
+        title = "Echo Creek",
         points = {{3340, 10818, 3921, 11410}}
     },
     Ekron = {
@@ -57,7 +57,7 @@ return {
     Irvington = {
         inherits = "Medium",
         title = "Irvington",
-        points = {{2155, 13785, 3013, 14246}, {1691, 14246, 3149, 14980}}
+        points = {{2155, 13785, 3013, 14246}, {1691, 14246, 3149, 14980}, {3660, 14610, 3860, 14780}}
     },
     IrvingtonSpeedway = {
         inherits = "Irvington",
@@ -72,12 +72,28 @@ return {
     Muldraugh = {
         inherits = "Easy",
         title = "Muldraugh",
-        points = {{10496, 9176, 11023, 10692}, {10247, 9221, 10497, 9457}}
+        points = {{10496, 9176, 11023, 10692}}
+    },
+    Muldraugh_McCoys = {
+        inherits = "Muldraugh",
+        subtitle = "McCoy's Logging",
+        points = {{10247, 9221, 10497, 9457}}
+    },
+    Muldraugh_Trainyard = {
+        inherits = "Muldraugh",
+        subtitle = "Trainyard",
+        difficulty = 2,
+        points = {{11500, 9620, 11920, 10220}}
+    },
+    DixieTrailerPark = {
+        inherits = "Easy",
+        title = "Dixie Trailer Park",
+        points = {{11430, 8760, 11890, 8980}}
     },
     Rosewood = {
         inherits = "Very_Easy",
         title = "Rosewood",
-        points = {{7800, 11424, 8549, 11902}, {8054, 11216, 8198, 11437}}
+        points = {{7800, 11096, 8200, 11424}, {7800, 11424, 8549, 11902}, {7900, 11902, 8520, 12360}}
     },
     Rosewood_Cabins = {
         points = {{7503, 11402, 7788, 11689}},
@@ -86,13 +102,13 @@ return {
         modsRequired = "rosewoodcabins"
     },
     Rosewood_Prison = {
-        points = {{7559, 11741, 7786, 11983}},
+        points = {{7320, 11694, 7800, 11990}},
         inherits = "Rosewood",
         difficulty = 3,
         subtitle = "State Prison"
     },
     Rosewood_Prison2 = {
-        points = {{7559, 11741, 7786, 11983}},
+        points = {{7320, 11694, 7800, 11990}},
         inherits = "Rosewood",
         subtitle = "State Prison",
         difficulty = 3,
@@ -109,38 +125,95 @@ return {
         title = "Riverside",
         points = {{5400, 5181, 6899, 5699}}
     },
+    Riverside_ScenicGrove = {
+        inherits = "Riverside",
+        subtitle = "Scenic Grove Trailer Park",
+        points = {{5270, 5850, 5450, 6130}}
+    },
+    Riverside_CountryClub = {
+        inherits = "Riverside",
+        subtitle = "West Maple Country Club",
+        points = {{5500, 6300, 6310, 6760}}
+    },
     Louisville = {
         inherits = "Hard",
         title = "Louisville",
         points = {{12400, 3904, 12545, 4483}, {11700, 950, 15954, 4215}}
     },
+    Louisville_Downtown = {
+        inherits = "Louisville",
+        subtitle = "Downtown",
+        difficulty = 4,
+        points = {{11980, 1040, 13150, 2110}}
+    },
+    Louisville_GrandOhioMall = {
+        inherits = "Louisville",
+        subtitle = "Grand Ohio Mall",
+        difficulty = 4,
+        points = {{13455, 1250, 13690, 1430}}
+    },
+    Louisville_IroquoisPark = {
+        inherits = "Louisville",
+        subtitle = "Iroquois Park",
+        difficulty = 2,
+        points = {{13000, 2250, 13420, 2860}}
+    },
+    Louisville_ChapelmountDowns = {
+        inherits = "Louisville",
+        subtitle = "Chapelmount Downs",
+        points = {{12100, 2620, 12460, 2960}}
+    },
+    Louisville_StPeregrin = {
+        inherits = "Louisville",
+        subtitle = "St. Peregrin Hospital",
+        difficulty = 4,
+        points = {{12340, 3540, 12480, 3810}}
+    },
+    -- The farmland east of the city, out to the airport.
+    Louisville_Outskirts = {
+        inherits = "Louisville",
+        subtitle = "Outskirts",
+        difficulty = 2,
+        points = {{14350, 950, 15954, 4215}}
+    },
     Louisville_Airport = {
         points = {{15251, 2418, 15684, 3346}},
         subtitle = "Airport",
+        inherits = "Louisville_Outskirts",
+        difficulty = 4
+    },
+    Louisville_MilitaryCamp = {
+        points = {{14990, 3550, 15700, 4000}},
+        subtitle = "Military Camp",
+        inherits = "Louisville_Outskirts",
+        difficulty = 4
+    },
+    -- Key kept so existing configs still apply. This is the Knox Boundary Camp
+    -- checkpoint on the Louisville wall; the trainyard is only part of it.
+    Louisville_Trainyard = {
+        points = {{12440, 3900, 12860, 4500}},
+        subtitle = "Knox Boundary Camp",
         inherits = "Louisville",
         difficulty = 4
     },
-    Louisville_Trainyard = {
-        points = {{12607, 4196, 12859, 4495}, {12548, 4355, 12859, 4495}},
-        subtitle = "Trainyard",
-        inherits = "Louisville"
-    },
+    -- Key kept so existing configs still apply. This is Crossroads Mall, which
+    -- is in Valley Station rather than Louisville.
     Louisville_Mall = {
         points = {{13519, 5724, 14088, 5975}},
-        inherits = "Louisville",
-        subtitle = "Mall",
+        inherits = "ValleyStation",
+        subtitle = "Crossroads Mall",
         difficulty = 4
     },
+    -- The burnt-out quarantine town is on the vanilla map, no mod needed.
     Louisville_Quarantine_Zone = {
         points = {{13414, 3957, 13978, 4193}},
         subtitle = "Quarantine Zone",
         inherits = "Louisville",
-        modsRequired = "Louisville_Quarantine_Zone",
         difficulty = 4
     },
     Louisville_Riverboat = {
         points = {{13084, 1165, 13146, 1199}},
-        inherits = "Louisville",
+        inherits = "Louisville_Downtown",
         subtitle = "Riverboat",
         modsRequired = "Louisville_Riverboat"
     },
@@ -161,21 +234,69 @@ return {
         title = "Valley Station",
         points = {{12397, 4556, 14737, 6477}}
     },
+    CampFitzgerald = {
+        inherits = "Medium",
+        title = "Camp Fitzgerald",
+        points = {{13740, 6590, 13930, 6800}}
+    },
     Brandenburg = {
         inherits = "Hard",
         title = "Brandenburg",
-        points = {{1280, 5687, 2517, 6701}, {2513, 6178, 2894, 6482}, {1457, 5501, 1682, 5709}}
+        points = {{1280, 5670, 2517, 6701}}
+    },
+    Brandenburg_Checkpoint = {
+        inherits = "Brandenburg",
+        subtitle = "Military Checkpoint",
+        difficulty = 4,
+        points = {{1440, 5390, 1710, 5700}}
+    },
+    Brandenburg_DetentionCenter = {
+        inherits = "Brandenburg",
+        subtitle = "Detention Center",
+        difficulty = 4,
+        points = {{1340, 5815, 1470, 5925}}
+    },
+    Brandenburg_BrightValley = {
+        inherits = "Brandenburg",
+        subtitle = "Bright Valley Trailer Park",
+        points = {{2513, 6178, 2894, 6482}}
     },
     FallasLake = {
         inherits = "Medium",
         title = "Fallas Lake",
-        points = {{7010, 8090, 7448, 8550}}
+        points = {{7000, 8070, 7520, 8640}}
+    },
+    SunderlandHills = {
+        inherits = "Hard",
+        title = "Sunderland Hills Sanatorium",
+        points = {{3800, 6090, 4300, 6560}}
+    },
+    CampCamus = {
+        inherits = "Easy",
+        title = "Camp Camus",
+        points = {{4630, 7800, 4800, 8050}}
+    },
+    MeadshireEstate = {
+        inherits = "Medium",
+        title = "Meadshire Estate",
+        points = {{4040, 9340, 4330, 9650}}
+    },
+    -- Named for the forest it sits in, not for what is there.
+    HogWallowForest = {
+        inherits = "Very_Hard",
+        title = "Hog Wallow Forest",
+        points = {{5500, 12400, 5620, 12530}}
+    },
+    CampArthur = {
+        inherits = "Easy",
+        title = "Camp Arthur",
+        points = {{8240, 14390, 8720, 14680}}
     },
     Frogtown = {
         inherits = "Medium",
         title = "Frogtown",
         modsRequired = "Frogtown",
-        points = {{3300, 7800, 3800, 7500}}
+        points = {{3300, 7500, 3800, 7800}}
     },
     -- to check
     DawnTown = { --
@@ -184,11 +305,12 @@ return {
         modsRequired = "dawn_town",
         points = {{2989, 8096, 3242, 8401}}
     },
+    -- Coalfield is on the vanilla map; the key is kept so existing configs
+    -- still apply.
     CoalField = {
-        title = "Coal Field",
-        inherits = "DawnTown",
-        modsRequired = "dawn_town",
-        points = {{3353, 8115, 3580, 8380}}
+        title = "Coalfield",
+        inherits = "Medium",
+        points = {{3353, 8115, 3600, 8380}}
     },
     ShamrockFarm = { --
         inherits = "Medium",
@@ -215,8 +337,9 @@ return {
         points = {{12578, 10801, 12905, 11372}}
     },
     beek_muldraugh_firedept = {
-        inherits = "Medium",
-        title = "Muldraugh",
+        inherits = "Muldraugh",
+        subtitle = "Fire Department",
+        difficulty = 2,
         modsRequired = "beek_muldraugh_firedept",
         points = {{10500, 9177, 10585, 9234}}
     },
@@ -241,7 +364,8 @@ return {
     },
     QuellasCastle = {
         title = "Quella's Castle",
-        inherits = "Hard",
+        inherits = "Riverside",
+        difficulty = 3,
         points = {{5443, 5159, 5633, 5310}},
         modsRequired = "Quella's Castle"
     },
@@ -332,7 +456,7 @@ return {
         modsRequired = "ForgottenFarmBunker"
     },
     WestpointFireandMall = {
-        title = "",
+        subtitle = "Fire Station & Mall",
         inherits = "WestPoint",
         points = {{10998, 6904, 11267, 7200}},
         modsRequired = "Westpoint-Fire"
@@ -344,7 +468,7 @@ return {
         modsRequired = "serenitybunker"
     },
     WestPointMilitaryBoat = {
-        title = "",
+        subtitle = "Military Boat",
         inherits = "WestPoint",
         points = {{11786, 6545, 12006, 6595}},
         modsRequired = "WMTBoat"
