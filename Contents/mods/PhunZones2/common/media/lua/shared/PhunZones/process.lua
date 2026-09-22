@@ -366,17 +366,27 @@ function Core.flattenZoneRects(zones)
 
     -- Assign implicit order to any entries still missing it
     -- Entries with explicit order are pushed above all implicit ones
+    --
+    -- Position is only a tie-break. It used to be added into the order, which
+    -- let a parent whose rect sat later in the list beat its own child, since
+    -- a child's order is only one higher than its parent's.
+    local n = #flattened
+    local position = {}
     for i, v in ipairs(flattened) do
+        position[v] = i
         if not v[2] then
             v[2] = i
         else
-            v[2] = i + maxExplicitOrder + v[2]
+            v[2] = n + maxExplicitOrder + v[2]
         end
     end
 
     -- Sort descending: highest order tested first (wins on overlap)
     table.sort(flattened, function(a, b)
-        return a[2] ~= b[2] and a[2] > b[2]
+        if a[2] ~= b[2] then
+            return a[2] > b[2]
+        end
+        return position[a] > position[b]
     end)
 
     return flattened

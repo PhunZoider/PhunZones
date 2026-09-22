@@ -177,6 +177,34 @@ somewhere Lua cannot reach:
 - nobody can turn their safety off while stood inside one
 - the server rejects player-hit-player and vehicle-hit-player packets
 
+### Explosives and fire do nothing in a safe zone
+
+This one catches people out, and it is worth knowing before you mark a zone
+safe: a non-pvp zone stops a good deal more than pvp.
+
+When anything explodes, the game walks the tiles in range and skips every one
+that sits in a non-pvp zone, before it looks at what is standing there. So
+inside a safe zone a grenade, pipe bomb or molotov does nothing at all:
+
+- no blast damage to **zombies**, not just to players
+- no damage to the person who threw it
+- no fire, no smoke, no burnt tiles
+
+It still makes the noise, which is what makes it look like a bug rather than a
+rule. Melee and guns are unaffected, because those are checked against the
+target and a zombie was never a pvp target to begin with.
+
+This is the game's own doing (`IsoTrap.drawCircleExplosion`), not something
+PhunZones adds on top, and there is no way to have one without the other: the
+explosion check reads the same list the pvp check does, and registering a
+rectangle in it is the whole mechanism.
+
+The check is per tile rather than per explosion, so a bomb thrown across the
+boundary still works normally on the side that is not safe.
+
+If a zone needs explosives to work, leave `pvp` unset there and put the safe
+zones somewhere else.
+
 ### Marking a pvp zone makes the rest of the map safe
 
 Saying "pvp happens **here**" only means something if it does not happen
@@ -323,7 +351,7 @@ Profiles are defined in a `profiles` block alongside `data` in
 ```
 
 Any zone field can be overridden, and overrides inherit: closing `Louisville`
-also closes `Louisville_Mall` and every other zone that inherits from it.
+also closes `Louisville_Downtown` and every other zone that inherits from it.
 
 A profile can also turn a setting back **off**, for a zone that is closed by
 default and opens for an event. Use `false`, not `null`:

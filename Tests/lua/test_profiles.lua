@@ -126,7 +126,8 @@ reload()
 Core.setActiveProfile("lockdown")
 
 check.same("parent is closed", Core.data.lookup.Louisville.noplayers, true)
-check.same("child inherits the override", Core.data.lookup.Louisville_Mall.noplayers, true)
+check.same("child inherits the override", Core.data.lookup.Louisville_Downtown.noplayers, true)
+check.same("grandchild inherits the override", Core.data.lookup.Louisville_Airport.noplayers, true)
 check.same("an unrelated zone is untouched", Core.data.lookup.MarchRidge.noplayers, nil)
 
 -- ---------------------------------------------------------------------------
