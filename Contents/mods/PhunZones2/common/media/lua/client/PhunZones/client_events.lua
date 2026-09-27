@@ -41,10 +41,10 @@ local function actionFor(zone, isBandit)
 end
 
 local function zoneHasAction(zone)
-    if zedActionOf(zone) ~= "none" then
+    if Core.evicts(zedActionOf(zone)) then
         return true
     end
-    return bandits2Active and Core.banditAction(zone) ~= "none"
+    return bandits2Active and Core.evicts(Core.banditAction(zone))
 end
 
 -- Per-zombie ongoing enforcement. Fires every AI update for each nearby zombie.

@@ -1003,8 +1003,8 @@ function Core.buildZoneData(filter, profileOverride)
     local banditsActive = getActivatedMods():contains("Bandits2")
     local hasZedAction = false
     for _, zone in pairs(lookup) do
-        if Core.zedAction(zone, "zeds") ~= "none" or
-            (banditsActive and Core.banditAction(zone) ~= "none") then
+        if Core.evicts(Core.zedAction(zone, "zeds")) or
+            (banditsActive and Core.evicts(Core.banditAction(zone))) then
             hasZedAction = true
             break
         end

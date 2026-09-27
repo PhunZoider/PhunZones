@@ -333,6 +333,51 @@ check.ok("no bandit where zeds are removed", trySpawn(500, 500) == nil)
 check.ok("bandits allowed in the arena", trySpawn(650, 650) ~= nil)
 
 -- ---------------------------------------------------------------------------
+check.section("Block Spawns refuses spawns but leaves walk-ins alone")
+-- The ask: no bandits spawning in a zone, while a player's allies can still
+-- follow them in. Refusing at the spawn does the first; not flagging the zone
+-- for per-zombie enforcement is what does the second.
+
+harness.reset()
+writeConfig({
+    _default = {
+        bandits = "none"
+    },
+    Base = {
+        title = "Base",
+        bandits = "nospawn",
+        order = BASE_ORDER,
+        points = {{600, 600, 699, 699}}
+    }
+})
+reload()
+
+check.same("reads as nospawn", Core.banditAction(Core.getLocation(650, 650)), "nospawn")
+check.ok("no bandit spawns in the zone", trySpawn(650, 650) == nil)
+check.ok("not even relocated, unlike Move", #spawned == 0)
+check.ok("a spawn outside the zone is left alone", trySpawn(500, 500) ~= nil)
+check.same("nothing is flagged for eviction", Core.data.hasZedAction, false)
+check.same("and nospawn does not evict", Core.evicts(Core.banditAction(Core.getLocation(650, 650))), false)
+
+individualCalls, restoreCalls = 0, 0
+BanditServer.Spawner.Individual(nil, {x = 650, y = 650, z = 0, bid = 1})
+check.same("Individual is refused", individualCalls, 0)
+BanditServer.Spawner.Restore(nil, {bornCoords = {x = 650, y = 650, z = 0}})
+check.same("Restore is refused", restoreCalls, 0)
+
+-- Only a bandit spawn can be refused before it happens, so the value means
+-- nothing on the zed field and must not quietly read as something else.
+harness.reset()
+writeConfig({
+    _default = {
+        zeds = "nospawn"
+    }
+})
+reload()
+check.same("zeds=nospawn reads as none", Core.zedAction(Core.getLocation(500, 500), "zeds"), "none")
+check.same("an unset bandit rule falling back to it is none too", Core.banditAction(Core.getLocation(500, 500)), "none")
+
+-- ---------------------------------------------------------------------------
 check.section("without Bandits2 nothing is flagged")
 -- The bandit field can survive a server dropping the mod. It must then cost
 -- nothing: no client-side per-zombie checking on its account.

@@ -157,6 +157,9 @@ PhunZones = {
                 }, {
                     label = getText("IGUI_PhunZones_ZedAction_Remove"),
                     value = "remove"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_NoSpawn"),
+                    value = "nospawn"
                 }}
             end
         },
@@ -358,9 +361,15 @@ local ZED_ACTION_MIGRATE = {
     ["3"] = "remove"
 }
 
--- The action a zone asks for, as one of "none", "move" or "remove".
--- field is "zeds" or "bandits". Anything unset or unrecognised reads as "none",
--- so callers only ever have to test the two values that mean something.
+-- The action a zone asks for, as one of "none", "move" or "remove", plus
+-- "nospawn" for bandits. field is "zeds" or "bandits". Anything unset or
+-- unrecognised reads as "none", so callers only ever have to test the values
+-- that mean something.
+--
+-- "nospawn" refuses new bandits in the zone but leaves alone any bandit that
+-- walks in, so allies can follow a player there. It is bandit-only because
+-- the bandit spawn is the only one we see before it happens; a zed spawn is
+-- the engine's and can only be dealt with after the fact.
 function Core.zedAction(zone, field)
     if not zone then
         return "none"
@@ -373,7 +382,16 @@ function Core.zedAction(zone, field)
     if action == "move" or action == "remove" then
         return action
     end
+    if action == "nospawn" and field == "bandits" then
+        return action
+    end
     return "none"
+end
+
+-- True when the action acts on something already in the zone, which is what
+-- the per-zombie enforcement exists for. "nospawn" is settled at the spawn.
+function Core.evicts(action)
+    return action == "move" or action == "remove"
 end
 
 -- The action that applies to a bandit in this zone. A zone that says nothing at
