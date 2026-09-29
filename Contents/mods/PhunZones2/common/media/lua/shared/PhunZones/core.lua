@@ -163,6 +163,21 @@ PhunZones = {
                 }}
             end
         },
+        alife = {
+            label = "IGUI_PhunZones_ALife",
+            type = "combo",
+            tooltip = "IGUI_PhunZones_ALife_tooltip",
+            group = "combat",
+            getOptions = function()
+                return {{
+                    label = getText("IGUI_PhunZones_ZedAction_None"),
+                    value = "none"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_NoSpawn"),
+                    value = "nospawn"
+                }}
+            end
+        },
         noannounce = {
             label = "IGUI_PhunZones_NoWelcome",
             type = "boolean",
@@ -361,15 +376,21 @@ local ZED_ACTION_MIGRATE = {
     ["3"] = "remove"
 }
 
+-- The fields whose spawns we see before they happen, and so the only ones
+-- "nospawn" means anything on. A zed spawn is the engine's and can only be
+-- dealt with after the fact.
+local SPAWN_HOOKED = {
+    bandits = true,
+    alife = true
+}
+
 -- The action a zone asks for, as one of "none", "move" or "remove", plus
--- "nospawn" for bandits. field is "zeds" or "bandits". Anything unset or
--- unrecognised reads as "none", so callers only ever have to test the values
--- that mean something.
+-- "nospawn" for bandits and A-Life. field is "zeds", "bandits" or "alife".
+-- Anything unset or unrecognised reads as "none", so callers only ever have
+-- to test the values that mean something.
 --
--- "nospawn" refuses new bandits in the zone but leaves alone any bandit that
--- walks in, so allies can follow a player there. It is bandit-only because
--- the bandit spawn is the only one we see before it happens; a zed spawn is
--- the engine's and can only be dealt with after the fact.
+-- "nospawn" refuses new spawns in the zone but leaves alone anything that
+-- walks in, so allies can follow a player there.
 function Core.zedAction(zone, field)
     if not zone then
         return "none"
@@ -382,7 +403,7 @@ function Core.zedAction(zone, field)
     if action == "move" or action == "remove" then
         return action
     end
-    if action == "nospawn" and field == "bandits" then
+    if action == "nospawn" and SPAWN_HOOKED[field] then
         return action
     end
     return "none"
@@ -404,6 +425,54 @@ end
 function Core.banditAction(zone)
     if zone and zone.bandits ~= nil then
         return Core.zedAction(zone, "bandits")
+    end
+    return Core.zedAction(zone, "zeds")
+end
+
+-- The action that applies to an A-Life NPC in this zone: "none" or "nospawn".
+-- Unlike bandits this never falls back to the zeds setting, and Move/Remove
+-- are not offered. A-Life keeps its own record of every NPC and a watchdog
+-- that respawns a body which goes missing, so deleting or teleporting one
+-- behind its back just starts a fight with it.
+function Core.alifeAction(zone)
+    if Core.zedAction(zone, "alife") == "nospawn" then
+        return "nospawn"
+    end
+    return "none"
+end
+
+-- Looked up on first use rather than at load: the mod list does not change
+-- mid-game, and this is asked once per zombie check.
+local bandits2Active
+
+function Core.isBandit(zed)
+    if bandits2Active == nil then
+        bandits2Active = getActivatedMods():contains("Bandits2")
+    end
+    return bandits2Active and zed:getModData().brain ~= nil
+end
+
+-- A-Life NPCs are zombie bodies. The server stamps ProjectALifeOwned on the
+-- body; an MP client only gets the flags once A-Life's own presentation
+-- message arrives, so the animation variable is checked as well.
+function Core.isALife(zed)
+    local data = zed:getModData()
+    if data and (data.ProjectALifeOwned == true or data.ProjectALifeActor == true) then
+        return true
+    end
+    return zed.GetVariable ~= nil and zed:GetVariable("ALifeActor") == "true"
+end
+
+-- The action that applies to this particular zombie in this zone, as
+-- "none"/"move"/"remove"/"nospawn". Every per-zombie enforcement path goes
+-- through here so a zed, a bandit and an A-Life NPC are told apart the same
+-- way everywhere.
+function Core.zombieAction(zone, zed)
+    if Core.isALife(zed) then
+        return Core.alifeAction(zone)
+    end
+    if Core.isBandit(zed) then
+        return Core.banditAction(zone)
     end
     return Core.zedAction(zone, "zeds")
 end

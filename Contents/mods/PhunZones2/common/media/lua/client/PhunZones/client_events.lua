@@ -26,22 +26,12 @@ local zedCheckCooldown = {} -- [zedId] = nextAllowedTimestamp
 local pendingRemove = {} -- zed IDs queued for removal, flushed each tick
 local sentForRemoval = {} -- [zedId] = true; prevents re-queuing until purge
 
--- The action a zone asks for, as "none"/"move"/"remove". Legacy index values are
--- migrated by Core.zedAction. Core.banditAction only matters when Bandits2 is
--- loaded, so a config carried in from a server that ran it does nothing here.
-local function zedActionOf(zone)
-    return Core.zedAction(zone, "zeds")
-end
-
-local function actionFor(zone, isBandit)
-    if isBandit then
-        return Core.banditAction(zone)
-    end
-    return zedActionOf(zone)
-end
-
+-- Whether anything in this zone can be moved or removed. Which action applies
+-- to a given zombie is Core.zombieAction's call. Core.banditAction only matters
+-- when Bandits2 is loaded, so a config carried in from a server that ran it
+-- does nothing here.
 local function zoneHasAction(zone)
-    if Core.evicts(zedActionOf(zone)) then
+    if Core.evicts(Core.zedAction(zone, "zeds")) then
         return true
     end
     return bandits2Active and Core.evicts(Core.banditAction(zone))
@@ -80,8 +70,7 @@ Events.OnZombieUpdate.Add(function(zed)
         return
     end
 
-    local isBandit = bandits2Active and zed:getModData().brain ~= nil
-    local action = actionFor(zedZone, isBandit)
+    local action = Core.zombieAction(zedZone, zed)
 
     if action == "move" then
         local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zedZone.key)
@@ -131,8 +120,7 @@ local function sweepZoneZeds(playerObj, zone)
         if instanceof(zed, "IsoZombie") then
             local zedZone = Core.getLocation(zed:getX(), zed:getY())
             if zedZone and zedZone.key == zone.key then
-                local isBandit = bandits2Active and zed:getModData().brain ~= nil
-                local action = actionFor(zone, isBandit)
+                local action = Core.zombieAction(zone, zed)
                 local id = Core.getZId(zed)
                 if action == "move" then
                     local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zone.key)
@@ -164,6 +152,15 @@ local function sweepZoneZeds(playerObj, zone)
         })
     end
 end
+
+-- Inside an RV interior, show the zone the vehicle is parked in rather than
+-- the void itself. rvZone is the last vehicle zone the server pushed.
+Events[Core.events.OnPhysicalZoneChanged].Add(function(playerObj, stored)
+    local physical = Core.data.lookup[stored.at.zone]
+    if physical and physical.isVoid and stored.rvZone and Core.data.lookup[stored.rvZone] then
+        stored.zone = stored.rvZone
+    end
+end)
 
 Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
     local zone = Core.data.lookup[stored.zone] or {}

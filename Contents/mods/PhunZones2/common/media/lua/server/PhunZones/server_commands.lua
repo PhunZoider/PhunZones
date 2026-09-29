@@ -98,10 +98,13 @@ Commands[Core.commands.removeZeds] = function(player, args)
     Core.debug("Removing zeds in " .. tostring(args and args.zone), args)
     -- Re-derive from server state: only remove zeds that are
     -- (a) in the player's current cell, AND
-    -- (b) in a zone that actually has zeds==3 action
+    -- (b) in the player's zone, AND
+    -- (c) ones that zone's rule says to remove. A bandit exempted by its own
+    --     rule, or an A-Life NPC, is left alone even where zeds are removed;
+    --     the server is where A-Life's markers can be trusted.
     local zone = Core.getLocation(player:getX(), player:getY()) or {}
-    if tostring(zone.zeds) ~= "remove" then
-        return -- player isn't even in a remove-zeds zone; ignore
+    if Core.zedAction(zone, "zeds") ~= "remove" and Core.banditAction(zone) ~= "remove" then
+        return -- player isn't even in a remove zone; ignore
     end
 
     local removed = {}
@@ -111,7 +114,7 @@ Commands[Core.commands.removeZeds] = function(player, args)
         if instanceof(zombie, "IsoZombie") then
             local zZone = Core.getLocation(zombie:getX(), zombie:getY()) or {}
             local id = Core.getZId(zombie)
-            if id and zZone.key == zone.key then
+            if id and zZone.key == zone.key and Core.zombieAction(zZone, zombie) == "remove" then
                 if Core.settings.Debug then
                     Core.debugLn(
                         "Removing zed " .. id .. " at " .. zombie:getX() .. "," .. zombie:getY() .. " in zone " ..

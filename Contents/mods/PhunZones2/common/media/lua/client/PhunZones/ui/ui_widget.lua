@@ -11,6 +11,12 @@ local FONT_HGT_LARGE = getTextManager():getFontHeight(UIFont.Large)
 local FONT_SCALE = FONT_HGT_SMALL / 14
 local HEADER_HGT = FONT_HGT_MEDIUM + 2 * 2
 
+local PAD = 5
+local TEXT_GAP = 1
+local PIP_HEIGHT = 5
+local PIP_GAP = 2
+local PIP_TOP_GAP = 4
+
 local profileName = "PhunZonesUIWidgety"
 PZ.ui.widget = ISPanel:derive(profileName);
 PZ.ui.widget.instances = {}
@@ -198,10 +204,7 @@ function UI:setData(data)
         if data.zone.title then
             self.data.title = data.zone.title
             self.data.titleWidth = getTextManager():MeasureStringX(UIFont.Medium, data.zone.title) + 20
-            if self.data.titleWidth > self.width then
-                self.data.titleWidth = self.width
-            end
-            self.data.titleHeight = FONT_HGT_MEDIUM + 10
+            self.data.titleHeight = FONT_HGT_MEDIUM
         else
             self.data.title = nil
             self.data.titleWidth = 0
@@ -211,10 +214,7 @@ function UI:setData(data)
         if data.zone.subtitle then
             self.data.subtitle = data.zone.subtitle
             self.data.subtitleWidth = getTextManager():MeasureStringX(UIFont.Small, data.zone.subtitle) + 20
-            if self.data.subtitleWidth > self.width then
-                self.data.subtitleWidth = self.width
-            end
-            self.data.subtitleHeight = FONT_HGT_SMALL
+            self.data.subtitleHeight = FONT_HGT_SMALL + TEXT_GAP
         else
             self.data.subtitle = nil
             self.data.subtitleWidth = 0
@@ -234,28 +234,41 @@ function UI:setData(data)
 
 end
 
+function UI:hasPips()
+    local difficulty = tonumber(self.data.difficulty)
+    local maxDifficulty = tonumber(self.data.maxDifficulty)
+    return difficulty ~= nil and maxDifficulty ~= nil and maxDifficulty > 0
+end
+
+-- height needed to stack title, subtitle and difficulty pips without overlap
+function UI:getContentHeight()
+    local h = PAD + (self.data.titleHeight or 0) + (self.data.subtitleHeight or 0)
+    if self:hasPips() then
+        h = h + PIP_TOP_GAP + PIP_HEIGHT
+    end
+    return h + PAD
+end
+
 function UI:prerender()
 
     if (ISWorldMap_instance and ISWorldMap_instance:isVisible()) then
         return
     end
 
-    ISPanel.prerender(self);
-
-    local x = 5
-    local y = 5
+    local x = PAD
+    local y = PAD
     local txtColor = self.normalTextColor
+    local contentHeight = self:getContentHeight()
 
     if self.downX == nil and self.userPosition ~= true then
         local minimap = getPlayerMiniMap(self.playerIndex)
 
         if not minimap then
             -- player does not minimap
-            local width = getTextManager():MeasureStringX(UIFont.Small, self.data.title or "") + x
             self.borderColor = self.hoverBorderColor
             self.backgroundColor = self.hoverBackgroundColor
-            self:setWidth(self.data.titleWidth + 40)
-            self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
+            self:setWidth(math.max(self.data.titleWidth or 0, self.data.subtitleWidth or 0) + 40)
+            self:setHeight(contentHeight)
 
             self:setX(getCore():getScreenWidth() - self.width - 2)
             self:setY(getCore():getScreenHeight() - self.height - 40)
@@ -281,15 +294,15 @@ function UI:prerender()
 
             -- Draw behind/over the map?
             if minimap.titleBar:isVisible() then
-                self.y = minimap.y - 50
+                self.y = minimap.y - contentHeight
             else
-                self.y = minimap.y - 50 - minimap.titleBar.height
+                self.y = minimap.y - contentHeight - minimap.titleBar.height
             end
 
             self.borderColor = self.hoverBorderColor
             self.backgroundColor = self.hoverBackgroundColor
             self:setWidth(minimap.width)
-            self:setHeight(50 + minimap.titleBar.height)
+            self:setHeight(contentHeight + minimap.titleBar.height)
             -- self:setHeight(self.data.titleHeight + self.data.subtitleHeight + 2)
             self.x = minimap.x
 
@@ -301,30 +314,38 @@ function UI:prerender()
 
         end
     else
+        -- user placed (or being dragged): keep position, but fit the content
         txtColor = self.hoverTextColor
         self.borderColor = self.hoverBorderColor
         self.backgroundColor = self.hoverBackgroundColor
+        local contentWidth = math.max(self.data.titleWidth or 0, self.data.subtitleWidth or 0) + 40
+        if self.width < contentWidth then
+            self:setWidth(contentWidth)
+        end
+        self:setHeight(contentHeight)
     end
+
+    -- draw background/border after sizing so it matches this frame's content
+    ISPanel.prerender(self);
 
     self:drawText(self.data.title or "", x, y, txtColor.r, txtColor.g, txtColor.b, txtColor.a, UIFont.Medium);
-    y = y + FONT_HGT_SMALL + 1
+    y = y + (self.data.titleHeight or 0)
 
     if self.data.subtitle then
-        self:drawText(self.data.subtitle or "", x, y, txtColor.r, txtColor.g, txtColor.b, txtColor.a, UIFont.Small);
-        y = y + FONT_HGT_SMALL + 1
+        y = y + TEXT_GAP
+        self:drawText(self.data.subtitle, x, y, txtColor.r, txtColor.g, txtColor.b, txtColor.a, UIFont.Small);
+        y = y + FONT_HGT_SMALL
     end
 
-    local difficulty = tonumber(self.data.difficulty)
-    local maxDifficulty = tonumber(self.data.maxDifficulty)
+    if self:hasPips() then
+        local difficulty = tonumber(self.data.difficulty)
+        local maxDifficulty = tonumber(self.data.maxDifficulty)
+        local pipHeight = PIP_HEIGHT
+        local gap = PIP_GAP
 
-    if difficulty and maxDifficulty and maxDifficulty > 0 then
-        local pad = 5
-        local pipHeight = 5
-        local gap = 2
-
-        local x0 = pad
-        local innerW = self.width - pad * 2
-        local y = self.height - pad - pipHeight
+        local x0 = PAD
+        local innerW = self.width - PAD * 2
+        y = y + PIP_TOP_GAP
 
         -- width of each pip so everything fits perfectly
         local totalGaps = gap * (maxDifficulty - 1)

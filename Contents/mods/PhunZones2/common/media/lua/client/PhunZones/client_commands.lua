@@ -50,6 +50,10 @@ Commands[Core.commands.updateEffectiveZone] = function(data)
     local player = Core.tools.getPlayerByUsername(data.player)
     if player then
         Core.setEffectiveZone(player, data.zone)
+        -- Kept so OnPhysicalZoneChanged can reapply it: the push can land
+        -- before the player reaches the void, and forced updates reset the
+        -- display zone to the physical one
+        player:getModData().PhunZones.rvZone = data.zone
     end
 end
 

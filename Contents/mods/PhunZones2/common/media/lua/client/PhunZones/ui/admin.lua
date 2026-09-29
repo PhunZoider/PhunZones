@@ -56,7 +56,7 @@ function ISAdminPanelUI:create()
     local x = UI_BORDER_SPACING + 1;
     local y = FONT_HGT_MEDIUM + UI_BORDER_SPACING * 2 + 1;
 
-    self.showPhunZonesConfigs = ISButton:new(x, y, btnWid, BUTTON_HGT, "** PhunZones **", self, showPhunZonesConfigs);
+    self.showPhunZonesConfigs = ISButton:new(x, y, btnWid, BUTTON_HGT, "PhunZones", self, showPhunZonesConfigs);
     self.showPhunZonesConfigs.internal = "";
     self.showPhunZonesConfigs:initialise();
     self.showPhunZonesConfigs:instantiate();
