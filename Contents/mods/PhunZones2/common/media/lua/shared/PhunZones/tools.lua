@@ -47,8 +47,13 @@ function tools.onlinePlayers(all)
 
     if tools.isLocal then
         onlinePlayers = ArrayList.new();
+        -- Nil before the player exists, eg another mod calling getLocation
+        -- at OnInitGlobalModData, which forces ini. Leave the list empty
+        -- rather than hand every caller a nil to index.
         local p = getPlayer()
-        onlinePlayers:add(p);
+        if p then
+            onlinePlayers:add(p);
+        end
     elseif all ~= false and isClient() then
         onlinePlayers = ArrayList.new();
         for i = 0, getOnlinePlayers():size() - 1 do

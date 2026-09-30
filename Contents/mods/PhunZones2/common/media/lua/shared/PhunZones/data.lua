@@ -795,7 +795,7 @@ return {
         inherits = "RavenCreek",
         difficulty = 4,
         modsRequired = "RavenCreekB42;kardinal_ravencreek_B42",
-        points = {{5382, 15340, 6398, 15453}}
+        points = {{5382, 15186, 6603, 15453}}
     },
     RavenCreekCityPort = {
         inherits = "RavenCreek",

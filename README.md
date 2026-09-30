@@ -8,7 +8,7 @@ A Project Zomboid mod for changing game behaviours depending on where the player
 - Single player or Multiplayer
 - Create and manage zones with special properties
 - Display custom location names when entering zones
-- Create zombie-free areas
+- Create zombie-free areas, or stop zombies spawning in an area while still letting them wander in
 - Block Bandits (requires Bandits 2)
 - Prevent safehouse creation
 - Restrict picking up or placing objects
@@ -80,7 +80,7 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | order         | number             | nil     | optional precedence number. The higher the number, the higher the precedence this zone will have. If left nil, the precedence will be in order of process (later entries overwrite earlier ones) | `order=4`                        |
 | enabled       | bool               | true    | set to false to disable loading of this zone                                                                                                                                                     | `enabled=false`                  |
 | difficulty    | number             | nil     | An optional number to signify difficulty level to the user                                                                                                                                       | `difficulty=4`                   |
-| zeds          | `Move` \| `Remove` | none    | `Move` teleport zeds away while `Remove` despawns them. The latter is more performant but can remove player corpses                                                                              | `zeds=move`                      |
+| zeds          | `Move` \| `Remove` \| `MoveSpawn` \| `RemoveSpawn` | none    | `Move` teleport zeds away while `Remove` despawns them. The latter is more performant but can remove player corpses. `MoveSpawn` and `RemoveSpawn` only deal with a zed when it spawns in the zone, so zeds that wander in are left alone. A zed that wanders in and is later unloaded (the player leaves, or it drifts out of range) counts as a spawn when it loads again. The game keeps topping the zone up, so these zones keep spawning zeds that are dealt with straight away. A bandit following a spawn-only setting is blocked from spawning, as with `bandits=nospawn` | `zeds=removespawn`               |
 | bandits       | `None` \| `Move` \| `Remove` \| `NoSpawn` | zeds | Requires the Bandits2 mod. `Move` and `Remove` act as they do for zeds, and also stop bandits spawning in the zone at all. `NoSpawn` (Block Spawns) only stops bandits spawning in the zone; any bandit that walks in, such as a player's allies, is left alone. Left unset, a zone follows its own `zeds` setting; set `None` to let bandits in where zeds are moved or removed. Note this reads the inherited value, so a `bandits` set on an ancestor counts as set | `bandits=remove`                 |
 | alife         | `None` \| `NoSpawn` | none | Requires the Project A-Life NPCs mod. `NoSpawn` (Block Spawns) stops A-Life NPCs spawning in the zone; any that walk in, such as friendly ones, are left alone. A-Life NPCs are never moved or removed by the `zeds` or `bandits` settings, since A-Life would just respawn them | `alife=nospawn`                  |
 | noannounce    | bool               | false   | Do not show the title of this location to the player when they first enter                                                                                                                       | `noannounce=true`                |

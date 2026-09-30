@@ -139,6 +139,12 @@ PhunZones = {
                 }, {
                     label = getText("IGUI_PhunZones_ZedAction_Remove"),
                     value = "remove"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_RemoveSpawn"),
+                    value = "removespawn"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_MoveSpawn"),
+                    value = "movespawn"
                 }}
             end
         },
@@ -384,10 +390,19 @@ local SPAWN_HOOKED = {
     alife = true
 }
 
+-- The zed-only counterparts of "nospawn". A zed spawn can't be refused, so
+-- these deal with a zed the moment it is created in the zone (removing it or
+-- moving it out) and leave it alone from then on, which lets zeds that
+-- wander in stay.
+local SPAWN_ONLY = {
+    removespawn = "remove",
+    movespawn = "move"
+}
+
 -- The action a zone asks for, as one of "none", "move" or "remove", plus
--- "nospawn" for bandits and A-Life. field is "zeds", "bandits" or "alife".
--- Anything unset or unrecognised reads as "none", so callers only ever have
--- to test the values that mean something.
+-- "nospawn" for bandits and A-Life and "removespawn"/"movespawn" for zeds.
+-- field is "zeds", "bandits" or "alife". Anything unset or unrecognised reads
+-- as "none", so callers only ever have to test the values that mean something.
 --
 -- "nospawn" refuses new spawns in the zone but leaves alone anything that
 -- walks in, so allies can follow a player there.
@@ -406,13 +421,32 @@ function Core.zedAction(zone, field)
     if action == "nospawn" and SPAWN_HOOKED[field] then
         return action
     end
+    if SPAWN_ONLY[action] and field == "zeds" then
+        return action
+    end
     return "none"
 end
 
 -- True when the action acts on something already in the zone, which is what
--- the per-zombie enforcement exists for. "nospawn" is settled at the spawn.
+-- the per-zombie enforcement exists for. "nospawn" is settled at the spawn,
+-- and "removespawn"/"movespawn" when the zombie is created.
 function Core.evicts(action)
     return action == "move" or action == "remove"
+end
+
+-- What to do to a zombie that has just been created in the zone: "move",
+-- "remove" or nil. Evicting actions apply at creation as well, so a zombie is
+-- dealt with before its first update rather than on it.
+function Core.onCreateAction(action)
+    if Core.evicts(action) then
+        return action
+    end
+    return SPAWN_ONLY[action]
+end
+
+-- True when a zombie created in a zone with this action is dealt with there.
+function Core.actsOnCreate(action)
+    return Core.onCreateAction(action) ~= nil
 end
 
 -- The action that applies to a bandit in this zone. A zone that says nothing at
@@ -422,11 +456,18 @@ end
 --
 -- Note this reads the resolved zone, so a bandit value inherited from _default
 -- counts as set. Only a chain that mentions bandits nowhere falls back.
+--
+-- A zeds "removespawn"/"movespawn" becomes "nospawn" for a bandit: bandit
+-- spawns can be refused outright, which is what those settings are after.
 function Core.banditAction(zone)
     if zone and zone.bandits ~= nil then
         return Core.zedAction(zone, "bandits")
     end
-    return Core.zedAction(zone, "zeds")
+    local action = Core.zedAction(zone, "zeds")
+    if SPAWN_ONLY[action] then
+        return "nospawn"
+    end
+    return action
 end
 
 -- The action that applies to an A-Life NPC in this zone: "none" or "nospawn".
@@ -464,7 +505,7 @@ function Core.isALife(zed)
 end
 
 -- The action that applies to this particular zombie in this zone, as
--- "none"/"move"/"remove"/"nospawn". Every per-zombie enforcement path goes
+-- "none"/"move"/"remove"/"nospawn"/"removespawn"/"movespawn". Every per-zombie enforcement path goes
 -- through here so a zed, a bandit and an A-Life NPC are told apart the same
 -- way everywhere.
 function Core.zombieAction(zone, zed)
