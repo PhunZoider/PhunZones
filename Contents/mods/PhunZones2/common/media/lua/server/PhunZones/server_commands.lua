@@ -94,14 +94,40 @@ Commands[Core.commands.evictZeds] = function(player, args)
     Core.evictZeds(player, args and args.zone)
 end
 
+-- How far, in tiles, the server's copy of a zombie may be from where the client
+-- saw it created and still count as the same one.
+local SPAWN_MATCH_RANGE = 2
+
 Commands[Core.commands.removeZeds] = function(player, args)
     Core.debug("Removing zeds in " .. tostring(args and args.zone), args)
     -- Re-derive from server state: only remove zeds that are
     -- (a) in the player's current cell, AND
-    -- (b) in a zone that actually has zeds==3 action
+    -- (b) in the player's zone, AND
+    -- (c) ones that zone's rule says to remove. A bandit exempted by its own
+    --     rule, or an A-Life NPC, is left alone even where zeds are removed;
+    --     the server is where A-Life's markers can be trusted.
+    --
+    -- args.at lists where the client removed a zombie as it was created. The
+    -- zombie there is removed too, wherever it is, provided its own zone removes
+    -- at creation; that is the only way a spawn-only zone works, since sweeping
+    -- it would take the zeds that were allowed to wander in. Positions rather
+    -- than IDs, because from B42.17 a zombie's ID differs between machines.
     local zone = Core.getLocation(player:getX(), player:getY()) or {}
-    if tostring(zone.zeds) ~= "remove" then
-        return -- player isn't even in a remove-zeds zone; ignore
+    local sweep = Core.zedAction(zone, "zeds") == "remove" or Core.banditAction(zone) == "remove"
+    local at = args and args.at or {}
+    if not sweep and #at == 0 then
+        return -- player isn't even in a remove zone; ignore
+    end
+
+    local function wasNamed(zombie)
+        local x, y, z = zombie:getX(), zombie:getY(), math.floor(zombie:getZ())
+        for _, p in ipairs(at) do
+            if math.floor(p.z or 0) == z and math.abs(p.x - x) <= SPAWN_MATCH_RANGE and math.abs(p.y - y) <=
+                SPAWN_MATCH_RANGE then
+                return true
+            end
+        end
+        return false
     end
 
     local removed = {}
@@ -111,7 +137,9 @@ Commands[Core.commands.removeZeds] = function(player, args)
         if instanceof(zombie, "IsoZombie") then
             local zZone = Core.getLocation(zombie:getX(), zombie:getY()) or {}
             local id = Core.getZId(zombie)
-            if id and zZone.key == zone.key then
+            local action = Core.zombieAction(zZone, zombie)
+            if id and ((sweep and zZone.key == zone.key and action == "remove") or
+                (#at > 0 and Core.onCreateAction(action) == "remove" and wasNamed(zombie))) then
                 if Core.settings.Debug then
                     Core.debugLn(
                         "Removing zed " .. id .. " at " .. zombie:getX() .. "," .. zombie:getY() .. " in zone " ..

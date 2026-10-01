@@ -27,9 +27,7 @@ Core.evictZeds = function(playerObj, zoneKey)
         if instanceof(zed, "IsoZombie") then
             local zedZone = Core.getLocation(zed:getX(), zed:getY())
             if zedZone and zedZone.key == zoneKey then
-                local isBandit = bandits2Active and zed:getModData().brain ~= nil
-                local shouldEvict = (isBandit and shouldEvictBandits) or (not isBandit and shouldEvictZeds)
-                if shouldEvict then
+                if Core.zombieAction(zone, zed) == "move" then
                     local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zoneKey)
                     if ex then
                         zed:setX(ex + ZombRand(-2, 2))

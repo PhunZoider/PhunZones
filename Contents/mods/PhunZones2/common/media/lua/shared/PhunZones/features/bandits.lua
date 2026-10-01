@@ -32,7 +32,7 @@ local function resolveSpawn(x, y, z)
     local zone = Core.getLocation(x, y)
     local action = Core.banditAction(zone)
 
-    if action == "remove" then
+    if action == "remove" or action == "nospawn" then
         return nil
     end
 

@@ -1000,12 +1000,22 @@ function Core.buildZoneData(filter, profileOverride)
     -- zombie whenever the player was somewhere unrestricted -- exactly the case
     -- where a bandit spawns just over the boundary of the zone the player is
     -- standing in and is never touched.
+    --
+    -- hasCreateAction is the same question for zombies at the moment they are
+    -- created, which the spawn-only zed settings also answer yes to.
     local banditsActive = getActivatedMods():contains("Bandits2")
     local hasZedAction = false
+    local hasCreateAction = false
     for _, zone in pairs(lookup) do
-        if Core.zedAction(zone, "zeds") ~= "none" or
-            (banditsActive and Core.banditAction(zone) ~= "none") then
+        local zedAction = Core.zedAction(zone, "zeds")
+        local banditEvicts = banditsActive and Core.evicts(Core.banditAction(zone))
+        if Core.evicts(zedAction) or banditEvicts then
             hasZedAction = true
+        end
+        if Core.actsOnCreate(zedAction) or banditEvicts then
+            hasCreateAction = true
+        end
+        if hasZedAction and hasCreateAction then
             break
         end
     end
@@ -1015,6 +1025,7 @@ function Core.buildZoneData(filter, profileOverride)
         zones = ordered,
         lookup = lookup,
         hasZedAction = hasZedAction,
+        hasCreateAction = hasCreateAction,
         -- Every zone rect in precedence order. Kept alongside the chunk map so
         -- callers that need to reason about overlap agree with getLocation.
         flat = flat,

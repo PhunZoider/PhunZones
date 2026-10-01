@@ -14,6 +14,10 @@ local zedZonePlayerCount = 0
 -- gating on the player meant a zed sitting in a restricted zone was ignored
 -- whenever every player happened to be somewhere unrestricted.
 local zoneActionsExist = false
+-- True when any zone deals with zombies as they are created, which includes
+-- the spawn-only zed settings that zoneActionsExist leaves out.
+local createActionsExist = false
+local dataBuilt = false
 
 -- Per-zombie cooldown. Each zombie self-tests its zone location at most once
 -- every ZED_COOLDOWN seconds. Out-of-zone zombies get the same cooldown so
@@ -26,25 +30,43 @@ local zedCheckCooldown = {} -- [zedId] = nextAllowedTimestamp
 local pendingRemove = {} -- zed IDs queued for removal, flushed each tick
 local sentForRemoval = {} -- [zedId] = true; prevents re-queuing until purge
 
--- The action a zone asks for, as "none"/"move"/"remove". Legacy index values are
--- migrated by Core.zedAction. Core.banditAction only matters when Bandits2 is
--- loaded, so a config carried in from a server that ran it does nothing here.
-local function zedActionOf(zone)
-    return Core.zedAction(zone, "zeds")
-end
+-- Zombies created since the last check, held briefly before their zone is
+-- read. At creation a zombie may not be placed yet, and a bandit or A-Life
+-- NPC may not carry the markers that tell it apart from a zed until its mod
+-- has had a moment to tag it (on an MP client, until the sync arrives).
+local CREATE_DELAY_MS = 500
+local CREATE_MAX_TRIES = 10 -- checks before giving up on a zombie with no square
+local pendingCreated = {} -- { zed = IsoZombie, at = dueMs, tries = n }
+local pendingCreateRemove = {} -- {x, y, z} of zombies removed at creation, flushed each tick
 
-local function actionFor(zone, isBandit)
-    if isBandit then
-        return Core.banditAction(zone)
+local function moveOut(zed, zoneKey)
+    local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zoneKey)
+    if ex then
+        zed:setX(ex + ZombRand(-2, 2))
+        zed:setY(ey + ZombRand(-2, 2))
+        zed:setZ(ez)
     end
-    return zedActionOf(zone)
 end
 
+local function queueRemove(zed, id)
+    if sentForRemoval[id] then
+        return
+    end
+    pendingRemove[#pendingRemove + 1] = id
+    sentForRemoval[id] = true
+    zed:removeFromWorld()
+    zed:removeFromSquare()
+end
+
+-- Whether anything in this zone can be moved or removed. Which action applies
+-- to a given zombie is Core.zombieAction's call. Core.banditAction only matters
+-- when Bandits2 is loaded, so a config carried in from a server that ran it
+-- does nothing here.
 local function zoneHasAction(zone)
-    if zedActionOf(zone) ~= "none" then
+    if Core.evicts(Core.zedAction(zone, "zeds")) then
         return true
     end
-    return bandits2Active and Core.banditAction(zone) ~= "none"
+    return bandits2Active and Core.evicts(Core.banditAction(zone))
 end
 
 -- Per-zombie ongoing enforcement. Fires every AI update for each nearby zombie.
@@ -80,29 +102,95 @@ Events.OnZombieUpdate.Add(function(zed)
         return
     end
 
-    local isBandit = bandits2Active and zed:getModData().brain ~= nil
-    local action = actionFor(zedZone, isBandit)
+    local action = Core.zombieAction(zedZone, zed)
 
     if action == "move" then
-        local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zedZone.key)
-        if ex then
-            zed:setX(ex + ZombRand(-2, 2))
-            zed:setY(ey + ZombRand(-2, 2))
-            zed:setZ(ez)
-        end
+        moveOut(zed, zedZone.key)
         -- Cooldown after move prevents immediately re-moving the same zombie.
         zedCheckCooldown[id] = now + ZED_COOLDOWN
     elseif action == "remove" then
-        if not sentForRemoval[id] then
-            pendingRemove[#pendingRemove + 1] = id
-            sentForRemoval[id] = true
-            zed:removeFromWorld()
-            zed:removeFromSquare()
-            -- No cooldown: zombie is gone. Omitting the entry means a newly
-            -- wandering-in zombie is caught on its very next update tick.
-        end
+        queueRemove(zed, id)
+        -- No cooldown: zombie is gone. Omitting the entry means a newly
+        -- wandering-in zombie is caught on its very next update tick.
+    else
+        -- The zone evicts something, just not this zombie: an exempted bandit,
+        -- an A-Life NPC, or a zed where the zed rule is spawn-only.
+        zedCheckCooldown[id] = now + ZED_COOLDOWN
     end
 end)
+
+-- Creation-time enforcement. Every zombie that becomes real near a player
+-- passes through here: a fresh spawn, but also one reloaded with its chunk or
+-- turned real from the population manager. A spawn-only zone can't tell those
+-- apart, so a zed that wandered in and was later unloaded goes the way of a
+-- spawn when it comes back. Zeds that stay loaded are never looked at again.
+Events.OnZombieCreate.Add(function(zed)
+    -- Until the zone data is built there is no telling whether anything cares,
+    -- and the zombies loaded with the world are created in that window.
+    if dataBuilt and not createActionsExist then
+        return
+    end
+    pendingCreated[#pendingCreated + 1] = {
+        zed = zed,
+        at = getTimestampMs() + CREATE_DELAY_MS,
+        tries = 0
+    }
+end)
+
+local function checkCreated(zed)
+    if zed:isDead() then
+        return true
+    end
+    if not zed:getCurrentSquare() then
+        return false
+    end
+    local zone = Core.getLocation(zed:getX(), zed:getY())
+    if not zone then
+        return true
+    end
+    local action = Core.onCreateAction(Core.zombieAction(zone, zed))
+    if action == "move" then
+        moveOut(zed, zone.key)
+        local id = Core.getZId(zed)
+        if id then
+            zedCheckCooldown[id] = getTimestamp() + ZED_COOLDOWN
+        end
+    elseif action == "remove" then
+        -- Sent by position: the server matches it to its own copy of this
+        -- zombie without sweeping the zone, which a spawn-only zone must not do.
+        pendingCreateRemove[#pendingCreateRemove + 1] = {
+            x = zed:getX(),
+            y = zed:getY(),
+            z = zed:getZ()
+        }
+        zed:removeFromWorld()
+        zed:removeFromSquare()
+    end
+    return true
+end
+
+local function processCreated()
+    if #pendingCreated == 0 or not dataBuilt then
+        return
+    end
+    if not createActionsExist then
+        pendingCreated = {}
+        return
+    end
+    local now = getTimestampMs()
+    local waiting = {}
+    for _, entry in ipairs(pendingCreated) do
+        if now < entry.at then
+            waiting[#waiting + 1] = entry
+        elseif not checkCreated(entry.zed) then
+            entry.tries = entry.tries + 1
+            if entry.tries < CREATE_MAX_TRIES then
+                waiting[#waiting + 1] = entry
+            end
+        end
+    end
+    pendingCreated = waiting
+end
 
 -- Zone-entry sweep: bulk-processes all zombies currently in the zone so the
 -- player sees immediate enforcement on arrival. Also primes each zombie's
@@ -131,16 +219,10 @@ local function sweepZoneZeds(playerObj, zone)
         if instanceof(zed, "IsoZombie") then
             local zedZone = Core.getLocation(zed:getX(), zed:getY())
             if zedZone and zedZone.key == zone.key then
-                local isBandit = bandits2Active and zed:getModData().brain ~= nil
-                local action = actionFor(zone, isBandit)
+                local action = Core.zombieAction(zone, zed)
                 local id = Core.getZId(zed)
                 if action == "move" then
-                    local ex, ey, ez = Core.findNearestSafePosition(zed:getX(), zed:getY(), zed:getZ(), zone.key)
-                    if ex then
-                        zed:setX(ex + ZombRand(-2, 2))
-                        zed:setY(ey + ZombRand(-2, 2))
-                        zed:setZ(ez)
-                    end
+                    moveOut(zed, zone.key)
                     if id then
                         zedCheckCooldown[id] = now + ZED_COOLDOWN
                     end
@@ -164,6 +246,15 @@ local function sweepZoneZeds(playerObj, zone)
         })
     end
 end
+
+-- Inside an RV interior, show the zone the vehicle is parked in rather than
+-- the void itself. rvZone is the last vehicle zone the server pushed.
+Events[Core.events.OnPhysicalZoneChanged].Add(function(playerObj, stored)
+    local physical = Core.data.lookup[stored.at.zone]
+    if physical and physical.isVoid and stored.rvZone and Core.data.lookup[stored.rvZone] then
+        stored.zone = stored.rvZone
+    end
+end)
 
 Events[Core.events.OnEffectiveZoneChanged].Add(function(playerObj, stored)
     local zone = Core.data.lookup[stored.zone] or {}
@@ -194,25 +285,43 @@ Events[Core.events.OnPhunZoneReady].Add(function()
 
     local nextCheck = 0
     local nextPurge = 0
+    local nextTrack = 0
+    -- Fixed rather than a setting: this is what decides how far a player
+    -- turned away from a noplayers zone gets sent back, and it is a
+    -- coordinate copy, not a zone check.
+    local TRACK_MS = 250
 
     Events.OnTick.Add(function()
         local now = getTimestamp()
 
         if now >= nextCheck then
-            nextCheck = now + (Core.settings.updateInterval or 1)
+            nextCheck = now + (Core.settings.UpdateInterval or 1)
             local players = Core.tools.onlinePlayers()
             for i = 0, players:size() - 1, 1 do
                 Core.updateModData(players:get(i), true)
             end
+        else
+            local nowMs = getTimestampMs()
+            if nowMs >= nextTrack then
+                nextTrack = nowMs + TRACK_MS
+                local players = Core.tools.onlinePlayers()
+                for i = 0, players:size() - 1, 1 do
+                    Core.trackPlayerPosition(players:get(i))
+                end
+            end
         end
 
-        if #pendingRemove > 0 then
+        processCreated()
+
+        if #pendingRemove > 0 or #pendingCreateRemove > 0 then
             if isClient() then
                 sendClientCommand(Core.name, Core.commands.removeZeds, {
-                    id = pendingRemove
+                    id = pendingRemove,
+                    at = pendingCreateRemove
                 })
             end
             pendingRemove = {}
+            pendingCreateRemove = {}
         end
 
         -- Purge stale cooldown entries every 5 minutes. Despawned zombies leave
@@ -232,6 +341,8 @@ Events[Core.events.OnDataBuilt].Add(function(playerObj, buttonId)
     -- nothing per zombie afterwards, and turning one on must take effect
     -- without waiting for anyone to walk into it.
     zoneActionsExist = (Core.data and Core.data.hasZedAction) == true
+    createActionsExist = (Core.data and Core.data.hasCreateAction) == true
+    dataBuilt = true
     playersInZedZone = {}
     zedZonePlayerCount = 0
     zedCheckCooldown = {} -- zone data changed; force fresh zone checks

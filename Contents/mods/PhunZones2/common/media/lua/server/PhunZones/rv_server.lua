@@ -34,10 +34,19 @@ if GetInToRV then
         local v = modData.Vehicles[p.VehicleId]
 
         if v and v.x then
+            local zone = (Core.getLocation(v.x, v.y) or {}).key
             md.players[player:getUsername()] = {
                 vid = p.VehicleId,
-                zone = (Core.getLocation(v.x, v.y) or {}).key
+                zone = zone
             }
+            -- processVehicleZoneChanges only pushes when the vehicle changes
+            -- zone, so without this a parked RV would show the void's title
+            if zone then
+                sendServerCommand(player, Core.name, Core.commands.updateEffectiveZone, {
+                    player = player:getUsername(),
+                    zone = zone
+                })
+            end
         end
 
         return result
@@ -85,7 +94,7 @@ Events[Core.events.OnPhunZoneReady].Add(function()
     local nextCheck = 0
     Events.OnTick.Add(function()
         if getTimestamp() >= nextCheck then
-            nextCheck = getTimestamp() + (Core.settings.updateInterval or 2)
+            nextCheck = getTimestamp() + (Core.settings.UpdateInterval or 2)
             processVehicleZoneChanges()
         end
     end)

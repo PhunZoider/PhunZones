@@ -139,6 +139,12 @@ PhunZones = {
                 }, {
                     label = getText("IGUI_PhunZones_ZedAction_Remove"),
                     value = "remove"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_RemoveSpawn"),
+                    value = "removespawn"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_MoveSpawn"),
+                    value = "movespawn"
                 }}
             end
         },
@@ -157,6 +163,24 @@ PhunZones = {
                 }, {
                     label = getText("IGUI_PhunZones_ZedAction_Remove"),
                     value = "remove"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_NoSpawn"),
+                    value = "nospawn"
+                }}
+            end
+        },
+        alife = {
+            label = "IGUI_PhunZones_ALife",
+            type = "combo",
+            tooltip = "IGUI_PhunZones_ALife_tooltip",
+            group = "combat",
+            getOptions = function()
+                return {{
+                    label = getText("IGUI_PhunZones_ZedAction_None"),
+                    value = "none"
+                }, {
+                    label = getText("IGUI_PhunZones_ZedAction_NoSpawn"),
+                    value = "nospawn"
                 }}
             end
         },
@@ -358,9 +382,30 @@ local ZED_ACTION_MIGRATE = {
     ["3"] = "remove"
 }
 
--- The action a zone asks for, as one of "none", "move" or "remove".
--- field is "zeds" or "bandits". Anything unset or unrecognised reads as "none",
--- so callers only ever have to test the two values that mean something.
+-- The fields whose spawns we see before they happen, and so the only ones
+-- "nospawn" means anything on. A zed spawn is the engine's and can only be
+-- dealt with after the fact.
+local SPAWN_HOOKED = {
+    bandits = true,
+    alife = true
+}
+
+-- The zed-only counterparts of "nospawn". A zed spawn can't be refused, so
+-- these deal with a zed the moment it is created in the zone (removing it or
+-- moving it out) and leave it alone from then on, which lets zeds that
+-- wander in stay.
+local SPAWN_ONLY = {
+    removespawn = "remove",
+    movespawn = "move"
+}
+
+-- The action a zone asks for, as one of "none", "move" or "remove", plus
+-- "nospawn" for bandits and A-Life and "removespawn"/"movespawn" for zeds.
+-- field is "zeds", "bandits" or "alife". Anything unset or unrecognised reads
+-- as "none", so callers only ever have to test the values that mean something.
+--
+-- "nospawn" refuses new spawns in the zone but leaves alone anything that
+-- walks in, so allies can follow a player there.
 function Core.zedAction(zone, field)
     if not zone then
         return "none"
@@ -373,7 +418,35 @@ function Core.zedAction(zone, field)
     if action == "move" or action == "remove" then
         return action
     end
+    if action == "nospawn" and SPAWN_HOOKED[field] then
+        return action
+    end
+    if SPAWN_ONLY[action] and field == "zeds" then
+        return action
+    end
     return "none"
+end
+
+-- True when the action acts on something already in the zone, which is what
+-- the per-zombie enforcement exists for. "nospawn" is settled at the spawn,
+-- and "removespawn"/"movespawn" when the zombie is created.
+function Core.evicts(action)
+    return action == "move" or action == "remove"
+end
+
+-- What to do to a zombie that has just been created in the zone: "move",
+-- "remove" or nil. Evicting actions apply at creation as well, so a zombie is
+-- dealt with before its first update rather than on it.
+function Core.onCreateAction(action)
+    if Core.evicts(action) then
+        return action
+    end
+    return SPAWN_ONLY[action]
+end
+
+-- True when a zombie created in a zone with this action is dealt with there.
+function Core.actsOnCreate(action)
+    return Core.onCreateAction(action) ~= nil
 end
 
 -- The action that applies to a bandit in this zone. A zone that says nothing at
@@ -383,9 +456,64 @@ end
 --
 -- Note this reads the resolved zone, so a bandit value inherited from _default
 -- counts as set. Only a chain that mentions bandits nowhere falls back.
+--
+-- A zeds "removespawn"/"movespawn" becomes "nospawn" for a bandit: bandit
+-- spawns can be refused outright, which is what those settings are after.
 function Core.banditAction(zone)
     if zone and zone.bandits ~= nil then
         return Core.zedAction(zone, "bandits")
+    end
+    local action = Core.zedAction(zone, "zeds")
+    if SPAWN_ONLY[action] then
+        return "nospawn"
+    end
+    return action
+end
+
+-- The action that applies to an A-Life NPC in this zone: "none" or "nospawn".
+-- Unlike bandits this never falls back to the zeds setting, and Move/Remove
+-- are not offered. A-Life keeps its own record of every NPC and a watchdog
+-- that respawns a body which goes missing, so deleting or teleporting one
+-- behind its back just starts a fight with it.
+function Core.alifeAction(zone)
+    if Core.zedAction(zone, "alife") == "nospawn" then
+        return "nospawn"
+    end
+    return "none"
+end
+
+-- Looked up on first use rather than at load: the mod list does not change
+-- mid-game, and this is asked once per zombie check.
+local bandits2Active
+
+function Core.isBandit(zed)
+    if bandits2Active == nil then
+        bandits2Active = getActivatedMods():contains("Bandits2")
+    end
+    return bandits2Active and zed:getModData().brain ~= nil
+end
+
+-- A-Life NPCs are zombie bodies. The server stamps ProjectALifeOwned on the
+-- body; an MP client only gets the flags once A-Life's own presentation
+-- message arrives, so the animation variable is checked as well.
+function Core.isALife(zed)
+    local data = zed:getModData()
+    if data and (data.ProjectALifeOwned == true or data.ProjectALifeActor == true) then
+        return true
+    end
+    return zed.GetVariable ~= nil and zed:GetVariable("ALifeActor") == "true"
+end
+
+-- The action that applies to this particular zombie in this zone, as
+-- "none"/"move"/"remove"/"nospawn"/"removespawn"/"movespawn". Every per-zombie enforcement path goes
+-- through here so a zed, a bandit and an A-Life NPC are told apart the same
+-- way everywhere.
+function Core.zombieAction(zone, zed)
+    if Core.isALife(zed) then
+        return Core.alifeAction(zone)
+    end
+    if Core.isBandit(zed) then
+        return Core.banditAction(zone)
     end
     return Core.zedAction(zone, "zeds")
 end
@@ -523,86 +651,116 @@ end
 -- Zone access enforcement — client-side only, returns false if player ejected
 -- ---------------------------------------------------------------------------
 
--- Returns a position just outside the zone rect containing (x, y).
--- Fast path: looks up the containing rect directly and jumps to its nearest
--- edge in O(1). Falls back to a spiral search only when overlapping rects
--- of the same zone cover that edge tile.
-function Core.findNearestSafePosition(x, y, z, restrictedZoneKey)
-    -- Find the specific rect for this zone that contains (x, y)
-    local ckey = math.floor(x / 300) .. "_" .. math.floor(y / 300)
-    local rects = Core.data and Core.data.cells and Core.data.cells[ckey] or {}
-    local x1, y1, x2, y2
-    for _, v in ipairs(rects) do
-        if v[1] == restrictedZoneKey and x >= v[2] and x <= v[4] and y >= v[3] and y <= v[5] then
-            x1, y1, x2, y2 = v[2], v[3], v[4], v[5]
-            break
-        end
-    end
-
-    if x1 then
-        -- Distance (in tiles) to clear each edge
-        local dLeft = x - x1 + 1
-        local dRight = x2 - x + 1
-        local dTop = y - y1 + 1
-        local dBot = y2 - y + 1
-        local tx, ty
-        local best = math.min(dLeft, dRight, dTop, dBot)
-        if best == dLeft then
-            tx, ty = x1 - 1, y
-        elseif best == dRight then
-            tx, ty = x2 + 1, y
-        elseif best == dTop then
-            tx, ty = x, y1 - 1
-        else
-            tx, ty = x, y2 + 1
-        end
-        -- Single check: verify the edge tile isn't inside an overlapping rect
-        local check = Core.getLocation(tx, ty)
-        if not check or check.key ~= restrictedZoneKey then
-            return tx, ty, z
-        end
-        -- Overlapping rect covers that edge — fall through to spiral
-    end
-
-    -- Fallback spiral for degenerate/heavily-overlapping cases
-    for radius = 1, 50 do
-        for dx = -radius, radius do
-            for dy = -radius, radius do
-                if math.abs(dx) == radius or math.abs(dy) == radius then
-                    local zone = Core.getLocation(x + dx, y + dy)
-                    if not zone or zone.key ~= restrictedZoneKey then
-                        return x + dx, y + dy, z
-                    end
-                end
+-- The rect getLocation would match at (x, y): the same cell, the same order,
+-- the same test, so "which rect am I in" never disagrees with "which zone".
+local function rectAt(x, y)
+    local cells = Core.data and Core.data.cells
+    local test = cells and cells[math.floor(x / 300) .. "_" .. math.floor(y / 300)]
+    if test then
+        for _, v in ipairs(test) do
+            if x >= v[2] and x <= v[4] and y >= v[3] and y <= v[5] then
+                return v
             end
         end
     end
     return nil
 end
 
--- Consecutive denied ticks per player, keyed by username. Resets whenever the
--- player is allowed through, or moves to a different restricted zone.
-local denialStreak = {}
+-- Each hop clears one rect, so this only bounds a zone stitched together from
+-- an absurd number of them along one line.
+local MAX_HOPS = 64
 
--- After this many consecutive failed relocations we conclude the vehicle
--- cannot be moved on this build and switch that player to brake-only mode for
--- as long as they stay in the zone. Also covers strategies that report success
--- but get snapped back by the physics step.
-local VEHICLE_ATTEMPTS = 3
+-- Walks from (x, y) in one direction until it is out of the zone, a whole
+-- rect at a time: inside a rect the next tile that could be outside is the
+-- one past its far edge, so nothing in between is worth looking at. A rect
+-- belonging to another zone ends the walk, since getLocation says that tile
+-- is not this zone. Returns how far it went to get out, or nil.
+local function exitAlong(x, y, dx, dy, zoneKey)
+    local px, py = x, y
+    for _ = 1, MAX_HOPS do
+        local v = rectAt(px, py)
+        if not v or v[1] ~= zoneKey then
+            return math.abs(px - x) + math.abs(py - y), px, py
+        end
+        if dx < 0 then
+            px = v[2] - 1
+        elseif dx > 0 then
+            px = v[4] + 1
+        elseif dy < 0 then
+            py = v[3] - 1
+        else
+            py = v[5] + 1
+        end
+    end
+    return nil
+end
 
--- The same idea for a player on foot, which previously had no limit at all:
--- streak.count was counted but only ever read on the vehicle branch, so a move
--- that would not stick was retried every tick for as long as they stood there.
--- A move the engine cannot service does not become serviceable by repetition,
--- and repeating it is how a client ends up being thrown back and forth while
--- its chunks are still streaming.
-local PLAYER_ATTEMPTS = 5
+local DIRECTIONS = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+
+-- Returns a position outside zone restrictedZoneKey, taking the shortest of
+-- the four straight lines out from (x, y). margin is how many tiles past the
+-- edge to land (default 1, the first tile outside); anything larger is backed
+-- off to the edge if it would land somewhere this zone covers again.
+function Core.findNearestSafePosition(x, y, z, restrictedZoneKey, margin)
+    margin = margin or 1
+    local best, bx, by, bdx, bdy
+    for _, d in ipairs(DIRECTIONS) do
+        local dist, ex, ey = exitAlong(x, y, d[1], d[2], restrictedZoneKey)
+        if dist and Core.isValidWorldPosition(ex, ey) and (not best or dist < best) then
+            best, bx, by, bdx, bdy = dist, ex, ey, d[1], d[2]
+        end
+    end
+    if not best then
+        return nil
+    end
+
+    if margin > 1 then
+        local mx, my = bx + bdx * (margin - 1), by + bdy * (margin - 1)
+        local zone = Core.getLocation(mx, my)
+        if (not zone or zone.key ~= restrictedZoneKey) and Core.isValidWorldPosition(mx, my) then
+            return mx, my, z
+        end
+    end
+    return bx, by, z
+end
+
+-- How far past the border a denied player is put. Landing on the first tile
+-- outside leaves them a step from the line, and a player still holding
+-- forward is back over it before the next check: a loop that looks like the
+-- zone not working.
+local PUSHBACK = 3
+
+-- lastAt pushed PUSHBACK tiles further out, along the line from where they
+-- are now (inside) to lastAt (outside) -- the way they came in. Falls back to
+-- lastAt itself if the pushed spot is not somewhere safe.
+local function pushedBack(lastAt, fromX, fromY, zoneKey)
+    local dx, dy = lastAt.x - fromX, lastAt.y - fromY
+    local len = math.sqrt(dx * dx + dy * dy)
+    if len < 0.01 then
+        return lastAt.x, lastAt.y, lastAt.z
+    end
+    local px, py = lastAt.x + dx / len * PUSHBACK, lastAt.y + dy / len * PUSHBACK
+    local zone = Core.getLocation(px, py)
+    if (not zone or zone.key ~= zoneKey) and Core.isValidWorldPosition(px, py) then
+        return px, py, lastAt.z
+    end
+    return lastAt.x, lastAt.y, lastAt.z
+end
+
+-- There is deliberately no attempt limit. One used to stop moving a player
+-- (or switch a car to brake-only) after a few denials, but a denial cannot
+-- tell "the move failed" from "the move worked and they came straight back",
+-- and the second is the common case: anyone holding forward against the
+-- border wore the zone down. And because enforcement only runs while their
+-- physical zone differs from the accepted one, giving up meant giving up
+-- until they next crossed a boundary. Retrying is cheap -- once per zone
+-- check, never stacked on an unfinished port -- so we always retry.
 
 -- lastAt is stored.at { zone, x, y, z } from the previous accepted tick —
 -- used as the teleport-back target when access is denied.
 -- If lastAt is itself inside the restricted zone (e.g. login after a
--- restriction was added), or is not somewhere the engine can put anybody, a
--- spiral search finds the nearest safe tile instead.
+-- restriction was added), or is not somewhere the engine can put anybody,
+-- the nearest edge in a straight line is used instead.
 -- Returns false when the player was moved (or could not be), true when they
 -- are allowed to stay and the caller should record their position.
 function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
@@ -618,7 +776,6 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
     end
 
     if effectiveZone.noplayers ~= true or Core.isExempt(obj) then
-        denialStreak[who] = nil
         return true
     end
 
@@ -628,73 +785,38 @@ function Core.enforceZoneAccess(obj, effectiveZone, lastAt)
         end
     end
 
-    local streak = denialStreak[who]
-    if not streak or streak.zone ~= effectiveZone.key then
-        streak = {
-            zone = effectiveZone.key,
-            count = 0,
-            brakeOnly = false,
-            stalled = false
-        }
-        denialStreak[who] = streak
-    end
-    streak.count = streak.count + 1
-
     local vehicle = obj.getVehicle and obj:getVehicle() or nil
-
-    -- Vehicle relocation has already proven unavailable for this player in
-    -- this zone. Stall the vehicle and warn, but leave them at the wheel so
-    -- they can drive back out — ejecting them here is what strands the car.
-    if vehicle and streak.brakeOnly then
-        Core.brakeVehicle(vehicle)
-        notify()
-        return false
-    end
-
-    -- On foot, and repeated moves have not got them out of this zone. Warn but
-    -- stop teleporting: the zone going unenforced for one player is a smaller
-    -- problem than a client being moved every tick indefinitely. Resets the
-    -- moment they change zone or are let through.
-    if not vehicle and streak.stalled then
-        notify()
-        return false
-    end
-    if not vehicle and streak.count > PLAYER_ATTEMPTS then
-        streak.stalled = true
-        Core.logLn("enforceZoneAccess: could not move " .. who .. " out of " .. tostring(effectiveZone.key) .. " in " ..
-                       PLAYER_ATTEMPTS .. " attempts; leaving them where they are")
-        notify()
-        return false
-    end
 
     local tx, ty, tz
     -- Recall them to where they came from, but only somewhere the engine can
     -- actually put them: an off-world target moves them for a frame and is
-    -- then undone, which reads here as another failed attempt. The nearest
-    -- edge of the zone is a few tiles away and is always real ground.
+    -- then undone. Otherwise (ported in, or logged in to a zone that has
+    -- since been closed) the nearest edge in a straight line.
+    local src = vehicle or obj
     local lastZone = lastAt and lastAt.x and Core.isValidWorldPosition(lastAt.x, lastAt.y) and
                          Core.getLocation(lastAt.x, lastAt.y)
     if lastZone and lastZone.key ~= effectiveZone.key then
-        tx, ty, tz = lastAt.x, lastAt.y, lastAt.z
+        tx, ty, tz = pushedBack(lastAt, src:getX(), src:getY(), effectiveZone.key)
     else
-        tx, ty, tz = Core.findNearestSafePosition(obj:getX(), obj:getY(), obj:getZ(), effectiveZone.key)
+        tx, ty, tz = Core.findNearestSafePosition(src:getX(), src:getY(), src:getZ(), effectiveZone.key, PUSHBACK)
     end
 
     if not tx then
-        denialStreak[who] = nil
-        return true -- zone fills entire search area; let player stay
+        -- No straight line out reaches valid ground; let them stay. This accepts them
+        -- into the zone, so it is not re-checked until they leave it --
+        -- logged because that is the one way this zone stops being enforced.
+        Core.logLn(
+            "enforceZoneAccess: no way out of " .. tostring(effectiveZone.key) .. " found for " .. who .. " at " ..
+                tostring(obj:getX()) .. "," .. tostring(obj:getY()) .. "; letting them stay")
+        return true
     end
 
     if vehicle then
-        -- Move the vehicle if we can. teleportVehicleToCoords verifies the
-        -- vehicle actually landed near the target, so a silently-unsupported
-        -- engine API reports false rather than looking like a success.
+        -- Move the vehicle if we can, otherwise brake it and leave them at the
+        -- wheel to drive out -- ejecting them here is what strands the car.
+        -- Either way the next check tries again while they are still inside.
         if not Core.teleportVehicleToCoords(obj, vehicle, tx, ty, tz) then
             Core.brakeVehicle(vehicle)
-            if streak.count >= VEHICLE_ATTEMPTS then
-                streak.brakeOnly = true
-                Core.debugLn("enforceZoneAccess: cannot relocate vehicle for " .. who .. ", falling back to brake-only")
-            end
         end
     else
         Core.portPlayer(obj, tx, ty, tz)
@@ -773,6 +895,29 @@ function Core.updatePlayerZoneData(obj, triggerChangeEvent, force)
     end
 
     return stored
+end
+
+-- Keeps stored.at's coordinates fresh between zone checks without running one.
+-- stored.at is where a denied player is sent back to, and it is otherwise only
+-- refreshed once per check: a player turned back is put up to a whole interval
+-- of running away from the border, and someone holding forward is back inside
+-- before the next check sees them out. Coordinates only, and only while they
+-- still stand in the zone stored.at names, so it never records a position the
+-- check has not accepted and never fires anything.
+function Core.trackPlayerPosition(obj)
+    local md = obj and obj.getModData and obj:getModData()
+    local at = md and md.PhunZones and md.PhunZones.at
+    -- Mid-port their coordinates are the destination while the square under
+    -- them is still the origin; nothing worth recording.
+    if not at or not at.zone or Core.isPortPending(obj) then
+        return
+    end
+    local src = (obj.getVehicle and obj:getVehicle()) or obj
+    local x, y = src:getX(), src:getY()
+    local here = Core.getLocation(x, y)
+    if here and here.key == at.zone then
+        at.x, at.y, at.z = x, y, src:getZ()
+    end
 end
 
 -- Returns the live zone properties table for obj's display zone.
@@ -911,6 +1056,33 @@ function Core.isValidWorldPosition(x, y)
     return grid:isValidSquare(math.floor(x), math.floor(y)) == true
 end
 
+-- Put away anything that watches where the player is standing. Until the
+-- destination chunk streams in the player has no square at all, and vanilla UI
+-- does not expect that: ISBuildWindow:update calls DistToProper on the nil
+-- square to decide whether to auto-close, which throws, then throws again
+-- every frame after. Someone building against a noplayers boundary is exactly
+-- who gets moved. Vanilla does the same before ISEnterVehicle:start moves
+-- anybody. Same treatment as PhunInteriors' Client.teleport.
+local function closePositionalUI(player)
+    local playerNum = player.getPlayerNum and player:getPlayerNum()
+    if not playerNum then
+        return
+    end
+    if getCell() then
+        getCell():setDrag(nil, playerNum)
+    end
+    local contextMenu = getPlayerContextMenu and getPlayerContextMenu(playerNum)
+    if contextMenu and contextMenu:isAnyVisible() then
+        contextMenu:hideAndChildren()
+    end
+    if ISBuildWindow and ISBuildWindow.instance then
+        -- pcall because this reaches into vanilla UI state we do not own
+        pcall(function()
+            ISBuildWindow.instance:close()
+        end)
+    end
+end
+
 -- The move itself. teleportTo is the vanilla path and does the bookkeeping the
 -- bare setters skip. The half tile centres the player on the square rather
 -- than dropping them on its corner, where they can read as being on either of
@@ -989,6 +1161,7 @@ function Core.portPlayer(player, x, y, z)
         return true
     end
 
+    closePositionalUI(player)
     place(player, tx, ty, tz)
 
     portPending[portKey(player)] = {

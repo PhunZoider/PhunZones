@@ -327,10 +327,11 @@ check.same("nothing to enforce", Core.enforceZoneAccess(walker, OPEN, {
 check.same("and nobody is moved", #walker.teleports, 0)
 
 -- ---------------------------------------------------------------------------
-check.section("a player who cannot be moved is eventually left alone")
+check.section("enforcement never gives up")
 
 -- Every move is recorded and none of them takes, so this player never leaves
--- the zone however many times they are bounced.
+-- the zone however many times they are bounced. A denial cannot tell that
+-- apart from someone walking straight back in, so both keep being moved.
 local stuck = makeStubbornPlayer("stuck", 1050, 1050)
 local lastAt = {
     zone = "Vault",
@@ -340,7 +341,7 @@ local lastAt = {
 }
 
 local moves = {}
-for _ = 1, 7 do
+for _ = 1, 10 do
     local was = #stuck.teleports
     Core.enforceZoneAccess(stuck, VAULT, lastAt)
     moves[#moves + 1] = (#stuck.teleports > was)
@@ -349,19 +350,63 @@ for _ = 1, 7 do
 end
 
 check.same("the first attempt moves them", moves[1], true)
-check.same("so does the fifth", moves[5], true)
-check.same("the sixth does not", moves[6], false)
-check.same("and neither does the seventh", moves[7], false)
+check.same("so does the sixth", moves[6], true)
+check.same("and the tenth", moves[10], true)
 check.same("they are still denied", Core.enforceZoneAccess(stuck, VAULT, lastAt), false)
 check.same("and still told why", #stuck.halos > 0, true)
-
-check.section("and picks up again once they are somewhere else")
-
-check.same("letting them through clears the streak", Core.enforceZoneAccess(stuck, OPEN, lastAt), true)
-local was = #stuck.teleports
-Core.enforceZoneAccess(stuck, VAULT, lastAt)
-check.same("so the next closed zone moves them again", #stuck.teleports > was, true)
 tick(180)
+
+-- ---------------------------------------------------------------------------
+check.section("walked in: sent back the way they came, clear of the line")
+
+-- lastAt is just outside the west edge (x 1000) and they are just inside.
+local walkedIn = makePlayer("walkedIn", 1001, 1050)
+Core.enforceZoneAccess(walkedIn, VAULT, {
+    zone = "_default",
+    x = 999,
+    y = 1050,
+    z = 0
+})
+check.same("pushed further west than where they were", walkedIn.teleports[1].x, 996.5)
+check.same("along the same row", walkedIn.teleports[1].y, 1050.5)
+loadSquare(996, 1050, 0)
+tick(1)
+
+-- ---------------------------------------------------------------------------
+check.section("ported or logged in: nearest edge in a straight line")
+
+-- 20 in from the north edge, 50+ from the others.
+local dropped = makePlayer("dropped", 1050, 1020)
+Core.enforceZoneAccess(dropped, VAULT, {
+    zone = "Vault",
+    x = 1050,
+    y = 1020,
+    z = 0
+})
+check.same("straight north", dropped.teleports[1].x, 1050.5)
+check.same("past the edge by the pushback", dropped.teleports[1].y, 997.5)
+loadSquare(1050, 997, 0)
+tick(1)
+
+-- A second Vault rect butting onto the north edge: the straight line has to
+-- hop both, and east is now the shorter way out.
+Core.data.cells["3_3"][2] = {"Vault", 1000, 900, 1100, 999}
+local hopped = makePlayer("hopped", 1090, 1020)
+Core.enforceZoneAccess(hopped, VAULT, {
+    zone = "Vault",
+    x = 1090,
+    y = 1020,
+    z = 0
+})
+check.same("east past both", hopped.teleports[1].x, 1103.5)
+check.same("on the same row", hopped.teleports[1].y, 1020.5)
+loadSquare(1103, 1020, 0)
+tick(1)
+
+-- One tile from the shared edge: north looks closest, but that only reaches
+-- the second rect, and the real way out north is 102 tiles. West is 51.
+check.same("north is measured across both rects", Core.findNearestSafePosition(1050, 1001, 0, "Vault"), 999)
+Core.data.cells["3_3"][2] = nil
 
 -- ---------------------------------------------------------------------------
 check.section("builds without teleportTo still get the bookkeeping")

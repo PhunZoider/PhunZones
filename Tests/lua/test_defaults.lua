@@ -130,4 +130,33 @@ for _, msg in ipairs(failed) do
 end
 check.ok("no default zone is covered by one of its own ancestors", #failed == 0)
 
+-- The Phun cells overlap the RV void, which has no explicit order. Probe every
+-- corner as well as the middle, since the overlap is only a strip in places.
+check.section("phun cells beat the RV void")
+
+failures = {}
+for _ = 1, 5 do
+    build()
+    -- PhunInteriors registers its own zone at load now, with the same order,
+    -- so it is not in these defaults and is skipped rather than failed.
+    for _, key in ipairs({"PhunInteriors", "PhunRooms", "PhunSpawn_TaxiGarage"}) do
+        for i, r in ipairs(defaults[key] and defaults[key].points or {}) do
+            local probes = {{r[1], r[2]}, {r[3], r[2]}, {r[1], r[4]}, {r[3], r[4]},
+                            {math.floor((r[1] + r[3]) / 2), math.floor((r[2] + r[4]) / 2)}}
+            for _, p in ipairs(probes) do
+                local hit = Core.getLocation(p[1], p[2])
+                if not hit or hit.key ~= key then
+                    failures[key .. " rect " .. i .. " at " .. p[1] .. "," .. p[2] .. " resolves to " ..
+                        tostring(hit and hit.key)] = true
+                end
+            end
+        end
+    end
+end
+failed = sortedKeys(failures)
+for _, msg in ipairs(failed) do
+    check.ok(msg, false)
+end
+check.ok("every Phun cell resolves to its own zone", #failed == 0)
+
 check.finish()
