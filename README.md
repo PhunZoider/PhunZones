@@ -10,6 +10,7 @@ A Project Zomboid mod for changing game behaviours depending on where the player
 - Display custom location names when entering zones
 - Create zombie-free areas, or stop zombies spawning in an area while still letting them wander in
 - Block Bandits (requires Bandits 2)
+- Block Project A-Life NPCs from spawning (requires Project A-Life NPCs)
 - Prevent safehouse creation
 - Restrict picking up or placing objects
 - Restrict dismantling and crafting
@@ -91,7 +92,7 @@ The above configuration will mean that MarchRidge_Checkpoint get all the propert
 | noscrap       | bool               | false   | Prevent items from being dissasembled here                                                                                                                                                       | `noscrap=true`                   |
 | nodestruction | bool               | false   | Prevents the sledgehammer from being used here                                                                                                                                                   | `nodestruction=true`             |
 | nofire        | bool               | false   | Prevents fire spread in this zone                                                                                                                                                                | `nofire=true`                    |
-| noplayers     | bool               | false   | Prevents players from entering this zone. Vehicles are turned back too; one that cannot be relocated is braked in place instead. A player the engine will not move (see [Being turned back](#being-turned-back)) is warned and left where they are                                                                    | `noplayers=true`                 |
+| noplayers     | bool               | false   | Prevents players from entering this zone. Players are put a few tiles back the way they came, and vehicles are turned back too; one that cannot be relocated is braked in place and tried again on the next check. See [Being turned back](#being-turned-back)                                                                    | `noplayers=true`                 |
 | pvp           | bool               | unset   | Whether players can hurt each other here. `false` makes a safe zone. Setting `true` anywhere makes the rest of the map safe; see [PVP zones](#pvp-zones)                                                        | `pvp=true`                       |
 | modsRequired  | string             | nil     | semi-colon separated string of one or more modids that need to be active in order to load this zone. Note that B42 requires the \ prefix                                                         | `modsRequired="\phunsprinters2"` |
 | points | array | none | Array of points. Each point is in the format of `{x, y, x2, y2}` | `points={{100, 100, 200, 200}, {300, 200, 350, 250}}` |
@@ -129,9 +130,22 @@ threw it. There is no player in that check to let through.
 
 ## Being turned back
 
-Somebody who walks, drives or is teleported into a `noplayers` zone is put back
-where they came from. That sounds simpler than it is, because the ground they
-are being sent to is not necessarily loaded at the moment we ask for the move.
+Somebody who walks or drives into a `noplayers` zone is put back where they
+came from, three tiles further out along the way they came in. Landing on the
+first tile outside would leave them a step from the line, and anyone still
+holding forward would be straight back over it. Somebody who is teleported in,
+or logs in to a zone that has since been closed, has no "where they came from"
+in that sense, so they go to the nearest edge in a straight line, again three
+tiles out.
+
+There is no attempt limit. A player who keeps pushing against the border is
+turned back on every zone check, however many times it takes; a limit would
+let anyone holding forward wear the zone down. A vehicle that cannot be
+relocated is braked in place, with the driver left at the wheel to drive out,
+and is tried again on the next check while it is still inside.
+
+That sounds simpler than it is, because the ground they are being sent to is
+not necessarily loaded at the moment we ask for the move.
 
 The engine restores anyone standing on a square that does not exist, so a
 single teleport can look like it worked and then undo itself a frame later.
@@ -149,15 +163,19 @@ an unfinished one.
 Two things are given up on rather than retried forever:
 
 - A destination that has not loaded after about three seconds. Logged as
-  `port: gave up moving <player> to <x>,<y>,<z>`.
-- A player still in the zone after five consecutive attempts to move them out.
-  They are warned and left where they are, and the zone goes unenforced for
-  that one player until they move somewhere else. Logged as
-  `enforceZoneAccess: could not move <player> out of <zone>`.
+  `port: gave up moving <player> to <x>,<y>,<z>`. If they are still inside, the
+  next zone check simply tries again.
+- A zone with no straight line out of it that reaches valid ground. The player
+  is let stay, and the zone goes unenforced for them until they leave it.
+  Logged as `enforceZoneAccess: no way out of <zone> found for <player>`.
 
 Both lines are printed whether or not Debug is on, because both mean a zone is
 not doing what its author asked. Neither should happen in ordinary play; if you
 see one, the log line has the coordinates involved.
+
+Anything open that depends on where the player is standing, such as the build
+window, a context menu or an item being dragged, is closed before they are
+moved.
 
 ## PVP zones
 

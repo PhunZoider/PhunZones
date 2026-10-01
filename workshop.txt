@@ -6,8 +6,9 @@ description=
 description=[h2]Features[/h2]
 description=[list]
 description=[*]Display custom location names when entering zones
-description=[*]Create zombie-free areas
+description=[*]Create zombie-free areas, or stop zombies spawning in an area while still letting them wander in
 description=[*]Block Bandits ([url=https://steamcommunity.com/sharedfiles/filedetails/?id=3268487204]requires Bandits[/url])
+description=[*]Block Project [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3803984183]A-Life NPCs[/url] from spawning (requires Project A-Life NPCs)
 description=[*]Prevent safehouse creation
 description=[*]Restrict picking up or placing objects
 description=[*]Restrict dismantling and crafting
