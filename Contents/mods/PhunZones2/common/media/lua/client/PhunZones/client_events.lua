@@ -285,15 +285,29 @@ Events[Core.events.OnPhunZoneReady].Add(function()
 
     local nextCheck = 0
     local nextPurge = 0
+    local nextTrack = 0
+    -- Fixed rather than a setting: this is what decides how far a player
+    -- turned away from a noplayers zone gets sent back, and it is a
+    -- coordinate copy, not a zone check.
+    local TRACK_MS = 250
 
     Events.OnTick.Add(function()
         local now = getTimestamp()
 
         if now >= nextCheck then
-            nextCheck = now + (Core.settings.updateInterval or 1)
+            nextCheck = now + (Core.settings.UpdateInterval or 1)
             local players = Core.tools.onlinePlayers()
             for i = 0, players:size() - 1, 1 do
                 Core.updateModData(players:get(i), true)
+            end
+        else
+            local nowMs = getTimestampMs()
+            if nowMs >= nextTrack then
+                nextTrack = nowMs + TRACK_MS
+                local players = Core.tools.onlinePlayers()
+                for i = 0, players:size() - 1, 1 do
+                    Core.trackPlayerPosition(players:get(i))
+                end
             end
         end
 

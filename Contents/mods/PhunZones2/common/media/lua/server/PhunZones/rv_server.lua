@@ -94,7 +94,7 @@ Events[Core.events.OnPhunZoneReady].Add(function()
     local nextCheck = 0
     Events.OnTick.Add(function()
         if getTimestamp() >= nextCheck then
-            nextCheck = getTimestamp() + (Core.settings.updateInterval or 2)
+            nextCheck = getTimestamp() + (Core.settings.UpdateInterval or 2)
             processVehicleZoneChanges()
         end
     end)

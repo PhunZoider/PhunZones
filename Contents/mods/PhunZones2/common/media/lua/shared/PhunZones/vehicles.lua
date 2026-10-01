@@ -48,6 +48,35 @@ local function resyncVehicle(vehicle)
     pcall(vehicle.updatePhysicsNetwork, vehicle)
 end
 
+-- Strategy 0: move the physics body itself. The vehicle's real position is the
+-- Bullet body's; x/y are copied back from it every physics step, so setting
+-- them (strategies 1 and 2) only sticks while the body is asleep -- a parked
+-- car, not one being driven. setWorldTransform hands the transform straight to
+-- Bullet.teleportVehicle, which is the actual move. It is a no-op on a server,
+-- which is fine: the driving client owns the physics and that is where this
+-- runs.
+--
+-- The transform is in physics space (origin.x/z are world x/y less the
+-- simulation offset, origin.y is height). Shifting it by the world delta
+-- sidesteps the offset, which Lua cannot read, and keeps height and rotation.
+--
+-- Not verified by landedAt: x/y only catch up on the next physics step, so a
+-- check here would fail a move that worked. Whether it worked shows up on the
+-- next zone check instead, which simply tries again if they are still inside.
+local function teleportTransform(vehicle, x, y)
+    if type(vehicle.setWorldTransform) ~= "function" or not Transform or not Transform.new then
+        return false
+    end
+    pcall(vehicle.setForceBrake, vehicle)
+    local ok = pcall(function()
+        local t = vehicle:getWorldTransform(Transform.new())
+        local origin = t:getOrigin()
+        origin:set(origin:x() + (x - vehicle:getX()), origin:y(), origin:z() + (y - vehicle:getY()))
+        vehicle:setWorldTransform(t)
+    end)
+    return ok
+end
+
 -- Strategy 1: freeze physics, move, thaw. This is the pattern vanilla's own
 -- vehicle repositioning tool uses (ISVehicleAngles: setPhysicsActive(false,
 -- false) while manipulating, setPhysicsActive(true, true) to drop). Without
@@ -155,6 +184,11 @@ end
 function Core.teleportVehicleToCoords(player, vehicle, x, y, z)
     if not vehicle or not x or not y then
         return false
+    end
+
+    if teleportTransform(vehicle, x, y) then
+        Core.debugLn("vehicles: relocated via physics transform")
+        return true
     end
 
     if teleportFrozen(vehicle, x, y, z) then
