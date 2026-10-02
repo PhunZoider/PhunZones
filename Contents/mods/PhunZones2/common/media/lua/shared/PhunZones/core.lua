@@ -59,6 +59,10 @@ PhunZones = {
             label = "Mods",
             order = 4
         },
+        map = {
+            label = "Map",
+            order = 5
+        },
         other = {
             label = "Other",
             order = 10
@@ -244,6 +248,42 @@ PhunZones = {
             tooltip = "IGUI_PhunZones_NoPlayers_tooltip",
             group = "functionality"
         },
+        -- Outline drawn on the player's world map and minimap. Either colour
+        -- left empty means that part is not drawn, so a zone with neither is
+        -- invisible on the map.
+        mapBorder = {
+            label = "IGUI_PhunZones_MapBorder",
+            type = "string",
+            tooltip = "IGUI_PhunZones_MapBorder_tooltip",
+            group = "map",
+            order = 1,
+            normalize = function(v)
+                return PhunZones.normalizeColour(v)
+            end
+        },
+        mapFill = {
+            label = "IGUI_PhunZones_MapFill",
+            type = "string",
+            tooltip = "IGUI_PhunZones_MapFill_tooltip",
+            group = "map",
+            order = 2,
+            normalize = function(v)
+                return PhunZones.normalizeColour(v)
+            end
+        },
+        mapOpacity = {
+            label = "IGUI_PhunZones_MapOpacity",
+            type = "int",
+            tooltip = "IGUI_PhunZones_MapOpacity_tooltip",
+            group = "map",
+            order = 3,
+            normalize = function(v)
+                if type(v) ~= "number" then
+                    return v
+                end
+                return math.max(0, math.min(100, math.floor(v)))
+            end
+        },
         order = {
             label = "IGUI_PhunZones_Order",
             type = "int",
@@ -367,6 +407,58 @@ function Core.isExempt(player)
         return true
     end
     return EXEMPT_STAFF[name] == true and Core.settings.ExemptModGM == true
+end
+
+-- ---------------------------------------------------------------------------
+-- Map colours
+--
+-- Zone map colours are stored as "#RRGGBB". The editor also accepts "RGB",
+-- "RRGGBB" without the hash, and "r,g,b" in 0-255, and normalizes them on save.
+-- ---------------------------------------------------------------------------
+
+-- Returns r, g, b in 0-1, or nil when the value is empty or not a colour.
+function Core.parseColour(v)
+    if type(v) ~= "string" then
+        return nil
+    end
+    local s = v:match("^%s*(.-)%s*$")
+    if s == "" then
+        return nil
+    end
+
+    local r, g, b = s:match("^(%d+)%s*,%s*(%d+)%s*,%s*(%d+)$")
+    if r then
+        r, g, b = tonumber(r), tonumber(g), tonumber(b)
+        if r > 255 or g > 255 or b > 255 then
+            return nil
+        end
+        return r / 255, g / 255, b / 255
+    end
+
+    local hex = s:gsub("^#", "")
+    if hex:match("^%x%x%x$") then
+        hex = hex:sub(1, 1):rep(2) .. hex:sub(2, 2):rep(2) .. hex:sub(3, 3):rep(2)
+    end
+    if not hex:match("^%x%x%x%x%x%x$") then
+        return nil
+    end
+    return tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255, tonumber(hex:sub(5, 6), 16) / 255
+end
+
+-- Canonical "#RRGGBB" for a colour field. Text that isn't a colour is kept as
+-- typed rather than dropped, so a typo stays visible in the editor (and draws
+-- nothing) instead of silently clearing the field.
+function Core.normalizeColour(v)
+    if type(v) ~= "string" then
+        return v
+    end
+    local r, g, b = Core.parseColour(v)
+    if not r then
+        local trimmed = v:match("^%s*(.-)%s*$")
+        return trimmed ~= "" and trimmed or nil
+    end
+    return string.format("#%02X%02X%02X", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5),
+        math.floor(b * 255 + 0.5))
 end
 
 -- ---------------------------------------------------------------------------

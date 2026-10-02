@@ -95,6 +95,8 @@ function UI:createChildren()
     local w = self.width;
 
     self.map = ISMiniMapInner:new(0, 0, self.width, self.height, self.playerIndex);
+    -- The editor overlay draws zones itself; skip the player-map outlines
+    self.map.phunZonesNoOutlines = true
     self:addChild(self.map);
     self:InitPlayer()
 
