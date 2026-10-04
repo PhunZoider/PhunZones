@@ -38,6 +38,16 @@ Commands[Core.commands.modifyZone] = function(player, data)
     -- saveChanges transmits on the server branch; no second transmit needed.
 end
 
+Commands[Core.commands.replaceZones] = function(player, data)
+    if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
+        return
+    end
+    local ok, err = Core.replaceCustomLayer(data and data.data)
+    if not ok then
+        print("PhunZones: " .. player:getUsername() .. " could not import zone data: " .. tostring(err))
+    end
+end
+
 Commands[Core.commands.setProfile] = function(player, data)
     if not player:getRole():hasCapability(Capability.CanSetupNonPVPZone) then
         return

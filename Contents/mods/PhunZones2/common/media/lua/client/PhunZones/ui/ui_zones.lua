@@ -151,6 +151,21 @@ local function lookup(self)
     return (self.data and self.data.lookup) or (Core.data and Core.data.lookup) or {}
 end
 
+-- Pending value meaning "remove this field from the layer being edited".
+local CLEAR = Core.const.clearField
+
+local function copyPoints(points)
+    local out = {}
+    for i, p in ipairs(points or {}) do
+        out[i] = {p[1], p[2], p[3], p[4]}
+    end
+    return out
+end
+
+local function clampScroll(scroll, contentH, viewH)
+    return math.max(0, math.min(scroll, math.max(0, contentH - viewH)))
+end
+
 -- ===========================================================================
 -- PUBLIC: open the panel
 -- ===========================================================================
@@ -172,7 +187,15 @@ function UI.OnOpenPanel(playerObj, key)
     instance:addToUIManager()
     ISLayoutManager.RegisterWindow(profileName, UI, instance)
     instance:setVisible(true)
-    instance:refreshData(Core.getLocation(playerObj:getX(), playerObj:getY()))
+
+    -- Start on the zone the player is standing in, unless that is just the
+    -- catch-all: opening on _default or void is never what anyone wants.
+    local here = Core.getLocation(playerObj:getX(), playerObj:getY())
+    local hereKey = here and (here.key or here.region)
+    if hereKey == "_default" or hereKey == "void" then
+        here = nil
+    end
+    instance:refreshData(here)
 
     -- After refreshData, explicitly zoom the map to the selected zone's full bounds.
     -- refreshZonePoints → setData already calls zoomAndCentreMapToBounds, but the
@@ -549,12 +572,17 @@ function UI:createChildren()
         self._propScrDrag = false;
         s:setCapture(false)
     end
+    propPanel.onRightMouseUp = function(s, x, y)
+        self:onPropRightClick(s, x, y)
+        return true
+    end
 
     self:addChild(propPanel)
     self.controls.propPanel = propPanel
 
     -- -----------------------------------------------------------------------
-    -- Inline property editor
+    -- Inline property editor. It and the two pickers below float over the
+    -- property panel; anchorPropEditors keeps them on their row every frame.
     -- -----------------------------------------------------------------------
     local inlineEdit = ISTextEntryBox:new("", 0, 0, 100, FONT_HGT_SMALL + sc(4))
     inlineEdit:initialise()
@@ -566,6 +594,24 @@ function UI:createChildren()
         self._inlineDirty = true
         self:updateSaveDiscardButtons()
     end
+    inlineEdit.onCommandEntered = function()
+        self:commitInlineEdit()
+    end
+    inlineEdit.onOtherKey = function(s, key)
+        if key == Keyboard.KEY_ESCAPE then
+            self:cancelInlineEdit()
+            self:swallowEscRelease()
+        elseif key == Keyboard.KEY_TAB then
+            self:editAdjacentProp(isShiftKeyDown() and -1 or 1)
+        elseif key == Keyboard.KEY_RETURN or key == Keyboard.KEY_NUMPADENTER then
+            self:commitInlineEdit()
+        end
+    end
+    -- Clicking anywhere else (the map, a button) keeps what was typed, the
+    -- same as clicking another row does.
+    inlineEdit.onLostFocus = function()
+        self:commitInlineEdit()
+    end
     self:addChild(inlineEdit)
     self.controls.inlineEdit = inlineEdit
 
@@ -575,10 +621,11 @@ function UI:createChildren()
     local inheritsPicker
     inheritsPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + sc(4), self, function(owner)
         local selected = inheritsPicker:getSelectedText()
-        if selected and selected ~= "" then
+        local current = owner.selectedData and owner.selectedData.raw.inherits or "_default"
+        if selected and selected ~= "" and selected ~= current then
             owner:saveProp("inherits", selected)
         end
-        inheritsPicker:setVisible(false)
+        owner:closePropPickers()
     end)
     inheritsPicker:initialise()
     inheritsPicker:setVisible(false)
@@ -590,22 +637,18 @@ function UI:createChildren()
     -- -----------------------------------------------------------------------
     local fieldPicker
     fieldPicker = ISComboBox:new(0, 0, 100, FONT_HGT_SMALL + sc(4), self, function(owner)
-        if fieldPicker._pendingField and fieldPicker._opts then
-            local text = fieldPicker:getSelectedText()
-            local chosen = nil
-            for _, opt in ipairs(fieldPicker._opts) do
-                if optLabel(opt) == text then
-                    chosen = optValue(opt)
-                    break
-                end
-            end
-            if chosen ~= nil then
-                owner:saveProp(fieldPicker._pendingField, chosen)
+        local field, opts = fieldPicker._rowKey, fieldPicker._opts
+        if field and opts then
+            local chosen = opts[fieldPicker.selected] and optValue(opts[fieldPicker.selected])
+            local row = owner.propRows[owner:findPropRow(field) or 0]
+            -- Picking what the row already owns changes nothing; picking the
+            -- value it merely inherits pins it as an explicit override.
+            local noop = row and row.override and row.value == chosen
+            if chosen ~= nil and not noop then
+                owner:saveProp(field, chosen)
             end
         end
-        fieldPicker._pendingField = nil
-        fieldPicker._opts = nil
-        fieldPicker:setVisible(false)
+        owner:closePropPickers()
     end)
     fieldPicker:initialise()
     fieldPicker:setVisible(false)
@@ -633,6 +676,12 @@ function UI:createChildren()
         self:flushPendingChanges()
     end)
     self.controls.btnSave.enable = false
+
+    self.controls.btnDiscard = mkBtn(getText("IGUI_PhunZones_Discard"), getText("IGUI_PhunZones_DiscardTooltip"),
+        function()
+            self:confirmDiscardAll()
+        end)
+    self.controls.btnDiscard.enable = false
 
     self.controls.btnDeleteZone = mkBtn(getText("Delete"), getText("IGUI_PhunZones_DelZoneTooltip"), function()
         self:confirmDelete()
@@ -1194,7 +1243,8 @@ function UI:doLayout()
     end
 
     -- Buttons (bottom bar) — Edit Rect removed; Add/Del Rect moved to coord bar
-    local leftBtns = {self.controls.btnNewRegion, self.controls.btnSave, self.controls.btnDeleteZone}
+    local leftBtns = {self.controls.btnNewRegion, self.controls.btnSave, self.controls.btnDiscard,
+                      self.controls.btnDeleteZone}
     local rightBtns = {self.controls.btnClose, self.controls.btnFileEditor}
 
     local lx = PAD
@@ -1284,6 +1334,13 @@ function UI:prerender()
         end
     end
 
+    -- Lists can shrink under a scroll offset (filtering, a refresh, a resize),
+    -- which would otherwise leave them scrolled past their end.
+    local tpanel, ppanel = self.controls.treePanel, self.controls.propPanel
+    self.treeScroll = clampScroll(self.treeScroll, #self.treeNodes * ROW_HGT, tpanel.height)
+    self.propScroll = clampScroll(self.propScroll, #self.propRows * ROW_HGT, ppanel.height)
+    self:anchorPropEditors()
+
     -- Background fills
     self:drawRect(0, th, L.lw, L.usableH, 1, C.bg.r, C.bg.g, C.bg.b)
     self:drawRect(0, th + L.barY, self.width, L.barH, 1, C.bg.r, C.bg.g, C.bg.b)
@@ -1327,6 +1384,9 @@ function UI:prerender()
             self.propHover = (i >= 1 and i <= #self.propRows) and i or -1
             local row = self.propRows[self.propHover]
             local tipKey = row and row.fdef and row.fdef.tooltip
+            if row and row.resettable and self:isOverResetBox(row, pp:getMouseX()) then
+                tipKey = "IGUI_PhunZones_ResetProp_tooltip"
+            end
             if tipKey then
                 self._tipText = getText(tipKey)
                 self._tipMX = pp.x + pp:getMouseX()
@@ -1342,12 +1402,43 @@ function UI:prerender()
     end
 end
 
+-- Greedy word wrap to maxW pixels. Some field tooltips run to a paragraph.
+local function wrapText(text, maxW)
+    local tm = getTextManager()
+    local lines, line = {}, ""
+    for word in text:gmatch("%S+") do
+        local candidate = (line == "") and word or (line .. " " .. word)
+        if line ~= "" and tm:MeasureStringX(UIFont.Small, candidate) > maxW then
+            table.insert(lines, line)
+            line = word
+        else
+            line = candidate
+        end
+    end
+    if line ~= "" then
+        table.insert(lines, line)
+    end
+    return lines
+end
+
 function UI:render()
     ISCollapsableWindowJoypad.render(self)
     if self._tipText then
         local mx, my = self._tipMX, self._tipMY
-        local tipW = getTextManager():MeasureStringX(UIFont.Small, self._tipText) + sc(16)
-        local tipH = FONT_HGT_SMALL + sc(8)
+        local maxW = math.min(sc(420), self.width - sc(24))
+        -- Wrapping measures every word, so only redo it when the text changes.
+        if self._tipWrapFor ~= self._tipText or self._tipWrapW ~= maxW then
+            self._tipWrapFor, self._tipWrapW = self._tipText, maxW
+            self._tipLines = wrapText(self._tipText, maxW)
+            local widest = 0
+            for _, l in ipairs(self._tipLines) do
+                widest = math.max(widest, getTextManager():MeasureStringX(UIFont.Small, l))
+            end
+            self._tipLinesW = widest
+        end
+        local lines = self._tipLines
+        local tipW = self._tipLinesW + sc(16)
+        local tipH = #lines * FONT_HGT_SMALL + sc(8)
         local tx = mx + sc(12)
         local ty = my - tipH - sc(4)
         if tx + tipW > self.width - sc(4) then
@@ -1358,7 +1449,10 @@ function UI:render()
         end
         self:drawRect(tx, ty, tipW, tipH, 0.95, 0.08, 0.08, 0.12)
         self:drawRectBorder(tx, ty, tipW, tipH, 1.0, C.border.r, C.border.g, C.border.b)
-        self:drawText(self._tipText, tx + sc(8), ty + sc(2), C.text.r, C.text.g, C.text.b, 1.0, UIFont.Small)
+        for li, l in ipairs(lines) do
+            self:drawText(l, tx + sc(8), ty + sc(4) + (li - 1) * FONT_HGT_SMALL, C.text.r, C.text.g, C.text.b, 1.0,
+                UIFont.Small)
+        end
     end
 end
 
@@ -1377,18 +1471,55 @@ function UI:onKeyPressed(key)
             return
         elseif key == Keyboard.KEY_ESCAPE then
             self:cancelInlineEdit();
+            self:swallowEscRelease()
             return
         end
     end
+
+    if key == Keyboard.KEY_ESCAPE and self:closePropPickers() then
+        self:swallowEscRelease()
+    end
+end
+
+-- Time-boxed, so a release that never arrives (the text box ate it) cannot
+-- swallow a later, deliberate Escape.
+function UI:swallowEscRelease()
+    self._swallowEscUntil = getTimestampMs() + 500
+end
+
+-- Text fields that Escape should just leave, rather than close the window.
+function UI:focusedTextField()
+    local fields = {self.controls.treeFilter, self.controls.propFilter}
+    for _, c in ipairs(self.controls.coordFields or {}) do
+        table.insert(fields, c.field)
+    end
+    for _, f in ipairs(fields) do
+        if f and f:isFocused() then
+            return f
+        end
+    end
+    return nil
 end
 
 function UI:onKeyRelease(key)
-    if key == Keyboard.KEY_ESCAPE then
-        if self.overlay and self.overlay:isDrawMode() then
-            self:exitDrawMode()
-        else
-            self:close()
-        end
+    if key ~= Keyboard.KEY_ESCAPE then
+        return
+    end
+    -- The press already backed out of an edit or a picker. Without this the
+    -- release that follows would go on to close the whole editor.
+    if self._swallowEscUntil and getTimestampMs() < self._swallowEscUntil then
+        self._swallowEscUntil = nil
+        return
+    end
+    local focused = self:focusedTextField()
+    if focused then
+        focused:unfocus()
+        return
+    end
+    if self.overlay and self.overlay:isDrawMode() then
+        self:exitDrawMode()
+    else
+        self:close()
     end
 end
 
@@ -1525,14 +1656,15 @@ function UI:renderTree(ox, oy, w, h)
     local hasScroll = totalH > h
     local contentW = hasScroll and (w - SCROLLBAR_W - sc(2)) or w
 
+    self:setStencilRect(ox, oy, w, h)
     for i, node in ipairs(nodes) do
         local ry = (i - 1) * ROW_HGT - scroll
         if ry >= h then
             break
         end
-        if ry >= 0 then
+        if ry > -ROW_HGT then
             local ay = oy + ry
-            if ay < oy + h then
+            do
                 local isSel = self.selectedData and self.selectedData.key == node.key
                 local isHov = self.treeHover == i
 
@@ -1592,6 +1724,7 @@ function UI:renderTree(ox, oy, w, h)
             end
         end
     end
+    self:clearStencilRect()
 
     if hasScroll then
         local sbH = math.max(sc(20), h * (h / totalH))
@@ -1625,10 +1758,16 @@ function UI:onTreeClick(panel, x, y)
     self:selectZone(node.key)
 end
 
+-- Re-selecting the zone already shown is a refresh (a save landed, another
+-- admin's edit arrived): the property scroll, the selected rect, the map view
+-- and any open editor all stay where the admin left them.
 function UI:selectZone(key)
-    self:cancelInlineEdit()
-    self.propHover = -1
-    self.propScroll = 0
+    local same = self.selectedData ~= nil and self.selectedData.key == key
+    if not same then
+        self:cancelInlineEdit()
+        self.propHover = -1
+        self.propScroll = 0
+    end
 
     local zoneData = zones(self)
     local lookupData = lookup(self)
@@ -1651,16 +1790,18 @@ function UI:selectZone(key)
     self.controls.btnDeleteZone.enable = notDefault and (self.editProfile == nil)
     self.controls.btnAddRect.enable = notDefault
 
-    self.selectedPoint = nil
-    self.controls.btnDeleteRect.enable = false
-
     self:refreshProperties()
-    self:refreshZonePoints(raw.points or {})
+    self:refreshZonePoints(raw.points or {}, same and self.selectedPtIdx or nil, same)
 
     -- Sync overlay
     if self.overlay then
         self.overlay:setSelectedZone(key)
         self.overlay:setZones(zoneData)
+    end
+
+    self:updateSaveDiscardButtons()
+    if same then
+        return
     end
 
     -- Scroll tree to show selection
@@ -1676,13 +1817,22 @@ function UI:selectZone(key)
             break
         end
     end
-
-    self:updateSaveDiscardButtons()
 end
 
 -- ===========================================================================
 -- PROPERTIES
 -- ===========================================================================
+
+-- What the layer being edited sets on this zone, and nothing beneath it: the
+-- custom layer for the base configuration, the profile's own sparse entry
+-- otherwise. Resetting removes a field from exactly this table, so it is also
+-- what decides whether a row reads as "set here".
+function UI:layerEntry(key)
+    if self.editProfile then
+        return ((self.data and self.data.profileLayer) or {})[key] or {}
+    end
+    return (ModData.get(Core.const.modifiedModData) or {})[key] or {}
+end
 function UI:refreshProperties()
     self.propRows = {}
     if not self.selectedData then
@@ -1706,13 +1856,25 @@ function UI:refreshProperties()
     local filter = self.propFilter
     local pending = self._pendingChanges[key] or {}
 
-    -- layerRaw is what the layer currently being edited sets on this zone. For
-    -- the base layer that is the zone's raw entry; for a profile it is only the
-    -- profile's own sparse entry, so the override markers answer "does the thing
-    -- I am editing set this?" rather than "does anything set this?".
-    local layerRaw = raw
-    if self.editProfile then
-        layerRaw = ((self.data and self.data.profileLayer) or {})[key] or {}
+    -- layerRaw is what the layer currently being edited sets on this zone, so
+    -- the override markers answer "does the thing I am editing set this?"
+    -- rather than "does anything set this?". Values from the shipped data (or,
+    -- under a profile, from the configuration beneath it) read as baseSet.
+    local layerRaw = self:layerEntry(key)
+
+    -- Marker state shared by every kind of row. A pending reset wins over
+    -- whatever the layer currently holds: on save the field is gone.
+    local function markers(k)
+        local cleared = pending[k] == CLEAR
+        local isOver = not cleared and (layerRaw[k] ~= nil or pending[k] ~= nil)
+        return {
+            cleared = cleared,
+            override = isOver,
+            baseSet = (not isOver) and (not cleared) and raw[k] ~= nil,
+            -- Something to take back: a value this layer holds, or an unsaved
+            -- edit to drop.
+            resettable = isOver
+        }
     end
 
     local seen = {}
@@ -1779,7 +1941,7 @@ function UI:refreshProperties()
             -- the boolean fields: an override that switches an inherited true
             -- back off is a real value, not an absent one.
             local val = merged[k]
-            if pending[k] ~= nil then
+            if pending[k] ~= nil and pending[k] ~= CLEAR then
                 val = pending[k]
             end
             -- merged may not include a raw override if the zone data wasn't yet
@@ -1787,10 +1949,7 @@ function UI:refreshProperties()
             if val == nil and raw[k] ~= nil then
                 val = raw[k]
             end
-            local isOver = layerRaw[k] ~= nil or pending[k] ~= nil
-            -- Set by a layer below the one being edited: shown, but clearly not
-            -- this profile's doing.
-            local fromBase = (not isOver) and raw[k] ~= nil
+            local m = markers(k)
             local displayVal = nil
             if fdef.type == "combo" then
                 local opts = fdef.options or (fdef.getOptions and fdef.getOptions()) or {}
@@ -1806,26 +1965,34 @@ function UI:refreshProperties()
                 label = getText(fdef.label or k),
                 value = val,
                 displayVal = displayVal,
-                override = isOver,
-                baseSet = fromBase,
+                override = m.override,
+                baseSet = m.baseSet,
+                cleared = m.cleared,
+                resettable = m.resettable and fdef.type ~= "button",
                 origin = fdef.mod or nil,
                 fdef = fdef
             })
         end
     end
 
+    -- Fields on the zone that no schema entry describes: typos, or settings
+    -- from a mod that is not loaded. Shown read-only, but resettable, since
+    -- clearing them out is usually the point of looking.
     local extraRows = {}
     for k, v in pairs(raw) do
         if not seen[k] and k ~= "inherits" and k ~= "disabled" and k ~= "isolated" and k ~= "_key" and k ~= "points" and
             k ~= "title" and k ~= "region" and k ~= "zone" then
             local displayVal = type(v) == "table" and ("[table]") or tostring(v)
             if filter == "" or k:lower():find(filter, 1, true) then
+                local m = markers(k)
                 table.insert(extraRows, {
                     key = k,
                     label = k,
                     value = displayVal,
-                    override = layerRaw[k] ~= nil,
-                    baseSet = layerRaw[k] == nil,
+                    override = m.override,
+                    baseSet = m.baseSet,
+                    cleared = m.cleared,
+                    resettable = m.resettable,
                     fdef = nil,
                     extra = true
                 })
@@ -1856,15 +2023,24 @@ function UI:refreshProperties()
         end
     end
 
+    local dm = markers("disabled")
+    local disabled = raw.disabled == true
+    if pending.disabled ~= nil and pending.disabled ~= CLEAR then
+        disabled = pending.disabled == true
+    end
     table.insert(self.propRows, 1, {
         key = "disabled",
         label = "Disabled",
-        value = raw.disabled == true,
-        override = layerRaw.disabled ~= nil,
-        baseSet = layerRaw.disabled == nil and raw.disabled ~= nil,
+        value = disabled,
+        override = dm.override,
+        baseSet = dm.baseSet,
+        cleared = dm.cleared,
+        resettable = dm.resettable,
         special = true,
-        danger = raw.disabled == true
+        danger = disabled
     })
+    -- Not resettable: dropping inherits from a zone the admin created would
+    -- make it a root with no parent at all, not put it back under _default.
     table.insert(self.propRows, 1, {
         key = "inherits",
         label = "Inherits from",
@@ -1891,15 +2067,20 @@ function UI:renderProps(ox, oy, w, h)
     local hasScroll = totalH > h
     local contentW = hasScroll and (w - SCROLLBAR_W - sc(2)) or w
     local valX = math.floor(contentW * 0.52)
+    local tm = getTextManager()
 
+    -- Clip to the panel so rows half scrolled out are cut off at its edge
+    -- rather than drawn over the header or the button bar.
+    self:setStencilRect(ox, oy, w, h)
     for i, row in ipairs(self.propRows) do
         local ry = (i - 1) * ROW_HGT - scroll
         if ry >= h then
             break
         end
-        if ry >= 0 then
+        if ry > -ROW_HGT then
             local ay = oy + ry
-            if ay < oy + h then
+            local editing = self:isEditingProp(row.key)
+            do
                 if row.isGroupHeader then
                     local lineY = ay + math.floor(ROW_HGT / 2)
                     self:drawRect(ox + sc(4), lineY, contentW - sc(8), 1, C.border.a, C.border.r, C.border.g, C.border.b)
@@ -1915,27 +2096,49 @@ function UI:renderProps(ox, oy, w, h)
                     if self.propHover == i then
                         self:drawRect(ox, ay, contentW, ROW_HGT, C.rowHover.a, C.rowHover.r, C.rowHover.g, C.rowHover.b)
                     end
-                    if self._editingRow and self._editingRow.key == row.key then
+                    if editing then
                         self:drawRect(ox, ay, contentW, ROW_HGT, 0.15, C.accent.r, C.accent.g, C.accent.b)
                         self:drawRectBorder(ox, ay, contentW, ROW_HGT, 0.6, C.accent.r, C.accent.g, C.accent.b)
                     end
 
-                    if row.override and not row.special then
+                    if row.cleared then
+                        -- Will be removed on save: dim accent, "mine, going away".
+                        self:drawRect(ox, ay + sc(1), sc(2), ROW_HGT - sc(2), 0.8, C.accentDim.r, C.accentDim.g,
+                            C.accentDim.b)
+                    elseif row.override and not (row.special and row.key == "inherits") then
                         local cr = row.danger and C.danger or C.accent
                         self:drawRect(ox, ay + sc(1), sc(2), ROW_HGT - sc(2), cr.a, cr.r, cr.g, cr.b)
-                    elseif row.baseSet and not row.special then
-                        -- Set by a layer under the profile being edited. A muted
+                    elseif row.baseSet then
+                        -- Set by a layer under the one being edited. A muted
                         -- bar so it reads as "comes from below", not "mine".
                         self:drawRect(ox, ay + sc(1), sc(2), ROW_HGT - sc(2), 0.7, C.textInherit.r, C.textInherit.g,
                             C.textInherit.b)
                     end
 
-                    local badgeW = 0
-                    if row.origin then
-                        badgeW = getTextManager():MeasureStringX(UIFont.Small, row.origin) + sc(6)
+                    -- Right-hand furniture: the mod badge, and on hover the
+                    -- reset box just left of it. The value text stops short
+                    -- of whichever of the two is showing.
+                    local valRight = contentW - sc(6)
+                    local badgeW = self:propBadgeW(row)
+                    if badgeW > 0 then
                         self:drawRect(ox + contentW - badgeW - sc(2), ay + sc(2), badgeW, ROW_HGT - sc(4), 0.8,
                             C.modBadge.r, C.modBadge.g, C.modBadge.b)
                         self:drawText(row.origin, ox + contentW - badgeW + sc(1), ay + sc(2), 1, 1, 1, 0.9, UIFont.Small)
+                        valRight = contentW - badgeW - sc(6)
+                    end
+                    if row.resettable and self.propHover == i and not editing then
+                        local bx, bsize = self:resetBoxRect(row, contentW)
+                        local by = ay + math.floor((ROW_HGT - bsize) / 2)
+                        local hot = self.controls.propPanel:isMouseOver() and
+                                        self:isOverResetBox(row, self.controls.propPanel:getMouseX())
+                        local bc = hot and C.danger or C.border
+                        self:drawRect(ox + bx, by, bsize, bsize, hot and 0.35 or 0.6, bc.r, bc.g, bc.b)
+                        self:drawRectBorder(ox + bx, by, bsize, bsize, 1.0, bc.r, bc.g, bc.b)
+                        local xw = tm:MeasureStringX(UIFont.Small, "x")
+                        self:drawText("x", ox + bx + math.floor((bsize - xw) / 2),
+                            by + math.floor((bsize - FONT_HGT_SMALL) / 2), C.text.r, C.text.g, C.text.b, 1.0,
+                            UIFont.Small)
+                        valRight = bx - sc(4)
                     end
 
                     local lr, lg, lb, la
@@ -1968,7 +2171,11 @@ function UI:renderProps(ox, oy, w, h)
                         -- to read as false rather than as the dash that means
                         -- nothing is set here.
                         local valStr
-                        if row.value == nil then
+                        if row.cleared then
+                            -- What it falls back to is only known once the
+                            -- layers are rebuilt, which happens on save.
+                            valStr = getText("IGUI_PhunZones_ResetPending")
+                        elseif row.value == nil then
                             valStr = "--"
                         elseif isCombo then
                             valStr = row.displayVal or tostring(row.value)
@@ -1976,21 +2183,22 @@ function UI:renderProps(ox, oy, w, h)
                             valStr = tostring(row.value)
                         end
                         local vr, vg, vb, va
-                        if row.override then
+                        if row.cleared then
+                            vr, vg, vb, va = C.accentDim.r, C.accentDim.g, C.accentDim.b, 1.0
+                        elseif row.override then
                             vr, vg, vb, va = C.accent.r, C.accent.g, C.accent.b, 1.0
                         elseif row.baseSet then
-                            -- A real value, just not one this profile owns.
+                            -- A real value, just not one this layer owns.
                             vr, vg, vb, va = C.text.r, C.text.g, C.text.b, 1.0
                         else
                             vr, vg, vb, va = C.textDim.r, C.textDim.g, C.textDim.b, 0.9
                         end
-                        if row.danger and row.value == true then
+                        if row.danger and row.value == true and not row.cleared then
                             vr, vg, vb = C.danger.r, C.danger.g, C.danger.b
                         end
 
                         -- Clip value text to available column width
-                        local valColW = contentW - valX - sc(6)
-                        local tm = getTextManager()
+                        local valColW = valRight - valX - sc(4)
                         if tm:MeasureStringX(UIFont.Small, valStr) > valColW then
                             while #valStr > 0 and tm:MeasureStringX(UIFont.Small, valStr .. "...") > valColW do
                                 valStr = valStr:sub(1, -2)
@@ -2006,6 +2214,7 @@ function UI:renderProps(ox, oy, w, h)
             end
         end
     end
+    self:clearStencilRect()
 
     if hasScroll then
         local sbH = math.max(sc(20), h * (h / totalH))
@@ -2013,6 +2222,121 @@ function UI:renderProps(ox, oy, w, h)
         self:drawRect(ox + w - SCROLLBAR_W, oy, SCROLLBAR_W, h, 0.3, 0.15, 0.15, 0.18)
         self:drawRect(ox + w - SCROLLBAR_W, sbY, SCROLLBAR_W, sbH, C.accentDim.a, C.accentDim.r, C.accentDim.g,
             C.accentDim.b)
+    end
+end
+
+-- ---------------------------------------------------------------------------
+-- Property row geometry. Everything here is relative to the property panel,
+-- so the click handlers, the renderer and the floating editors all agree.
+-- ---------------------------------------------------------------------------
+function UI:propContentW()
+    local pp = self.controls.propPanel
+    local hasScroll = (#self.propRows * ROW_HGT) > pp.height
+    return hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
+end
+
+function UI:propBadgeW(row)
+    if not row.origin then
+        return 0
+    end
+    return getTextManager():MeasureStringX(UIFont.Small, row.origin) + sc(6)
+end
+
+-- x and size of the square reset box, which sits just left of the mod badge.
+function UI:resetBoxRect(row, contentW)
+    local size = ROW_HGT - sc(6)
+    local right = contentW - sc(4)
+    local badgeW = self:propBadgeW(row)
+    if badgeW > 0 then
+        right = contentW - badgeW - sc(6)
+    end
+    return right - size, size
+end
+
+function UI:isOverResetBox(row, panelX)
+    local bx, size = self:resetBoxRect(row, self:propContentW())
+    return panelX >= bx - sc(2) and panelX <= bx + size + sc(2)
+end
+
+function UI:findPropRow(key)
+    for i, row in ipairs(self.propRows) do
+        if row.key == key and not row.isGroupHeader then
+            return i
+        end
+    end
+    return nil
+end
+
+-- The value cell of row i, in window coordinates, and whether the whole row is
+-- inside the panel's visible area.
+function UI:propValueCell(i)
+    local pp = self.controls.propPanel
+    local contentW = self:propContentW()
+    local valX = math.floor(contentW * 0.52)
+    local ry = (i - 1) * ROW_HGT - self.propScroll
+    local visible = ry >= 0 and ry + ROW_HGT <= pp.height
+    return pp.x + valX, pp.y + ry, contentW - valX - sc(4), visible
+end
+
+function UI:ensurePropRowVisible(i)
+    local pp = self.controls.propPanel
+    local rowY = (i - 1) * ROW_HGT
+    if rowY < self.propScroll then
+        self.propScroll = rowY
+    elseif rowY + ROW_HGT > self.propScroll + pp.height then
+        self.propScroll = rowY + ROW_HGT - pp.height
+    end
+end
+
+function UI:isEditingProp(key)
+    if self._editingRow and self._editingRow.key == key then
+        return true
+    end
+    local fp, ip = self.controls.fieldPicker, self.controls.inheritsPicker
+    return (fp:isVisible() and fp._rowKey == key) or (ip:isVisible() and key == "inherits")
+end
+
+-- Keeps the floating editor on its row as the list scrolls, refreshes under
+-- it, or the window is resized. One that has scrolled out of view is closed
+-- (keeping what was typed) instead of being left hanging over other rows.
+function UI:anchorPropEditors()
+    local function place(widget, key, height)
+        local i = self:findPropRow(key)
+        if not i then
+            return false
+        end
+        local x, y, w, visible = self:propValueCell(i)
+        if not visible then
+            return false
+        end
+        widget:setX(x)
+        widget:setY(y + math.floor((ROW_HGT - height) / 2))
+        widget:setWidth(w)
+        return true
+    end
+
+    local ie = self.controls.inlineEdit
+    if ie:isVisible() and self._editingRow then
+        if not place(ie, self._editingRow.key, ie.height) then
+            self:commitInlineEdit()
+        end
+    end
+
+    local pickers = {{self.controls.fieldPicker, self.controls.fieldPicker._rowKey},
+                     {self.controls.inheritsPicker, "inherits"}}
+    for _, p in ipairs(pickers) do
+        local picker, key = p[1], p[2]
+        if picker:isVisible() then
+            -- The dropdown closed without a choice (clicked away, clicked the
+            -- box again): nothing left to keep the box open for. While it is
+            -- open the dropdown holds the mouse, so the list cannot scroll
+            -- under it; placing it just follows a refresh that moved the row.
+            if not picker.expanded then
+                self:closePropPickers()
+            else
+                place(picker, key, picker.height)
+            end
+        end
     end
 end
 
@@ -2036,17 +2360,32 @@ function UI:onPropClick(panel, x, y)
 
     self:cancelInlineEdit()
 
+    if row.resettable and self:isOverResetBox(row, x) then
+        self:resetProp(row.key)
+        return
+    end
+
+    self:activatePropRow(i)
+end
+
+-- Does whatever clicking row i's value means: toggle, pick, run, or type.
+function UI:activatePropRow(i)
+    local row = self.propRows[i]
     local sd = self.selectedData
-    if not sd then
+    if not row or not sd then
         return
     end
 
     if row.key == "disabled" then
-        self:saveProp("disabled", not (sd.raw.disabled == true));
+        self:saveProp("disabled", not (row.value == true))
         return
     end
     if row.key == "inherits" then
-        self:showInheritsPicker(row, i);
+        -- _default is the root of every chain; it has nothing to inherit.
+        if sd.key ~= "_default" then
+            self:ensurePropRowVisible(i)
+            self:showInheritsPicker(row, i)
+        end
         return
     end
     if row.special or row.extra or not row.fdef then
@@ -2055,16 +2394,15 @@ function UI:onPropClick(panel, x, y)
 
     local fdef = row.fdef
     if fdef.type == "boolean" then
-        local cur = sd.raw[row.key]
-        if cur == nil then
-            cur = sd.merged[row.key]
-        end
-        self:saveProp(row.key, not cur);
+        -- row.value already accounts for pending edits, which sd.raw does
+        -- not when the pending edit is a reset.
+        self:saveProp(row.key, not (row.value == true))
         return
     end
 
     if fdef.type == "combo" then
         local opts = fdef.options or (fdef.getOptions and fdef.getOptions()) or {}
+        self:ensurePropRowVisible(i)
         self:showFieldPicker(row, i, opts)
         return
     end
@@ -2076,32 +2414,102 @@ function UI:onPropClick(panel, x, y)
         return
     end
 
-    -- Inline text editor
-    local pp = self.controls.propPanel
-    local hasScroll = (#self.propRows * ROW_HGT) > pp.height
-    local contentW = hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
-    local valX = math.floor(contentW * 0.52)
-    local rowScreenY = pp.y + (i - 1) * ROW_HGT - self.propScroll
+    self:openInlineEditor(i)
+end
+
+local function isTextRow(row)
+    return row and not row.isGroupHeader and not row.special and not row.extra and row.fdef and
+               (row.fdef.type == "string" or row.fdef.type == "int")
+end
+
+function UI:openInlineEditor(i)
+    local row = self.propRows[i]
+    if not isTextRow(row) then
+        return
+    end
+    self:ensurePropRowVisible(i)
 
     local ie = self.controls.inlineEdit
     local ieH = FONT_HGT_SMALL + sc(4)
-    ie:setX(pp.x + valX)
-    ie:setY(rowScreenY + math.floor((ROW_HGT - ieH) / 2))
-    ie:setWidth(contentW - valX - sc(4))
+    local x, y, w = self:propValueCell(i)
+    ie:setX(x)
+    ie:setY(y + math.floor((ROW_HGT - ieH) / 2))
+    ie:setWidth(w)
     ie:setHeight(ieH)
 
-    local curVal = sd.raw[row.key]
-    if curVal == nil then
-        curVal = sd.merged[row.key]
-    end
-    local initText = curVal ~= nil and tostring(curVal) or ""
+    local initText = row.value ~= nil and tostring(row.value) or ""
     ie:setText(initText)
     self._inlineOrigValue = initText
     self._inlineDirty = false
+    self._editingRow = row
     ie:setVisible(true)
     ie:focus()
     ie:selectAll()
-    self._editingRow = row
+end
+
+-- Tab / Shift+Tab: keep what was typed and move to the next text field.
+function UI:editAdjacentProp(dir)
+    local from = self._editingRow and self:findPropRow(self._editingRow.key)
+    self:commitInlineEdit()
+    if not from then
+        return
+    end
+    local i = from + dir
+    while i >= 1 and i <= #self.propRows do
+        if isTextRow(self.propRows[i]) then
+            self:openInlineEditor(i)
+            return
+        end
+        i = i + dir
+    end
+end
+
+function UI:onPropRightClick(panel, x, y)
+    if not self.selectedData then
+        return
+    end
+    local i = math.floor((y + self.propScroll) / ROW_HGT) + 1
+    local row = self.propRows[i]
+    if not row or row.isGroupHeader then
+        return
+    end
+    self:commitInlineEdit()
+    self:closePropPickers()
+
+    local key = self.selectedData.key
+    local pending = self._pendingChanges[key]
+    local hasPending = pending ~= nil and pending[row.key] ~= nil
+    local editable = not row.extra and row.fdef ~= nil and row.fdef.type ~= "button"
+    if row.key == "disabled" or (row.key == "inherits" and key ~= "_default") then
+        editable = true
+    end
+    if not (editable or row.resettable or hasPending) then
+        return
+    end
+
+    local context = ISContextMenu.get(self.playerIndex, getMouseX(), getMouseY())
+    if editable then
+        context:addOption(getText("IGUI_PhunZones_EditProp"), self, function(owner)
+            local idx = owner:findPropRow(row.key)
+            if idx then
+                owner:activatePropRow(idx)
+            end
+        end)
+    end
+    if row.resettable then
+        local opt = context:addOption(getText("IGUI_PhunZones_ResetProp"), self, function(owner)
+            owner:resetProp(row.key)
+        end)
+        local tip = ISToolTip:new()
+        tip:initialise()
+        tip.description = getText("IGUI_PhunZones_ResetProp_tooltip")
+        opt.toolTip = tip
+    end
+    if hasPending then
+        context:addOption(getText("IGUI_PhunZones_UndoProp"), self, function(owner)
+            owner:discardPendingField(key, row.key)
+        end)
+    end
 end
 
 function UI:showInheritsPicker(row, rowIndex)
@@ -2110,16 +2518,11 @@ function UI:showInheritsPicker(row, rowIndex)
         return
     end
 
-    local pp = self.controls.propPanel
-    local hasScroll = (#self.propRows * ROW_HGT) > pp.height
-    local contentW = hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
-    local valX = math.floor(contentW * 0.52)
-    local rowScreenY = pp.y + (rowIndex - 1) * ROW_HGT - self.propScroll
-
     local picker = self.controls.inheritsPicker
-    picker:setX(pp.x + valX)
-    picker:setY(rowScreenY)
-    picker:setWidth(contentW - valX - sc(4))
+    local x, y, w = self:propValueCell(rowIndex)
+    picker:setX(x)
+    picker:setY(y + math.floor((ROW_HGT - picker.height) / 2))
+    picker:setWidth(w)
 
     local selfKey = sd.key
     local descendants = {}
@@ -2163,24 +2566,20 @@ function UI:showInheritsPicker(row, rowIndex)
         idx = idx + 1
     end
 
-    picker:select(selectedIdx)
-    picker:setVisible(true)
+    -- ISComboBox:select() matches option text, not an index.
+    picker.selected = selectedIdx
+    self:openPicker(picker)
 end
 
 function UI:showFieldPicker(row, rowIndex, opts)
-    local pp = self.controls.propPanel
-    local hasScroll = (#self.propRows * ROW_HGT) > pp.height
-    local contentW = hasScroll and (pp.width - SCROLLBAR_W - sc(2)) or pp.width
-    local valX = math.floor(contentW * 0.52)
-    local rowScreenY = pp.y + (rowIndex - 1) * ROW_HGT - self.propScroll
-
     local picker = self.controls.fieldPicker
-    picker:setX(pp.x + valX)
-    picker:setY(rowScreenY)
-    picker:setWidth(contentW - valX - sc(4))
+    local x, y, w = self:propValueCell(rowIndex)
+    picker:setX(x)
+    picker:setY(y + math.floor((ROW_HGT - picker.height) / 2))
+    picker:setWidth(w)
     picker:clear()
     picker._opts = opts
-    picker._pendingField = row.key
+    picker._rowKey = row.key
 
     local currentIdx = 1
     for i, opt in ipairs(opts) do
@@ -2189,61 +2588,89 @@ function UI:showFieldPicker(row, rowIndex, opts)
             currentIdx = i
         end
     end
-    picker:select(math.max(1, math.min(currentIdx, math.max(1, #opts))))
+    picker.selected = math.max(1, math.min(currentIdx, #opts))
+    self:openPicker(picker)
+end
+
+-- Shows a picker with its dropdown already open, so choosing a value takes
+-- one click on the row and one on the option, not a third on the box between.
+function UI:openPicker(picker)
     picker:setVisible(true)
+    picker.expanded = true
+    picker:showPopup()
+end
+
+-- Closes either picker. Returns true if one was open.
+function UI:closePropPickers()
+    local closed = false
+    for _, picker in ipairs({self.controls.inheritsPicker, self.controls.fieldPicker}) do
+        if picker and picker:isVisible() then
+            if picker.expanded then
+                picker.expanded = false
+                picker:hidePopup()
+            end
+            picker:setVisible(false)
+            closed = true
+        end
+    end
+    local fp = self.controls.fieldPicker
+    if fp then
+        fp._rowKey = nil
+        fp._opts = nil
+    end
+    return closed
 end
 
 function UI:commitInlineEdit()
-    local ie = self.controls.inlineEdit
-    if not ie:isVisible() then
+    -- _editingRow is the guard, cleared first: hiding the box makes it lose
+    -- focus, and onLostFocus calls straight back in here.
+    local row = self._editingRow
+    if not row then
         return
     end
+    self._editingRow = nil
+    local ie = self.controls.inlineEdit
+    local text = ie:getText()
+    local orig = self._inlineOrigValue
     ie:setVisible(false)
     self._inlineOrigValue = nil
     self._inlineDirty = false
 
-    local row = self._editingRow
-    self._editingRow = nil
-    if not row or not row.fdef then
+    -- Opening a field and leaving it untouched must not pin its inherited
+    -- value as an override.
+    if not row.fdef or text == orig then
+        self:updateSaveDiscardButtons()
         return
     end
 
-    local raw = ie:getText()
     local fdef = row.fdef
     local val
-
     if fdef.type == "int" then
-        val = tonumber(raw);
+        val = tonumber(text)
         if val == nil then
+            -- Not a number (or emptied). Use Reset to clear a value.
+            self:updateSaveDiscardButtons()
             return
         end
     elseif fdef.type == "boolean" then
-        val = (raw == "true" or raw == "1")
+        val = (text == "true" or text == "1")
     else
-        val = raw
+        val = text
     end
 
     self:saveProp(row.key, val)
 end
 
 function UI:cancelInlineEdit()
+    self._editingRow = nil
     self._inlineOrigValue = nil
     self._inlineDirty = false
     local ie = self.controls.inlineEdit
     if ie and ie:isVisible() then
         ie:setVisible(false)
     end
-    local ip = self.controls.inheritsPicker
-    if ip and ip:isVisible() then
-        ip:setVisible(false)
-    end
-    local fp = self.controls.fieldPicker
-    if fp and fp:isVisible() then
-        fp:setVisible(false)
-        fp._pendingField = nil
-        fp._opts = nil
-    end
-    self._editingRow = nil
+    self:closePropPickers()
+    self:updateSaveDiscardButtons()
 end
 
 -- ===========================================================================
@@ -2292,13 +2719,10 @@ function UI:saveProp(fieldKey, newValue)
     sd.raw[fieldKey] = val
     sd.merged[fieldKey] = val
 
-    -- Keep the edited profile's own layer in step too, or the override marker
-    -- would go dark between flushing the change and the server's copy arriving.
-    if self.editProfile and self.data and self.data.profileLayer then
-        local pl = self.data.profileLayer
-        pl[key] = pl[key] or {}
-        pl[key][fieldKey] = val
-    end
+    -- The profile layer is deliberately left alone: it is the live runtime
+    -- table, so writing an unsaved edit into it would leak into the game (and
+    -- into the file on the next profile save) even if the edit is discarded.
+    -- The pending entry is what marks the row as this layer's own until then.
 
     if fieldKey == "title" then
         self:buildTree()
@@ -2309,6 +2733,79 @@ function UI:saveProp(fieldKey, newValue)
 
     self:updateSaveDiscardButtons()
     self:refreshProperties()
+end
+
+-- Takes a field back out of the layer being edited, so whatever is underneath
+-- applies again. Saved like any other edit. If the layer never held the field
+-- and there is only an unsaved edit, that edit is simply dropped.
+function UI:resetProp(fieldKey)
+    local sd = self.selectedData
+    if not sd or not sd.key then
+        return
+    end
+    local key = sd.key
+    if self:layerEntry(key)[fieldKey] == nil then
+        self:discardPendingField(key, fieldKey)
+        return
+    end
+    self._pendingChanges[key] = self._pendingChanges[key] or {}
+    self._pendingChanges[key][fieldKey] = CLEAR
+    self:updateSaveDiscardButtons()
+    self:refreshProperties()
+end
+
+-- Drops one unsaved edit. The optimistic copy in self.data cannot be unpicked
+-- field by field, so it is rebuilt and the remaining edits laid back on top.
+function UI:discardPendingField(key, fieldKey)
+    local pending = self._pendingChanges[key]
+    if not pending or pending[fieldKey] == nil then
+        return
+    end
+    pending[fieldKey] = nil
+    if Core.tools.isEmpty(pending) then
+        self._pendingChanges[key] = nil
+    end
+    self:refreshData(self.selectedData)
+end
+
+function UI:confirmDiscardAll()
+    self:commitInlineEdit()
+    if not self:hasPendingChanges() then
+        return
+    end
+    local modal = ISModalDialog:new(0, 0, sc(300), sc(150), getText("IGUI_PhunZones_DiscardConfirm"), true, self,
+        function(owner, button)
+            if button.internal == "YES" then
+                owner._pendingChanges = {}
+                owner:refreshData(owner.selectedData)
+            end
+        end)
+    modal:initialise()
+    modal:setX(getCore():getScreenWidth() / 2 - modal.width / 2)
+    modal:setY(getCore():getScreenHeight() / 2 - modal.height / 2)
+    modal:addToUIManager()
+end
+
+-- Lays unsaved edits back over a freshly built self.data, so a rebuild (a
+-- save landing, another admin's change arriving) does not visually undo them
+-- while they still sit in the queue waiting for Save.
+function UI:applyPendingToData()
+    local zoneData, lookupData = zones(self), lookup(self)
+    for key, fields in pairs(self._pendingChanges) do
+        local zone = zoneData[key]
+        if zone then
+            for field, val in pairs(fields) do
+                if field == "_points" then
+                    zone.points = copyPoints(val)
+                elseif val ~= CLEAR then
+                    zone[field] = val
+                    if lookupData[key] then
+                        lookupData[key][field] = val
+                    end
+                end
+            end
+        end
+    end
 end
 
 function UI:hasPendingChanges()
@@ -2378,17 +2875,22 @@ function UI:flushPendingChanges()
         else
             Core.saveChanges(changes)
         end
-        local currentKey = self.selectedData and self.selectedData.key
-        self:rebuildUI(currentKey and {
-            key = currentKey
-        } or nil)
+        -- Both save paths have already applied the change to the local copy
+        -- of the layer, so a rebuild shows real values straight away. That
+        -- matters for resets in particular: what a reset falls back to is only
+        -- known once the layers are merged again.
+        self:refreshData(self.selectedData)
     end
 end
 
 function UI:updateSaveDiscardButtons()
     local ie = self.controls.inlineEdit
     local inlineDirty = ie and ie:isVisible() and self._inlineDirty
-    self.controls.btnSave.enable = self:hasPendingChanges() or inlineDirty
+    local dirty = self:hasPendingChanges() or inlineDirty
+    self.controls.btnSave.enable = dirty
+    if self.controls.btnDiscard then
+        self.controls.btnDiscard.enable = dirty
+    end
 end
 
 -- ===========================================================================
@@ -2471,6 +2973,18 @@ function UI:refreshData(zone)
     -- and the layer being edited. This keeps Core.data untouched: the editor can
     -- show a profile that is not live without changing anything for players.
     self.data = Core.buildZoneData(self._filterActive or false, self.editProfile or false)
+
+    -- Rect arrays come out of the merge shared with the layers they were read
+    -- from: the shipped zone data and the custom layer in ModData. Dragging a
+    -- rect edits its array in place, so without a private copy an unsaved,
+    -- later discarded drag would already be in those tables.
+    for _, z in pairs(self.data.zones or {}) do
+        if z.points then
+            z.points = copyPoints(z.points)
+        end
+    end
+    self:applyPendingToData()
+
     self:refreshProfileBar()
     self:rebuildUI(zone)
 end
@@ -2480,25 +2994,26 @@ function UI:rebuildUI(zone)
 
     if zone then
         local targetKey = zone.key or zone.region
-        local zoneData = zones(self)
-        if targetKey and targetKey ~= "_default" and targetKey ~= "void" and zoneData[targetKey] then
+        if targetKey and zones(self)[targetKey] then
             self:selectZone(targetKey)
             return
         end
     end
 
+    self:cancelInlineEdit()
     self.selectedData = nil
     self:refreshProperties()
 end
 
-function UI:refreshZonePoints(points, selectedIdx)
+-- keepView: same zone shown again, so leave the map where the admin put it.
+function UI:refreshZonePoints(points, selectedIdx, keepView)
     self.selectedPoint = nil
     self.controls.btnDeleteRect.enable = false
     self:updateCoordBar(nil)
 
-    self.controls.mapui:setData(points, nil)
-
-    if points and #points > 0 then
+    if not points or #points == 0 then
+        self.controls.mapui:setData(points or {}, nil, keepView)
+    else
         local idx = selectedIdx or 1
         idx = math.max(1, math.min(idx, #points))
         self.selectedPoint = {
@@ -2508,7 +3023,7 @@ function UI:refreshZonePoints(points, selectedIdx)
             y2 = points[idx][4]
         }
         self.controls.btnDeleteRect.enable = true
-        self.controls.mapui:setData(points, self.selectedPoint)
+        self.controls.mapui:setData(points, self.selectedPoint, keepView)
         self.controls.mapui.selectedPointIndex = idx
         self.selectedPtIdx = idx
 
@@ -2589,7 +3104,7 @@ function UI:savePoint(xy, pointIndex)
 
     -- Re-select zone and point so handles appear immediately
     self:selectZone(key)
-    self:refreshZonePoints(zone.points, ptIdx)
+    self:refreshZonePoints(zone.points, ptIdx, true)
 end
 
 function UI:openImportModal()
@@ -2719,7 +3234,7 @@ function UI:confirmDeleteRect()
 
     -- Refresh point list UI, selecting adjacent point if one exists
     local newIdx = math.min(idx, #pts)
-    self:refreshZonePoints(pts, #pts > 0 and newIdx or nil)
+    self:refreshZonePoints(pts, #pts > 0 and newIdx or nil, true)
 end
 
 -- ===========================================================================

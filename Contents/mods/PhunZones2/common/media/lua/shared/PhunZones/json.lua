@@ -81,6 +81,77 @@ function json.encode(value)
     return result, nil
 end
 
+-- Human-readable layout: one key per line, keys sorted so the same data
+-- always reads the same way, and arrays of plain values (a rect's four
+-- coordinates) kept on one line rather than stretched over six.
+local function encodePretty(value, stack, indent, depth)
+    if type(value) ~= 'table' then
+        return encodeValue(value, stack)
+    end
+    if stack[value] then
+        error('cannot encode a circular table')
+    end
+
+    local array, count = isArray(value)
+    if array then
+        local flat = true
+        for index = 1, count do
+            if type(value[index]) == 'table' then
+                flat = false
+                break
+            end
+        end
+        if flat then
+            local items = {}
+            for index = 1, count do
+                items[index] = encodeValue(value[index], stack)
+            end
+            return '[' .. table.concat(items, ', ') .. ']'
+        end
+    end
+
+    stack[value] = true
+    local pad = string.rep(indent, depth + 1)
+    local lines = {}
+    if array then
+        for index = 1, count do
+            lines[index] = pad .. encodePretty(value[index], stack, indent, depth + 1)
+        end
+    else
+        local keys = {}
+        for key in pairs(value) do
+            if type(key) ~= 'string' then
+                error('object keys must be strings')
+            end
+            keys[#keys + 1] = key
+        end
+        if #keys == 0 then
+            stack[value] = nil
+            return '{}'
+        end
+        table.sort(keys)
+        for index, key in ipairs(keys) do
+            lines[index] = pad .. escapeString(key) .. ': ' .. encodePretty(value[key], stack, indent, depth + 1)
+        end
+    end
+    stack[value] = nil
+
+    local close = string.rep(indent, depth)
+    local open, shut = '{', '}'
+    if array then
+        open, shut = '[', ']'
+    end
+    return open .. '\n' .. table.concat(lines, ',\n') .. '\n' .. close .. shut
+end
+
+function json.encodePretty(value, indent)
+    local ok, result = pcall(encodePretty, value, {}, indent or '  ', 0)
+    if not ok then
+        return nil, result
+    end
+    return result, nil
+end
+
 local function decodeError(message, position)
     error(message .. ' at character ' .. tostring(position))
 end

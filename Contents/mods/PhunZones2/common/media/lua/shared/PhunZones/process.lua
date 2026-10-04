@@ -534,6 +534,21 @@ function Core.loadAdminConfig()
     return data
 end
 
+-- Merges one zone's field changes into a sparse layer (the custom layer or a
+-- profile). A field set to Core.const.clearField is removed instead, and a
+-- zone left with nothing in it is dropped from the layer altogether.
+local function mergeZoneFields(layer, key, fields)
+    local entry = layer[key] or {}
+    for field, val in pairs(fields) do
+        if val == Core.const.clearField then
+            entry[field] = nil
+        else
+            entry[field] = val
+        end
+    end
+    layer[key] = (not Core.tools.isEmpty(entry)) and entry or nil
+end
+
 -- ---------------------------------------------------------------------------
 -- SAVE CHANGES
 -- Accepts a table of zone changes keyed by zone key.
@@ -556,10 +571,7 @@ function Core.saveChanges(changes)
 
     -- Merge all changes into the custom layer in one pass
     for key, zoneData in pairs(changes) do
-        custom[key] = custom[key] or {}
-        for field, val in pairs(zoneData) do
-            custom[key][field] = val
-        end
+        mergeZoneFields(custom, key, zoneData)
     end
 
     ModData.add(Core.const.modifiedModData, custom)
@@ -582,6 +594,34 @@ function Core.saveChanges(changes)
         -- Reprocess locally once for the entire batch
         Core.updateZoneData()
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- REPLACE CUSTOM LAYER
+-- Swaps the whole custom layer for `data`: the file editor's Import. Same
+-- persistence and sync as saveChanges, which can only ever merge into it.
+-- Profiles live in their own block of the file and are carried through.
+-- ---------------------------------------------------------------------------
+function Core.replaceCustomLayer(data)
+    if type(data) ~= "table" then
+        return false, "expected a table, got " .. type(data)
+    end
+
+    ModData.add(Core.const.modifiedModData, data)
+
+    if isClient() and not isCoopHost() then
+        -- Only the server can write the file. Its transmit brings the
+        -- authoritative copy back and triggers the rebuild here.
+        sendClientCommand(getPlayer(), Core.name, Core.commands.replaceZones, {
+            data = data
+        })
+        return true
+    end
+
+    Core.saveAdminConfig(data)
+    ModData.transmit(Core.const.modifiedModData)
+    Core.updateZoneData()
+    return true
 end
 
 -- ---------------------------------------------------------------------------
@@ -842,10 +882,7 @@ function Core.applyProfileChanges(rt, name, changes)
     end
     local profile = rt.profiles[name]
     for zoneKey, fields in pairs(changes or {}) do
-        profile[zoneKey] = profile[zoneKey] or {}
-        for field, val in pairs(fields) do
-            profile[zoneKey][field] = val
-        end
+        mergeZoneFields(profile, zoneKey, fields)
     end
     return profile
 end

@@ -20,6 +20,10 @@ PhunZones = {
         -- which one is currently active. Lives in global ModData rather than the
         -- admin JSON file so scheduled profile swaps never rewrite their config.
         runtimeModData = "PhunZonesRuntime",
+        -- Field value in a change payload meaning "remove this field from the
+        -- layer", so the value underneath shows through again. nil cannot do
+        -- the job: it never survives being sent from client to server.
+        clearField = "__PhunZonesClear__",
 
         playerData = "PhunZonesPlayers"
     },
@@ -28,6 +32,7 @@ PhunZones = {
     commands = {
         playerSetup = "PhunZonesPlayerSetup",
         modifyZone = "PhunZonesModifyZone",
+        replaceZones = "PhunZonesReplaceZones",
         playerTeleport = "PhunZonesPlayerTeleport",
         teleportVehicle = "PhunZonesTeleportVehicle",
         deleteZone = "PhunZonesDeleteZone",

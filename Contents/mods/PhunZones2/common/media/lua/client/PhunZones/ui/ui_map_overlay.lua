@@ -812,10 +812,16 @@ function MapOverlay:_render(widget)
         return
     end
 
+    -- Clip to the map widget here, not further up the tree: the world map's
+    -- own render has finished with the stencil by the time this runs, so a
+    -- clip set by a parent no longer applies. Without it, a zone bigger than
+    -- the current view is drawn out over the rest of the editor.
+    widget:setStencilRect(0, 0, widget.width, widget.height)
     self:_renderZones(widget)
     if self._drawMode and self._drawStart and self._drawCurrent then
         self:_renderDrawPreview(widget)
     end
+    widget:clearStencilRect()
 end
 
 -- Draw all zone rects

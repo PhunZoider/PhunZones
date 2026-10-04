@@ -374,6 +374,107 @@ check.same("and reverts the zone", Core.data.lookup.MarchRidge.noplayers, nil)
 check.same("deleting an unknown profile is refused", (Core.deleteProfile("event")), false)
 
 -- ---------------------------------------------------------------------------
+check.section("a field can be cleared from a layer")
+-- What the editor's Reset sends. Blanking a field is still setting it; clearing
+-- removes it so whatever is underneath shows through again. nil cannot carry
+-- that from a client, so the payload uses a sentinel.
+
+harness.reset()
+writeConfig({
+    MarchRidge = {
+        difficulty = 4,
+        noplayers = true
+    }
+}, {
+    night = {
+        MarchRidge = {
+            difficulty = 1,
+            nofire = true
+        }
+    }
+})
+reload()
+
+check.same("custom layer sets it", Core.data.lookup.MarchRidge.difficulty, 4)
+
+Core.saveChanges({
+    MarchRidge = {
+        difficulty = Core.const.clearField
+    }
+})
+local cfg = Core.tools.loadTable(Core.const.modifiedLuaFile)
+check.same("cleared from the custom layer", cfg.data.MarchRidge.difficulty, nil)
+check.same("the sentinel is never written", cfg.data.MarchRidge.difficulty ~= Core.const.clearField, true)
+check.same("other fields on the zone are kept", cfg.data.MarchRidge.noplayers, true)
+check.ok("the custom value is gone from the live data", Core.data.lookup.MarchRidge.difficulty ~= 4,
+    "still 4 after clearing")
+check.same("the value underneath shows through", Core.data.lookup.MarchRidge.difficulty,
+    Core.buildZoneData(true, false).lookup._default.difficulty)
+
+Core.saveChanges({
+    MarchRidge = {
+        noplayers = Core.const.clearField
+    }
+})
+cfg = Core.tools.loadTable(Core.const.modifiedLuaFile)
+check.same("a zone with nothing left is dropped from the layer", cfg.data.MarchRidge, nil)
+
+check.ok("clearing a profile field", Core.saveProfileChanges("night", {
+    MarchRidge = {
+        difficulty = Core.const.clearField
+    }
+}))
+local night = Core.getRuntime().profiles.night
+check.same("cleared from the profile", night.MarchRidge.difficulty, nil)
+check.same("the profile keeps its other fields", night.MarchRidge.nofire, true)
+
+Core.saveProfileChanges("night", {
+    MarchRidge = {
+        nofire = Core.const.clearField
+    }
+})
+check.same("an emptied profile zone is dropped", Core.getRuntime().profiles.night.MarchRidge, nil)
+check.ok("but the profile itself remains", Core.getRuntime().profiles.night ~= nil, "profile was removed")
+
+-- ---------------------------------------------------------------------------
+check.section("the file editor's import replaces the custom layer")
+-- Import used to write ModData and transmit it, which never reached the file:
+-- the import was gone on restart. It now goes through replaceCustomLayer.
+
+harness.reset()
+writeConfig({
+    MarchRidge = {
+        difficulty = 4
+    }
+}, {
+    night = {
+        MarchRidge = {
+            noplayers = true
+        }
+    }
+})
+reload()
+
+-- What the editor shows and reads back: the pretty form must round-trip.
+local shown = Core.tools.tableToPrettyString({
+    Rosewood = {
+        nofire = true,
+        points = {{1, 2, 3, 4}}
+    }
+})
+check.ok("the export is laid out over several lines", shown:find("\n", 1, true) ~= nil, shown)
+local imported = Core.tools.jsonToTable(shown)
+check.same("and parses back", imported.Rosewood.points[1][3], 3)
+
+check.ok("replace is accepted", Core.replaceCustomLayer(imported))
+cfg = Core.tools.loadTable(Core.const.modifiedLuaFile)
+check.same("the import reached the file", cfg.data.Rosewood.nofire, true)
+check.same("zones not in the import are gone", cfg.data.MarchRidge, nil)
+check.ok("profiles are carried through", cfg.profiles and cfg.profiles.night ~= nil, "profiles block dropped")
+check.same("and the live data was rebuilt", Core.data.lookup.Rosewood.nofire, true)
+check.same("a non-table is refused", (Core.replaceCustomLayer("nope")), false)
+
+-- ---------------------------------------------------------------------------
 check.section("client requests apply optimistically")
 -- The editor creates a profile and immediately switches to editing it. On a
 -- client that races the server, so the request path updates the local copy

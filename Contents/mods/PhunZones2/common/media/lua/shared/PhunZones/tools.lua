@@ -159,6 +159,15 @@ function tools.tableToString(tbl)
     return result
 end
 
+-- Same as tableToString, laid out for a person to read and edit.
+function tools.tableToPrettyString(tbl)
+    local result, err = json.encodePretty(tbl)
+    if not result then
+        error(err)
+    end
+    return result
+end
+
 function tools.jsonToTable(src)
     return json.decode(src)
 end

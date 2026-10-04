@@ -22,7 +22,7 @@ local UI = Core.ui.configEditor
 
 function UI:buildExportString()
     local md = ModData.getOrCreate(Core.const.modifiedModData)
-    return Core.tools.tableToString(md) .. "\n"
+    return Core.tools.tableToPrettyString(md) .. "\n"
 end
 
 function UI:parseImportString(src)
@@ -112,26 +112,29 @@ function UI:initialise()
     local padBot = 10
     local inset = 2
 
-    -- Multiline entry — height = inset + lines*fontHgt + inset (journal pattern)
+    -- Multiline entry. lineNumber only sizes the box: the content itself is
+    -- not capped, since a capped box silently cuts a large config short on
+    -- export and then fails to parse on import. It scrolls instead, the way
+    -- the vanilla debug error window does.
     local entryH = inset + self.lineNumber * self.fontHgt + inset
     self.entry = ISTextEntryBox:new(self.initialText, 10, 20, self.width - 20, entryH)
     self.entry:initialise()
     self.entry:instantiate()
     self.entry:setMultipleLine(true)
-    self.entry.javaObject:setMaxLines(self.lineNumber)
-    self.entry.javaObject:setMaxTextLength(self.lineNumber * 200)
     self:addChild(self.entry)
+    self.entry:addScrollBars()
     self.entry:focus()
 
     local bottom = self.entry:getBottom()
 
-    -- Status label (import mode — shows validation errors)
-    self.statusLbl = ISLabel:new(10, bottom + 6, FONT_HGT_SMALL + 2, "", 1, 0.4, 0.4, 1, UIFont.Small, true)
+    -- Status label (import mode — shows validation errors). Its own line, so
+    -- a long error does not run underneath the buttons.
+    self.statusLbl = ISLabel:new(10, bottom + 4, FONT_HGT_SMALL + 2, "", 1, 0.4, 0.4, 1, UIFont.Small, true)
     self.statusLbl:initialise()
     self.statusLbl:instantiate()
     self:addChild(self.statusLbl)
 
-    local btnY = bottom + 6
+    local btnY = self.statusLbl:getBottom() + 4
 
     -- Validate & Import button (import mode only)
     if not self.readOnly then
@@ -226,20 +229,16 @@ function UI:open(readOnly)
     local uiRef = self
     local text = self:buildExportString()
 
+    -- Goes through the same server path as every other edit, so the import is
+    -- permission-checked, written to PhunZones.json and rebuilt everywhere.
+    -- Writing ModData and transmitting it from here did none of that: the
+    -- file was never updated, so the import was gone on the next restart.
     local onImport = not readOnly and function(src)
         local data, err = uiRef:parseImportString(src)
         if err then
             return false, err
         end
-        local md = ModData.getOrCreate(Core.const.modifiedModData)
-        for k in pairs(md) do
-            md[k] = nil
-        end
-        for k, v in pairs(data) do
-            md[k] = v
-        end
-        ModData.transmit(Core.const.modifiedModData)
-        return true, nil
+        return Core.replaceCustomLayer(data)
     end or nil
 
     local win = UI:new(mx, my, w, h, text, readOnly, onImport)

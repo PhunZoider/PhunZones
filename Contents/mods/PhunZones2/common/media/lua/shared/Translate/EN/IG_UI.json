@@ -9,7 +9,7 @@
   "IGUI_PhunZones_AddRect": "Add Rect",
   "IGUI_PhunZones_AddRectTooltip": "Add a new rect at the current map centre for the selected zone",
   "IGUI_PhunZones_File": "File Contents",
-  "IGUI_PhunZones_FileTooltip": "View contents of your lua/PhunZones.txt file",
+  "IGUI_PhunZones_FileTooltip": "View, copy or import your customisations (lua/PhunZones.json)",
   "IGUI_PhunZones_SavePending": "Save pending property changes",
   "IGUI_PhunZones_UnsavedChanges": "You have unsaved changes. Save them now?",
   "IGUI_PhunZones_SayNoSafeHouse": "You cannot create a safehouse in this area",
@@ -95,5 +95,13 @@
   "IGUI_PhunZones_Profile_BaseOnly": "Only available on the base configuration. Switch Editing back to 'default'.",
   "IGUI_PhunZones_Profile_SwitchUnsaved": "You have unsaved changes to this layer. Save them before switching?",
   "IGUI_PhunZones_Pvp": "PVP",
-  "IGUI_PhunZones_Pvp_tooltip": "Whether players can hurt each other here. Off makes this a safe zone. Leave it unset unless you mean it - as soon as any zone is set to on, everywhere else on the map becomes safe. Needs the server option PVP to be on, and applies to staff too: the check is on the tile, not the player. Off also stops explosives and fire working here, on zombies as well as players - that is the game's own rule for safe zones, not ours"
+  "IGUI_PhunZones_Pvp_tooltip": "Whether players can hurt each other here. Off makes this a safe zone. Leave it unset unless you mean it - as soon as any zone is set to on, everywhere else on the map becomes safe. Needs the server option PVP to be on, and applies to staff too: the check is on the tile, not the player. Off also stops explosives and fire working here, on zombies as well as players - that is the game's own rule for safe zones, not ours",
+  "IGUI_PhunZones_Discard": "Discard",
+  "IGUI_PhunZones_DiscardTooltip": "Throw away every unsaved change",
+  "IGUI_PhunZones_DiscardConfirm": "Discard all unsaved changes?",
+  "IGUI_PhunZones_ResetProp": "Reset to inherited",
+  "IGUI_PhunZones_ResetProp_tooltip": "Remove this setting from the layer you are editing, so the value underneath applies again",
+  "IGUI_PhunZones_ResetPending": "(reset on save)",
+  "IGUI_PhunZones_UndoProp": "Undo unsaved change",
+  "IGUI_PhunZones_EditProp": "Edit"
 }

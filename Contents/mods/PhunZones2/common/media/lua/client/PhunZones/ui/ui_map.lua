@@ -204,7 +204,10 @@ function UI:zoomAndCentreMapToBounds(x, y, x2, y2)
 
 end
 
-function UI:setData(data, selectedPoint)
+-- keepView: refresh the rects without moving the map. Used when the same zone
+-- is shown again after a save or a data rebuild, so the view the admin was
+-- working in does not jump back to the zone's full bounds.
+function UI:setData(data, selectedPoint, keepView)
 
     self.data = {
         points = data,
@@ -212,6 +215,9 @@ function UI:setData(data, selectedPoint)
     }
 
     local points = data
+    if keepView then
+        return
+    end
 
     if #points == 0 then
         -- No rects yet — centre on the player so the map view is useful
