@@ -103,5 +103,12 @@
   "IGUI_PhunZones_ResetProp_tooltip": "Remove this setting from the layer you are editing, so the value underneath applies again",
   "IGUI_PhunZones_ResetPending": "(reset on save)",
   "IGUI_PhunZones_UndoProp": "Undo unsaved change",
-  "IGUI_PhunZones_EditProp": "Edit"
+  "IGUI_PhunZones_EditProp": "Edit",
+  "IGUI_PhunZones_MutantPuker": "Puker Spawn Rate",
+  "IGUI_PhunZones_MutantHusk": "Husk Spawn Rate",
+  "IGUI_PhunZones_MutantSkitter": "Skitter Spawn Rate",
+  "IGUI_PhunZones_MutantWrecker": "Wrecker Spawn Rate",
+  "IGUI_PhunZones_MutantLeaper": "Leaper Spawn Rate",
+  "IGUI_PhunZones_MutantWeeper": "Weeper Spawn Rate",
+  "IGUI_PhunZones_MutantSpawn_tooltip": "Requires The Mutants mod. Percentage (0-100, decimals allowed) of zombies that become this mutant when they spawn in this zone. Leave empty to use the sandbox setting; 0 stops this mutant spawning here. Mutants that wander in from elsewhere are not affected"
 }

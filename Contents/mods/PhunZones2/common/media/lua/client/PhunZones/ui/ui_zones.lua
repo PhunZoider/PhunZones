@@ -2419,7 +2419,7 @@ end
 
 local function isTextRow(row)
     return row and not row.isGroupHeader and not row.special and not row.extra and row.fdef and
-               (row.fdef.type == "string" or row.fdef.type == "int")
+               (row.fdef.type == "string" or row.fdef.type == "int" or row.fdef.type == "double")
 end
 
 function UI:openInlineEditor(i)
@@ -2645,7 +2645,7 @@ function UI:commitInlineEdit()
 
     local fdef = row.fdef
     local val
-    if fdef.type == "int" then
+    if fdef.type == "int" or fdef.type == "double" then
         val = tonumber(text)
         if val == nil then
             -- Not a number (or emptied). Use Reset to clear a value.
@@ -2685,7 +2685,7 @@ function UI:saveProp(fieldKey, newValue)
     local fdef = Core.fields[fieldKey]
     local val = newValue
     if fdef then
-        if fdef.type == "int" then
+        if fdef.type == "int" or fdef.type == "double" then
             val = tonumber(newValue);
             if val == nil then
                 return
@@ -3054,7 +3054,7 @@ function UI:saveData(data)
             final = (data[k] ~= nil and data[k] ~= "") and data[k] or nil
         elseif v.type == "combo" then
             final = (data[k] ~= nil and data[k] ~= "none") and data[k] or nil
-        elseif v.type == "int" then
+        elseif v.type == "int" or v.type == "double" then
             final = tonumber(data[k])
         elseif v.type == "boolean" then
             final = data[k]
