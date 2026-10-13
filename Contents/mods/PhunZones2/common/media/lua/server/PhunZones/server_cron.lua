@@ -18,14 +18,21 @@ local Core = PhunZones
 -- Example jobs in <Zomboid>/Lua/PhunServer2Cron.json:
 --
 --   "closeLouisville": {
---       "enabled": true, "action": "zoneprofile", "at": "22:00",
+--       "enabled": true, "action": "zoneprofile", "at": ["22:00"],
 --       "args": { "profile": "night" },
 --       "announcements": [ { "before": 600, "text": "Louisville closes in 10 minutes" } ]
 --   },
 --   "openLouisville": {
---       "enabled": true, "action": "zoneprofile", "at": "06:00",
+--       "enabled": true, "action": "zoneprofile", "at": ["06:00"],
 --       "args": { "profile": "none" }
+--   },
+--   "nightZones": {
+--       "enabled": true, "action": "zoneprofile", "on": ["dusk"],
+--       "args": { "profile": "night" }
 --   }
+--
+-- 'at' is the real-world clock, 'on' is in-game dawn/dusk and 'gameAt' is the
+-- in-game clock. See PhunServer's Docs/cron.md.
 -- ---------------------------------------------------------------------------
 Events.OnServerStarted.Add(function()
     if not PhunServer2 or type(PhunServer2.registerAction) ~= "function" then

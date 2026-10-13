@@ -455,28 +455,64 @@ rather than left active while applying nothing.
 ### Scheduling profile changes
 
 With [PhunServer2](https://github.com/PhunZoider/PhunServer) installed,
-PhunZones registers a `zoneprofile` cron action, so profile swaps can run on the
-real-world clock. In `PhunServer2Cron.json`:
+PhunZones registers a `zoneprofile` cron action, so profile swaps can be
+scheduled. Jobs go in `PhunServer2Cron.json`, and there are three ways to time
+them.
+
+**Real-world clock**, with `at`. The only mode that supports `announcements`:
 
 ```json
 "closeLouisville": {
-  "enabled": true, "action": "zoneprofile", "at": "22:00",
+  "enabled": true, "action": "zoneprofile", "at": ["22:00"],
   "args": { "profile": "night" },
   "announcements": [ { "before": 600, "text": "Louisville closes in 10 minutes" } ]
 },
 "openLouisville": {
-  "enabled": true, "action": "zoneprofile", "at": "06:00",
+  "enabled": true, "action": "zoneprofile", "at": ["06:00"],
   "args": { "profile": "none" }
 }
 ```
+
+**In-game dawn and dusk**, with `on`. Needs PhunServer 2: Day/Night
+(`phunserver2daynight`) enabled, and follows its seasonal dawn and dusk:
+
+```json
+"nightZones": {
+  "enabled": true, "action": "zoneprofile", "on": ["dusk"],
+  "args": { "profile": "night" }
+},
+"dayZones": {
+  "enabled": true, "action": "zoneprofile", "on": ["dawn"],
+  "args": { "profile": "none" }
+}
+```
+
+This is the most robust option for a day/night profile. When the server
+starts, the job for the current phase runs once, so a restart at night still
+ends up on the night profile.
+
+**In-game clock**, with `gameAt`. Runs when the game clock reaches a time,
+however fast your days are:
+
+```json
+"curfew": {
+  "enabled": true, "action": "zoneprofile", "gameAt": ["22:00"],
+  "args": { "profile": "curfew" }
+}
+```
+
+`on` and `gameAt` are recent additions to PhunServer2. An older build logs these
+jobs as ignored at startup, so update it if you see that. See the [cron guide](https://github.com/PhunZoider/PhunServer/blob/main/Docs/cron.md)
+for every option.
 
 PhunServer2 is optional. Without it the action is simply not registered, and
 profiles are switched by hand from `/zoneprofile` or from Lua via
 `PhunZones.setActiveProfile(name)`.
 
-Note that the two jobs are independent: if the server is down when the "open"
-job was due, the profile stays active until something clears it. `/zoneprofile
-none` is the escape hatch.
+Note that `at` and `gameAt` jobs are independent moments: if the server is down
+when the "open" job was due, the profile stays active until something clears
+it. `on` jobs catch up at startup, as above. `/zoneprofile none` is the escape
+hatch either way.
 
 ## Extending PhunZones
 
