@@ -165,7 +165,7 @@ check.section("writers preserve the profiles block")
 -- would delete every profile the admin has defined.
 
 local raw = Core.tools.loadTable(Core.const.modifiedLuaFile)
-check.same("written as v3", raw.version, 3)
+check.same("written as v4", raw.version, 4)
 check.ok("profiles survived saveChanges", raw.profiles ~= nil and raw.profiles.night ~= nil,
     "profiles block was dropped by the rewrite")
 check.same("profile contents are intact", raw.profiles.night.MarchRidge.noplayers, true)

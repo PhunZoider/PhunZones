@@ -358,7 +358,7 @@ Profiles are defined in a `profiles` block alongside `data` in
 
 ```json
 {
-  "version": 3,
+  "version": 4,
   "data": {},
   "profiles": {
     "night": {
@@ -377,7 +377,7 @@ default and opens for an event. Use `false`, not `null`:
 
 ```json
 {
-  "version": 3,
+  "version": 4,
   "data": { "FallasLake": { "noplayers": true } },
   "profiles": { "open": { "FallasLake": { "noplayers": false } } }
 }

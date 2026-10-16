@@ -116,6 +116,9 @@ end
 -- Merges base (shipped defaults) with custom (admin config).
 -- Admin values always win. Tombstones (disabled = true) suppress base entries.
 -- Admin can introduce entirely new zones not present in base.
+-- An empty `points` list is an override like any other: the admin deleted
+-- every rect. Legacy configs that wrote empty lists as a no-op are cleaned up
+-- on load (see stripLegacyEmptyPoints).
 -- ---------------------------------------------------------------------------
 function Core.mergeLayers(base, custom)
     local result = {}
@@ -127,11 +130,7 @@ function Core.mergeLayers(base, custom)
     for k, v in pairs(custom or {}) do
         if result[k] then
             for field, val in pairs(v) do
-                if field == "points" and type(val) == "table" and #val == 0 then
-                    -- preserve base points
-                else
-                    result[k][field] = val
-                end
+                result[k][field] = val
             end
         else
             result[k] = Core.tools.shallowCopy(v)
@@ -472,6 +471,22 @@ local function migrateV1toV2(d)
     return result
 end
 
+-- Before v4, an empty `points` list meant "no geometry change" (older saves
+-- wrote one whenever only properties changed), so it must not be read as
+-- "delete every rect". Drops those lists from a layer, nested subzones included.
+local function stripLegacyEmptyPoints(layer)
+    for _, zone in pairs(layer or {}) do
+        if type(zone) == "table" then
+            if type(zone.points) == "table" and #zone.points == 0 then
+                zone.points = nil
+            end
+            if type(zone.subzones) == "table" then
+                stripLegacyEmptyPoints(zone.subzones)
+            end
+        end
+    end
+end
+
 function Core.loadAdminConfig()
     if isClient() then
         -- Clients receive customisations via ModData, not from disk
@@ -513,6 +528,14 @@ function Core.loadAdminConfig()
             version = 2,
             data = data
         })
+    end
+
+    -- v4 reads an empty points list as "no rects". The next save writes v4.
+    if (d.version or 1) < 4 then
+        stripLegacyEmptyPoints(data)
+        for _, profile in pairs(d.profiles or {}) do
+            stripLegacyEmptyPoints(profile)
+        end
     end
 
     -- Store in ModData so it survives and is accessible for transmission
@@ -719,7 +742,7 @@ end
 -- the next time anyone edited a zone in the UI.
 function Core.saveAdminConfig(data)
     local out = {
-        version = 3,
+        version = 4,
         data = data
     }
     local profiles = Core.getRuntime().profiles
